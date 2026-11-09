@@ -56,12 +56,12 @@ jobs:
           python -m compileall -q .
           python -m unittest discover -s tests -v
 
-      - name: Restore existing private project state
+      - name: Restore only the private SQLite state needed for an original composition
         working-directory: agent
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
         run: |
-          python main.py drive-pull
+          python main.py drive-pull-state
           python main.py drive-status
 
       - name: Generate one-hour original instrumental review video
