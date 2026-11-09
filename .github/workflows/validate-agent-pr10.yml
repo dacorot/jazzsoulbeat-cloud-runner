@@ -35,7 +35,11 @@ jobs:
 
       - name: Record exact private-agent revision under test
         working-directory: agent
-        run: git show -s --format='Agent revision: %H%nCommit: %s' HEAD
+        run: |
+          echo "Agent revision:"
+          git rev-parse HEAD
+          echo "Commit message:"
+          git log -1 --pretty=%s
 
       - name: Set up Python
         uses: actions/setup-python@v5
