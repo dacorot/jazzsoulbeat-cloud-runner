@@ -57,3 +57,16 @@ No se debe almacenar música ni base de datos en el repositorio público. Tampoc
 - Los secretos OAuth y tokens nunca se guardan en el repositorio.
 
 El flujo Drive-backed aún no se ha ejecutado: antes hay que cargar el estado local inicial a Drive y verificar una primera recuperación en dos ejecuciones manuales separadas. El PR #1 está fusionado en `main` (commit `7e9cdd594bb62926c86977b19d0c511f002c674d`). No se ha añadido `schedule`, no se ha ejecutado este workflow y no se ha habilitado ninguna subida a YouTube. El PR #4 del repositorio privado quedó fusionado (commit `f5ad2558b7f66ced4327448755058f5fede6a9b1`) e incorpora el comando de carga inicial `drive-seed`; sus pruebas nuevas aún deben ejecutarse localmente. Ver `PERSISTENCE_DECISION.md` para los límites y criterios pendientes.
+
+
+## Nueva tarea propuesta: música original
+
+La rama `feature/original-music-task` añade la opción manual `build-original` al workflow privado. Cuando el PR correspondiente del agente privado (#7) esté integrado en `master`, esta tarea ejecutará:
+
+```bash
+python main.py make-original --hours 1
+```
+
+El comando sintetiza una composición original, crea un video y persiste los archivos bajo la carpeta privada de Google Drive mediante los pasos ya existentes. No utiliza biblioteca musical de terceros, no sube a YouTube y no usa credenciales de YouTube. Las opciones de duración siguen limitadas a 1, 2 o 3 horas en el formulario del workflow.
+
+**No ejecutar este workflow por ahora.** La ejecución de GitHub Actions está bloqueada por el límite de uso configurado en la cuenta, y no se ha verificado un costo cero para nuevas ejecuciones. Esta propuesta es solo una modificación de código; no programa ni inicia trabajos.
