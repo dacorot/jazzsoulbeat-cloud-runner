@@ -111,7 +111,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          VIDEO="$(find output -type f -name video.mp4 -printf '%T@ %p\\n' | sort -nr | head -1 | cut -d' ' -f2-)"
+          VIDEO="$(find output -type f -name video.mp4 -printf '%T@ %p\n' | sort -nr | head -1 | cut -d' ' -f2-)"
           test -n "$VIDEO"
           RUN_DIR="$(dirname "$VIDEO")"
           test -s "$RUN_DIR/mix.mp3"
