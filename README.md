@@ -21,6 +21,6 @@ No uses un token con permisos de escritura, administración, Actions o acceso a 
 
 ## Estado operativo
 
-La ejecución de Actions permanece sin probar y no debe iniciarse mientras la cuenta muestre `Usage blocked` o no se pueda garantizar coste cero. Este repositorio no configura pagos ni activa ejecuciones programadas.
+El workflow usa únicamente el runner estándar `ubuntu-latest` de este repositorio público. GitHub documenta que los runners estándar alojados en repositorios públicos son gratuitos y sin límite de minutos, independientemente del cómputo incluido para repositorios privados. No usa runners grandes, caché ni artefactos. La ejecución todavía no se ha probado. Este repositorio no configura pagos ni activa ejecuciones programadas. La ejecución manual genera los registros normales de GitHub Actions; no se guardan archivos de salida.
 
 El runner es efímero: no conserva archivos ni SQLite entre ejecuciones. Esta prevalidación no constituye todavía un servicio autónomo de producción ni resuelve el almacenamiento persistente de música aprobada y estado.
