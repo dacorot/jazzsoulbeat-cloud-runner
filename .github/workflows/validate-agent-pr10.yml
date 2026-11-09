@@ -1,4 +1,4 @@
-name: Validate Jazz Soul Beat agent PR #10
+name: Validate Jazz Soul Beat agent PR #11
 # Full production-duration render is isolated: no Drive restore/push and no YouTube credentials.
 # Validates Cloudflare integration, clean no-watermark video output, and Drive path hardening without consuming image quota; checks latest PR branch revision.
 
@@ -25,7 +25,7 @@ jobs:
       - name: Check out public validation controller
         uses: actions/checkout@v4
 
-      - name: Check out private agent PR branch
+      - name: Check out private agent PR #11 branch
         uses: actions/checkout@v4
         with:
           repository: dacorot/jazzsoulbeat-agent
@@ -40,6 +40,12 @@ jobs:
           echo "Agent revision:"
           git rev-parse HEAD
           echo "Commit message:"
+          git log -1 --pretty=%s
+
+      - name: Record exact private-agent revision under test
+        working-directory: agent
+        run: |
+          git rev-parse HEAD
           git log -1 --pretty=%s
 
       - name: Set up Python
