@@ -13,8 +13,10 @@ Es la alternativa gratuita más viable encontrada hasta ahora, pero todavía no 
 - Una cuenta Google personal incluye hasta 15 GB sin costo, compartidos entre Drive, Gmail y Google Photos. No son 15 GB exclusivos para el agente; el espacio real disponible depende del uso actual de esa cuenta.
 - El uso estándar de Google Drive API se ofrece sin costo adicional. La documentación vigente define límites diarios estándar y un umbral de 400.000.000 unidades de cuota; Google indica que el uso por debajo del umbral no genera cargos. Google anuncia cargos por superar límites estándar más adelante en 2026, tras aviso previo. Por la condición de costo cero, la implementación debe limitar transferencias y operaciones, y no debe solicitar aumentos de cuota ni activar facturación.
 - El permiso OAuth `drive.file` es un alcance no sensible recomendado por Google. Permite crear y administrar los archivos que la propia aplicación crea o que el usuario comparte con ella; evita pedir acceso indiscriminado a todo Drive.
-- La aplicación ya tiene OAuth para YouTube, pero el token actual no incluye Drive. Añadir Drive requiere habilitar Google Drive API en el proyecto y una nueva autorización OAuth con el alcance `drive.file`. El secreto actual `YOUTUBE_TOKEN_JSON` tendría que sustituirse por el nuevo token, sin compartir su contenido en el chat.
-- No se debe iniciar la integración hasta tener autorización expresa para ampliar el alcance OAuth. La conexión a Drive no debe activar pagos ni requerir tarjeta.
+- El token de YouTube actual devolvió una identidad `@pages.plusgoogle.com`. Google confirma que ese identificador corresponde a una Cuenta de marca de YouTube, no a una cuenta Google real; la Cuenta de marca no tiene almacenamiento de Drive propio. Por tanto, no se debe intentar usar el token de YouTube para Drive.
+- La arquitectura correcta separa identidades: `YOUTUBE_TOKEN_JSON` permanece intacto para el canal; un segundo token `DRIVE_TOKEN_JSON` se autoriza iniciando sesión con la cuenta Google propietaria real de la Cuenta de marca. La autorización Drive solicitará solo `drive.file` y no necesita sustituir el secreto de YouTube.
+- Antes de autorizar, debe confirmarse que la cuenta Google propietaria tiene espacio disponible. Habilitar Drive API y obtener `drive.file` no debe activar facturación ni requerir tarjeta.
+- La nueva autorización Drive requiere aprobación expresa de la propietaria. No se debe pedir ni compartir el contenido del token en el chat.
 
 Fuentes oficiales consultadas:
 - Almacenamiento gratuito y compartido: https://support.google.com/drive/answer/9312312
@@ -35,7 +37,7 @@ Fuentes oficiales consultadas:
 ## Bloqueos de producción que siguen vigentes
 
 - La cuenta debe tener espacio libre suficiente dentro de sus 15 GB compartidos; no se ha verificado ese saldo.
-- El nuevo alcance OAuth de Drive requiere autorización de la propietaria.
+- La autorización Drive separada requiere la cuenta Google propietaria real de la Cuenta de marca y aprobación de la propietaria.
 - Los archivos de música que están solo en el PC todavía no están en el almacenamiento cloud.
 - Las candidatas Ketsa recuperadas continúan PENDING. No hay música aprobada y el agente no debe elevarlas automáticamente.
 - El runner estándar público de GitHub Actions es gratuito y sin límite de minutos según GitHub; eso no elimina la necesidad de persistencia. Fuente: https://docs.github.com/en/actions/how-tos/write-workflows/choose-where-workflows-run/choose-the-runner-for-a-job
