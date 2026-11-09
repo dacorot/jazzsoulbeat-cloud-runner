@@ -33,6 +33,10 @@ jobs:
           path: agent
           persist-credentials: false
 
+      - name: Record exact private-agent revision under test
+        working-directory: agent
+        run: git rev-parse HEAD
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
