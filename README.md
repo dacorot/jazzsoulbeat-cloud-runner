@@ -9,7 +9,7 @@ Controlador público mínimo para ejecutar validaciones del agente privado `daco
 - Los workflows solo permiten ejecución manual (`workflow_dispatch`); no hay programación automática.
 - `private-agent-preflight.yml` compila, ejecuta pruebas y genera un video sintético sin Drive.
 - `private-cloud-agent.yml` restaura `tracks/`, SQLite y `output/` desde Drive privado, ejecuta una prueba sintética o construye un video local sin subirlo, y vuelve a persistir los archivos.
-- No descarga música, no usa OAuth, no sube videos y no publica contenido.
+- No descarga música desde Internet ni usa OAuth de YouTube; sí usa el secreto `DRIVE_TOKEN_JSON` para persistencia privada. No sube videos ni publica contenido.
 - No habilita pagos ni modifica presupuestos. El flujo cloud requiere los secretos `PRIVATE_REPO_READ_TOKEN` y `DRIVE_TOKEN_JSON`.
 - No se habilitaron ejecuciones automáticas ni se creó un mecanismo de publicación.
 
@@ -56,4 +56,4 @@ No se debe almacenar música ni base de datos en el repositorio público. Tampoc
 - No ejecutar `make --upload` automáticamente. Cualquier subida futura requerirá autorización explícita y privacidad `private` confirmada por YouTube.
 - Los secretos OAuth y tokens nunca se guardan en el repositorio.
 
-El flujo Drive-backed aún no se ha ejecutado: antes hay que cargar el estado local inicial a Drive y verificar una primera recuperación en dos ejecuciones manuales separadas. No se ha añadido `schedule`, no se ha ejecutado el workflow y no se ha habilitado ninguna subida a YouTube. Ver `PERSISTENCE_DECISION.md` para los límites y criterios pendientes.
+El flujo Drive-backed aún no se ha ejecutado: antes hay que cargar el estado local inicial a Drive y verificar una primera recuperación en dos ejecuciones manuales separadas. El PR #1 está fusionado en `main` (commit `7e9cdd594bb62926c86977b19d0c511f002c674d`). No se ha añadido `schedule`, no se ha ejecutado este workflow y no se ha habilitado ninguna subida a YouTube. El PR #4 del repositorio privado prepara el comando de carga inicial `drive-seed` y está pendiente de validación. Ver `PERSISTENCE_DECISION.md` para los límites y criterios pendientes.
