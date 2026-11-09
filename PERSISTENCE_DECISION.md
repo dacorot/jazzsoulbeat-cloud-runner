@@ -62,3 +62,27 @@ Fuentes oficiales consultadas:
 - Automatización programada: deshabilitada.
 - Música aprobada: ninguna.
 - Subida a YouTube: deshabilitada en el workflow; nunca pública sin autorización explícita.
+
+
+## Actualización de implementación — 9 de noviembre de 2026
+
+Se fusionó en el repositorio privado el módulo `drive_storage.py` (PR #3, commit `56058d87f652135f17df78fcdd1ec52625da9ef0`). La usuaria ejecutó localmente compilación y **91 pruebas**, todas correctas. Esto valida las pruebas unitarias, pero no sustituye una prueba real contra Google Drive.
+
+Se preparó en una rama del controlador público el workflow manual `.github/workflows/private-cloud-agent.yml`:
+- Checkout del agente privado con el token de solo lectura.
+- Compilación y pruebas unitarias en cada ejecución.
+- Recuperación de `tracks/`, `data/agent.db` y `output/` desde Drive usando `DRIVE_TOKEN_JSON`.
+- Opción de generar una prueba sintética o construir un video local desde una colección que ya tenga música aprobada.
+- Persistencia posterior de los cambios en Drive.
+- No incluye `YOUTUBE_TOKEN_JSON`, no contiene `--upload` y no puede publicar videos.
+- No tiene cron ni programación automática.
+
+### Pasos aún necesarios para la puesta en marcha
+
+1. Revisar y aprobar la integración del workflow del controlador.
+2. Hacer una única carga inicial desde el PC a Drive con el token local ya autorizado; esto es necesario porque los archivos locales ignorados por Git no existen en el runner cloud.
+3. Ejecutar manualmente la tarea `self-test` para verificar la primera escritura en Drive.
+4. Ejecutar una segunda vez `self-test` y confirmar que restaura los mismos archivos desde la ejecución anterior y conserva la integridad SHA-256.
+5. Confirmar que el estado `PENDING` de la música se conserva y que no se habilita ninguna publicación.
+
+La tarea `build-evergreen` solo funcionará cuando exista música aprobada y con derechos verificados. Si la biblioteca está vacía, el agente se detendrá sin generar un mix incompleto. La programación automática continúa deshabilitada hasta que la cuenta y el costo de ejecución estén confirmados sin riesgo de cobro; no se debe habilitar facturación ni pagar almacenamiento.
