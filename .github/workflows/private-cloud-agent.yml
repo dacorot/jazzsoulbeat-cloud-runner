@@ -32,6 +32,11 @@ on:
         description: "Slug de temporada (solo seasonal; por ejemplo halloween)"
         required: false
         type: string
+      agent_ref:
+        description: "Rama o SHA del agente privado que se validará"
+        required: true
+        default: master
+        type: string
 
 permissions:
   contents: read
@@ -49,11 +54,20 @@ jobs:
       - name: Check out public controller
         uses: actions/checkout@v4
 
+      - name: Validate private agent ref
+        env:
+          AGENT_REF: ${{ inputs.agent_ref }}
+        run: |
+          if [[ -z "$AGENT_REF" || ! "$AGENT_REF" =~ ^[A-Za-z0-9][A-Za-z0-9._/-]{0,99}$ || "$AGENT_REF" == *..* || "$AGENT_REF" == */ || "$AGENT_REF" == *//* ]]; then
+            echo "Rama o SHA del agente no válida."
+            exit 1
+          fi
+
       - name: Check out private agent (read-only token)
         uses: actions/checkout@v4
         with:
           repository: dacorot/jazzsoulbeat-agent
-          ref: master
+          ref: ${{ inputs.agent_ref }}
           token: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
           path: agent
           persist-credentials: false
