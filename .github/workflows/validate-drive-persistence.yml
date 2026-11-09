@@ -1,0 +1,81 @@
+name: Validate Drive persistence PR without paid resources
+
+on:
+  push:
+    branches:
+      - validate-drive-persistence
+
+permissions:
+  contents: read
+
+concurrency:
+  group: jazz-soul-beat-drive-validation
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Compile, unit tests and synthetic render
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out public controller
+        uses: actions/checkout@v4
+
+      - name: Check out private agent PR branch
+        uses: actions/checkout@v4
+        with:
+          repository: dacorot/jazzsoulbeat-agent
+          ref: feature/google-drive-persistence-sync
+          token: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
+          path: agent
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ffmpeg
+          ffmpeg -version
+          ffprobe -version
+
+      - name: Install Python dependencies
+        working-directory: agent
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Compile complete agent
+        working-directory: agent
+        run: python -m compileall -q .
+
+      - name: Run unit tests
+        working-directory: agent
+        run: python -m unittest discover -s tests -v
+
+      - name: Build synthetic video (no YouTube or Drive)
+        working-directory: agent
+        run: python main.py self-test
+
+      - name: Verify synthetic output
+        working-directory: agent
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          folders = sorted(Path("output").glob("self-test-*"))
+          if not folders:
+              raise SystemExit("No se generó la carpeta de prueba.")
+          latest = folders[-1]
+          required = ["test-video.mp4", "test-mix.mp3", "test-thumbnail.jpg", "SELF_TEST.txt"]
+          missing = [name for name in required if not (latest / name).is_file()]
+          if missing:
+              raise SystemExit("Faltan artefactos: " + ", ".join(missing))
+          for name in required:
+              if (latest / name).stat().st_size <= 0:
+                  raise SystemExit(f"Artefacto vacío: {name}")
+          print(f"Preflight sintético correcto: {latest}")
+          print("Sin acceso a Google Drive, sin OAuth y sin subida a YouTube.")
+          PY
