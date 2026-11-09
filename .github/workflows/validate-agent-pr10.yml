@@ -1,4 +1,5 @@
 name: Validate Jazz Soul Beat agent PR #10
+# Re-triggered after JSB logo watermark integration on the private agent branch.
 
 on:
   push:
