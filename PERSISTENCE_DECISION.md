@@ -36,7 +36,7 @@ Fuentes oficiales consultadas:
 
 ## Bloqueos de producción que siguen vigentes
 
-- La cuenta debe tener espacio libre suficiente dentro de sus 15 GB compartidos; no se ha verificado ese saldo.
+- La autorización local Drive fue completada por la propietaria para `dacorot@icloud.com`. La consulta de cuota reportó 400 GiB totales, 19.17 GiB usados y 380.83 GiB libres en ese momento. El saldo puede cambiar y debe volver a comprobarse si se agota espacio.
 - La autorización Drive separada requiere la cuenta Google propietaria real de la Cuenta de marca y aprobación de la propietaria.
 - Los archivos de música que están solo en el PC todavía no están en el almacenamiento cloud.
 - Las candidatas Ketsa recuperadas continúan PENDING. No hay música aprobada y el agente no debe elevarlas automáticamente.
@@ -57,7 +57,7 @@ Fuentes oficiales consultadas:
 - Preflight real: correcto (78 pruebas y video sintético).
 - Acceso de solo lectura al repositorio privado: comprobado.
 - Repositorio privado y código principal: permanecen privados.
-- Google Drive: candidato recomendado; integración pendiente de autorización OAuth y verificación de espacio disponible.
+- Google Drive: OAuth `drive.file` completado; cuota reportada 400 GiB total / 380.83 GiB libres; integración de sincronización implementada, pero todavía no probada en vivo.
 - Facturación de Google Cloud: no habilitar.
 - Automatización programada: deshabilitada.
 - Música aprobada: ninguna.
@@ -79,10 +79,17 @@ Se preparó en una rama del controlador público el workflow manual `.github/wor
 
 ### Pasos aún necesarios para la puesta en marcha
 
-1. Revisar y aprobar la integración del workflow del controlador.
-2. Hacer una única carga inicial desde el PC a Drive con el token local ya autorizado; esto es necesario porque los archivos locales ignorados por Git no existen en el runner cloud.
-3. Ejecutar manualmente la tarea `self-test` para verificar la primera escritura en Drive.
+1. El workflow del controlador quedó integrado en `main` mediante PR #1, commit `7e9cdd594bb62926c86977b19d0c511f002c674d`.
+2. Ejecutar desde la copia local `python main.py drive-seed` (cuando el PR #4 del agente esté validado y fusionado). Este comando carga la copia local de `tracks/`, `output/` y SQLite a Drive privado usando `drive_token.json`, sin mostrar el token.
+3. Ejecutar manualmente la tarea `self-test` para verificar la primera recuperación y escritura en Drive.
 4. Ejecutar una segunda vez `self-test` y confirmar que restaura los mismos archivos desde la ejecución anterior y conserva la integridad SHA-256.
 5. Confirmar que el estado `PENDING` de la música se conserva y que no se habilita ninguna publicación.
 
 La tarea `build-evergreen` solo funcionará cuando exista música aprobada y con derechos verificados. Si la biblioteca está vacía, el agente se detendrá sin generar un mix incompleto. La programación automática continúa deshabilitada hasta que la cuenta y el costo de ejecución estén confirmados sin riesgo de cobro; no se debe habilitar facturación ni pagar almacenamiento.
+
+
+## Actualización posterior — integración del controlador
+
+El PR #1 del repositorio público `dacorot/jazzsoulbeat-cloud-runner` fue fusionado el 9 de noviembre de 2026 (commit `7e9cdd594bb62926c86977b19d0c511f002c674d`). El workflow `.github/workflows/private-cloud-agent.yml` ya está en `main`, se ejecuta solo mediante `workflow_dispatch` y no contiene secretos de YouTube ni pasos de subida.
+
+Se identificó que el primer seed local necesitaba un comando directo y seguro. Se preparó PR #4 en el repositorio privado (`https://github.com/dacorot/jazzsoulbeat-agent/pull/4`) para añadir `python main.py drive-seed`, que lee `drive_token.json` localmente sin imprimirlo y sube solo las rutas persistentes permitidas. Está pendiente de validación local; no se ha fusionado ni ejecutado.
