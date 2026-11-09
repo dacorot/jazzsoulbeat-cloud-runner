@@ -1,5 +1,5 @@
 name: Validate Jazz Soul Beat agent PR #10
-# Re-triggered after JSB logo watermark integration on the private agent branch.
+# Full production-duration render is isolated: no Drive restore/push and no YouTube credentials.
 
 on:
   push:
@@ -17,9 +17,9 @@ concurrency:
 
 jobs:
   validate:
-    name: Compile, unit tests, and FFmpeg self-test
+    name: Tests and full original-jazz production render
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 120
     steps:
       - name: Check out public validation controller
         uses: actions/checkout@v4
@@ -63,6 +63,47 @@ jobs:
         working-directory: agent
         run: python main.py self-test
 
-      - name: Confirm no publishing or cloud writes
+      - name: Render the complete original jazz suite as a 25-minute MP4
+        working-directory: agent
+        run: python main.py make-original --hours 0.4166667 --bpm 82 --seed 20261109
+
+      - name: Verify production MP4 streams and duration
+        working-directory: agent
+        shell: bash
         run: |
-          echo "Validation only: no YouTube credentials, upload, Google Drive restore, or Drive push."
+          set -euo pipefail
+          VIDEO="$(find output -type f -name video.mp4 -printf '%T@ %p\n' | sort -nr | head -1 | cut -d' ' -f2-)"
+          test -n "$VIDEO"
+          ffprobe -v error -show_entries format=duration,size -show_entries stream=codec_type,codec_name,width,height,sample_rate,channels -of json "$VIDEO" > production-probe.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path("production-probe.json").read_text())
+          duration = float(data["format"]["duration"])
+          streams = data["streams"]
+          assert 1490 <= duration <= 1510, f"Unexpected render duration: {duration}"
+          video = next(s for s in streams if s["codec_type"] == "video")
+          audio = next(s for s in streams if s["codec_type"] == "audio")
+          assert video["codec_name"] == "h264", video
+          assert (video["width"], video["height"]) == (1920, 1080), video
+          assert audio["codec_name"] == "aac" and audio["channels"] == 2, audio
+          print(f"PASS: {duration:.2f}s H.264 1920x1080 + AAC stereo")
+          print(f"File size: {data['format']['size']} bytes")
+          PY
+          mkdir -p production-artifact
+          cp "$VIDEO" production-artifact/
+          cp production-probe.json production-artifact/
+          find tracks/generated/original -maxdepth 1 -type f \( -name '*.json' -o -name '*.wav' \) -exec cp {} production-artifact/ \;
+          find output -type f \( -name thumb.jpg -o -name description.txt -o -name ORIGINAL_MUSIC_SOURCE.txt \) -exec cp {} production-artifact/ \;
+
+      - name: Preserve the production render for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: jazz-soul-beat-original-production-render
+          path: agent/production-artifact/
+          retention-days: 7
+          if-no-files-found: error
+
+      - name: Confirm no publishing or Drive writes
+        run: |
+          echo "Production render only: no YouTube credentials, upload, Google Drive restore, or Drive push."
