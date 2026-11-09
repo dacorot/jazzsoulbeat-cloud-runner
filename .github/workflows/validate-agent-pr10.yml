@@ -93,7 +93,7 @@ jobs:
                  VALUES(?,?,?,?,?,?,?,?,?,?,?)""",
               (track, "CI TEST FIXTURE — NOT FOR RELEASE", "Jazz Soul Beat CI",
                "TEST ONLY", "https://example.invalid/ci-fixture", 1, 60.0, 1,
-               "https://example.invalid/test-only", "evergreen", ""),
+               "https://creativecommons.org/licenses/by/4.0/", "evergreen", ""),
           )
           c.commit()
           c.close()
