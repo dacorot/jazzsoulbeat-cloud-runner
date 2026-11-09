@@ -1,6 +1,9 @@
 name: Jazz Soul Beat private cloud agent
 
 on:
+  push:
+    paths:
+      - ".run-self-test-once"
   workflow_dispatch:
     inputs:
       task:
@@ -96,7 +99,7 @@ jobs:
         run: python main.py library-status
 
       - name: Build synthetic technical test (never uploads)
-        if: ${{ steps.restore.outcome == 'success' && inputs.task == 'self-test' }}
+        if: ${{ steps.restore.outcome == 'success' && (inputs.task == 'self-test' || github.event_name == 'push') }}
         working-directory: agent
         run: python main.py self-test
 
