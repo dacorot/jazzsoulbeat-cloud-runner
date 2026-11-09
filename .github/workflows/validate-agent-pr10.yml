@@ -1,5 +1,5 @@
 name: Validate Jazz Soul Beat agent PR #11
-# Isolated CI fixture validates the approved-track mixing and animated-video pipeline.
+# Isolated CI fixture validates approved-track mixing and scene-aware environmental animation.
 # Fixture audio is synthetic and test-only; it is never approved in the production library or uploaded.
 
 on:
