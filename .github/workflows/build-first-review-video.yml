@@ -23,7 +23,7 @@ jobs:
       - name: Check out cloud controller
         uses: actions/checkout@v4
 
-      - name: Check out private agent branch
+      - name: Check out private agent branch at latest approved-track fix
         uses: actions/checkout@v4
         with:
           repository: dacorot/jazzsoulbeat-agent
@@ -31,6 +31,12 @@ jobs:
           token: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
           path: agent
           persist-credentials: false
+
+      - name: Record exact agent revision under test
+        working-directory: agent
+        run: |
+          git rev-parse HEAD
+          git log -1 --pretty=%s
 
       - name: Set up Python
         uses: actions/setup-python@v5
