@@ -1,6 +1,6 @@
 name: Validate Jazz Soul Beat agent PR #11
-# Full production-duration render is isolated: no Drive restore/push and no YouTube credentials.
-# Validates Cloudflare integration, clean no-watermark video output, and Drive path hardening without consuming image quota; checks latest PR branch revision.
+# Isolated CI fixture validates the approved-track mixing and animated-video pipeline.
+# Fixture audio is synthetic and test-only; it is never approved in the production library or uploaded.
 
 on:
   push:
@@ -13,12 +13,12 @@ permissions:
   contents: read
 
 concurrency:
-  group: validate-jazzsoulbeat-pr10
+  group: validate-jazzsoulbeat-quality-fix
   cancel-in-progress: false
 
 jobs:
   validate:
-    name: Tests and full original-jazz production render
+    name: Tests and licensed-track pipeline integration render
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
@@ -40,12 +40,6 @@ jobs:
           echo "Agent revision:"
           git rev-parse HEAD
           echo "Commit message:"
-          git log -1 --pretty=%s
-
-      - name: Record exact private-agent revision under test
-        working-directory: agent
-        run: |
-          git rev-parse HEAD
           git log -1 --pretty=%s
 
       - name: Set up Python
@@ -70,19 +64,7 @@ jobs:
         working-directory: agent
         run: python -m compileall -q .
 
-      - name: Report the composed melody design
-        working-directory: agent
-        run: |
-          python - <<'PY'
-          import original_music
-          print(f"Melodic cells: {len(original_music.MELODY_CELLS)}")
-          print(f"Sections: {len(original_music.SECTION_PROGRESSIONS)}")
-          print("Phrase structure: call / answer / variation / cadence")
-          assert len(original_music.MELODY_CELLS) >= 4
-          assert callable(original_music.melody_phrase_events)
-          PY
-
-      - name: Run complete unit test suite, including long-form listening profile
+      - name: Run complete unit test suite
         working-directory: agent
         run: python -m unittest discover -s tests -v
 
@@ -90,23 +72,50 @@ jobs:
         working-directory: agent
         run: python main.py self-test
 
-      - name: Create a local-only validation background (no image API quota)
-        working-directory: agent
-        run: python -c "from PIL import Image; Image.new('RGB', (1920, 1080), (30, 24, 20)).save('validation-background.jpg', quality=90)"
-
-      - name: Render the complete original jazz suite as a 25-minute MP4
+      - name: Prepare isolated test-only approved-track fixture
         working-directory: agent
         env:
           JSB_BACKGROUND_IMAGE: validation-background.jpg
-        run: python main.py make-original --hours 0.4162603 --bpm 82 --seed 20261109
+        run: |
+          set -euo pipefail
+          python -c "from PIL import Image; Image.new('RGB', (1920, 1080), (30, 24, 20)).save('validation-background.jpg', quality=90)"
+          mkdir -p tracks/ci
+          ffmpeg -nostdin -y -loglevel error -f lavfi -i "sine=frequency=220:duration=60" -c:a libmp3lame -b:a 192k tracks/ci/fixture.mp3
+          python - <<'PY'
+          from pathlib import Path
+          from db import conn
+          track = str(Path("tracks/ci/fixture.mp3").resolve())
+          c = conn()
+          c.execute("DELETE FROM tracks")
+          c.execute(
+              """INSERT INTO tracks(file,title,artist,license,source_url,approved,duration,
+                 rights_verified,license_url,collection,season)
+                 VALUES(?,?,?,?,?,?,?,?,?,?,?)""",
+              (track, "CI TEST FIXTURE — NOT FOR RELEASE", "Jazz Soul Beat CI",
+               "TEST ONLY", "https://example.invalid/ci-fixture", 1, 60.0, 1,
+               "https://example.invalid/test-only", "evergreen", ""),
+          )
+          c.commit()
+          c.close()
+          print("Inserted isolated synthetic CI fixture; no production rights are asserted.")
+          PY
 
-      - name: Verify production MP4 streams and duration
+      - name: Render short integration video through the real-track mix pipeline
+        working-directory: agent
+        env:
+          JSB_BACKGROUND_IMAGE: validation-background.jpg
+        run: python main.py make --hours 0.01 --auto
+
+      - name: Verify mixed audio, animated MP4 streams, and exact duration
         working-directory: agent
         shell: bash
         run: |
           set -euo pipefail
-          VIDEO="$(find output -type f -name video.mp4 -printf '%T@ %p\n' | sort -nr | head -1 | cut -d' ' -f2-)"
+          VIDEO="$(find output -type f -name video.mp4 -printf '%T@ %p\\n' | sort -nr | head -1 | cut -d' ' -f2-)"
           test -n "$VIDEO"
+          RUN_DIR="$(dirname "$VIDEO")"
+          test -s "$RUN_DIR/mix.mp3"
+          test -s "$RUN_DIR/MUSIC_SOURCE.txt"
           ffprobe -v error -show_entries format=duration,size -show_entries stream=codec_type,codec_name,width,height,sample_rate,channels -of json "$VIDEO" > production-probe.json
           python - <<'PY'
           import json
@@ -114,18 +123,17 @@ jobs:
           data = json.loads(Path("production-probe.json").read_text())
           duration = float(data["format"]["duration"])
           streams = data["streams"]
-          assert 1490 <= duration <= 1505, f"Unexpected render duration: {duration}"
+          assert 35 <= duration <= 37, f"Unexpected integration render duration: {duration}"
           video = next(s for s in streams if s["codec_type"] == "video")
           audio = next(s for s in streams if s["codec_type"] == "audio")
           assert video["codec_name"] == "h264", video
           assert (video["width"], video["height"]) == (1920, 1080), video
           assert audio["codec_name"] == "aac" and audio["channels"] == 2, audio
           print(f"PASS: {duration:.2f}s H.264 1920x1080 + AAC stereo")
-          print(f"File size: {data['format']['size']} bytes")
+          print("PASS: mix.mp3 and MUSIC_SOURCE.txt present")
           PY
-          echo "Render validado en el runner; no se publica como artifact en el repositorio público."
-          rm -f "$VIDEO" production-probe.json
-          find tracks/generated/original -maxdepth 1 -type f \( -name '*.json' -o -name '*.wav' \) -delete
+          rm -f "$VIDEO" production-probe.json "$RUN_DIR/mix.mp3" "$RUN_DIR/thumb.jpg" "$RUN_DIR/description.txt" "$RUN_DIR/MUSIC_SOURCE.txt"
+          rm -f tracks/ci/fixture.mp3 validation-background.jpg
 
       - name: Confirm no publishing or Drive writes
         run: |
