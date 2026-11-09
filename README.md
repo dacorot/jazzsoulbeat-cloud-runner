@@ -6,10 +6,11 @@ Controlador público mínimo para ejecutar validaciones del agente privado `daco
 
 - El código de producción permanece en el repositorio privado.
 - Este repositorio no contiene música, biblioteca, base de datos, OAuth, tokens ni datos del canal.
-- El workflow solo permite ejecución manual (`workflow_dispatch`); no tiene programación automática.
-- La prevalidación compila módulos, ejecuta pruebas unitarias y genera un video sintético.
+- Los workflows solo permiten ejecución manual (`workflow_dispatch`); no hay programación automática.
+- `private-agent-preflight.yml` compila, ejecuta pruebas y genera un video sintético sin Drive.
+- `private-cloud-agent.yml` restaura `tracks/`, SQLite y `output/` desde Drive privado, ejecuta una prueba sintética o construye un video local sin subirlo, y vuelve a persistir los archivos.
 - No descarga música, no usa OAuth, no sube videos y no publica contenido.
-- No habilita pagos ni modifica presupuestos.
+- No habilita pagos ni modifica presupuestos. El flujo cloud requiere los secretos `PRIVATE_REPO_READ_TOKEN` y `DRIVE_TOKEN_JSON`.
 - No se habilitaron ejecuciones automáticas ni se creó un mecanismo de publicación.
 
 ## Secreto de lectura
@@ -55,4 +56,4 @@ No se debe almacenar música ni base de datos en el repositorio público. Tampoc
 - No ejecutar `make --upload` automáticamente. Cualquier subida futura requerirá autorización explícita y privacidad `private` confirmada por YouTube.
 - Los secretos OAuth y tokens nunca se guardan en el repositorio.
 
-Ver `PERSISTENCE_DECISION.md` para el bloqueo técnico pendiente y los criterios de aceptación.
+El flujo Drive-backed aún no se ha ejecutado: antes hay que cargar el estado local inicial a Drive y verificar una primera recuperación en dos ejecuciones manuales separadas. No se ha añadido `schedule`, no se ha ejecutado el workflow y no se ha habilitado ninguna subida a YouTube. Ver `PERSISTENCE_DECISION.md` para los límites y criterios pendientes.
