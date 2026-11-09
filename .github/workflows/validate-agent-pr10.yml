@@ -55,7 +55,7 @@ jobs:
         working-directory: agent
         run: python -m compileall -q .
 
-      - name: Run complete unit test suite
+      - name: Run complete unit test suite, including long-form listening profile
         working-directory: agent
         run: python -m unittest discover -s tests -v
 
