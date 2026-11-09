@@ -84,8 +84,14 @@ jobs:
         working-directory: agent
         run: python main.py self-test
 
+      - name: Create a local-only validation background (no image API quota)
+        working-directory: agent
+        run: python -c "from PIL import Image; Image.new('RGB', (1920, 1080), (30, 24, 20)).save('validation-background.jpg', quality=90)"
+
       - name: Render the complete original jazz suite as a 25-minute MP4
         working-directory: agent
+        env:
+          JSB_BACKGROUND_IMAGE: validation-background.jpg
         run: python main.py make-original --hours 0.4162603 --bpm 82 --seed 20261109
 
       - name: Verify production MP4 streams and duration
