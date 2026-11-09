@@ -23,6 +23,17 @@ Controlador público mínimo para ejecutar el agente privado `dacorot/jazzsoulbe
 
 La duración configurada en el formulario manual está limitada a 1, 2 o 3 horas. La tarea estacional requiere un slug válido y una biblioteca estacional revisada.
 
+## Validar una rama del agente
+
+El formulario manual incluye `agent_ref`, que permite seleccionar una rama o SHA del repositorio privado. Por defecto es `master`. Así se puede compilar y ejecutar la suite completa de pruebas contra una rama de trabajo sin fusionarla primero. La referencia se valida antes del checkout.
+
+Para una validación técnica sin generar producción, seleccionar:
+- `task = self-test`
+- `hours = 1` (no afecta a self-test)
+- `agent_ref = feature/original-arrangement-development` (o el SHA exacto que se quiera probar)
+
+La tarea `self-test` genera únicamente el video sintético de comprobación; no genera una mezcla musical de producción. Para probar el render original de producción se requiere seleccionar explícitamente `build-original`. Toda ejecución sigue guardando el estado y los resultados en Drive privado, por lo que debe elegirse conscientemente la tarea.
+
 ## Seguridad y límites
 
 - No hay `schedule` ni ejecuciones automáticas. El runner estándar `ubuntu-latest` de este repositorio público es gratuito e ilimitado según GitHub; los runners grandes sí se cobran. Aun así, una programación no garantiza puntualidad: GitHub puede retrasarla o descartar ejecuciones con alta carga y desactiva schedules en repositorios públicos tras 60 días sin actividad. No activar `schedule` sin autorización expresa.
@@ -36,7 +47,7 @@ La duración configurada en el formulario manual está limitada a 1, 2 o 3 horas
 
 1. Abre [el workflow privado](https://github.com/dacorot/jazzsoulbeat-cloud-runner/actions/workflows/private-cloud-agent.yml).
 2. Selecciona **Run workflow** en la rama `main`.
-3. Elige la tarea y los parámetros que correspondan.
+3. Elige la tarea y los parámetros que correspondan. Para validar una rama sin producir música, usa `self-test` y establece `agent_ref` a la rama de trabajo.
 4. Revisa el resultado en la ejecución. No se realiza ninguna publicación en YouTube.
 
 El runner es efímero: no conserva archivos después del trabajo. La persistencia entre ejecuciones depende de Google Drive y del flujo pull → tarea → push. Este controlador no es todavía un servicio autónomo con programación automática.
