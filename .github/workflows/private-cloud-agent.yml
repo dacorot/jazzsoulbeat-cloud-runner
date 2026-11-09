@@ -10,8 +10,9 @@ on:
         options:
           - self-test
           - build-evergreen
+          - build-original
       hours:
-        description: "Duración del mix (horas, solo build-evergreen)"
+        description: "Duración del video (horas, para build-evergreen o build-original)"
         required: true
         default: "1"
         type: choice
@@ -120,6 +121,14 @@ jobs:
             exit 1
           fi
           python main.py "${args[@]}"
+
+      - name: Build original instrumental music and video (never uploads)
+        if: ${{ steps.restore.outcome == 'success' && inputs.task == 'build-original' }}
+        working-directory: agent
+        env:
+          MIX_HOURS: ${{ inputs.hours }}
+        run: |
+          python main.py make-original --hours "$MIX_HOURS"
 
       - name: Persist private state and generated outputs
         if: ${{ always() && steps.restore.outcome == 'success' }}
