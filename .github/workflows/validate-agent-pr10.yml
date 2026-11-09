@@ -1,6 +1,6 @@
 name: Validate Jazz Soul Beat agent PR #10
 # Full production-duration render is isolated: no Drive restore/push and no YouTube credentials.
-# Re-run after PR #10 melodic-answer correction and visual-direction documentation update.
+# Validates Cloudflare integration, clean no-watermark video output, and Drive path hardening without consuming image quota.
 
 on:
   push:
