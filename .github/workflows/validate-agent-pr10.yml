@@ -63,6 +63,18 @@ jobs:
         working-directory: agent
         run: python -m compileall -q .
 
+      - name: Report the composed melody design
+        working-directory: agent
+        run: |
+          python - <<'PY'
+          import original_music
+          print(f"Melodic cells: {len(original_music.MELODY_CELLS)}")
+          print(f"Sections: {len(original_music.SECTION_PROGRESSIONS)}")
+          print("Phrase structure: call / answer / variation / cadence")
+          assert len(original_music.MELODY_CELLS) >= 4
+          assert callable(original_music.melody_phrase_events)
+          PY
+
       - name: Run complete unit test suite, including long-form listening profile
         working-directory: agent
         run: python -m unittest discover -s tests -v
