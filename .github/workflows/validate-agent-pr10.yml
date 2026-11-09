@@ -90,19 +90,9 @@ jobs:
           print(f"PASS: {duration:.2f}s H.264 1920x1080 + AAC stereo")
           print(f"File size: {data['format']['size']} bytes")
           PY
-          mkdir -p production-artifact
-          cp "$VIDEO" production-artifact/
-          cp production-probe.json production-artifact/
-          find tracks/generated/original -maxdepth 1 -type f \( -name '*.json' -o -name '*.wav' \) -exec cp {} production-artifact/ \;
-          find output -type f \( -name thumb.jpg -o -name description.txt -o -name ORIGINAL_MUSIC_SOURCE.txt \) -exec cp {} production-artifact/ \;
-
-      - name: Preserve the production render for review
-        uses: actions/upload-artifact@v4
-        with:
-          name: jazz-soul-beat-original-production-render
-          path: agent/production-artifact/
-          retention-days: 7
-          if-no-files-found: error
+          echo "Render validado en el runner; no se publica como artifact en el repositorio público."
+          rm -f "$VIDEO" production-probe.json
+          find tracks/generated/original -maxdepth 1 -type f \( -name '*.json' -o -name '*.wav' \) -delete
 
       - name: Confirm no publishing or Drive writes
         run: |
