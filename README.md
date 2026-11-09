@@ -25,7 +25,7 @@ La duración configurada en el formulario manual está limitada a 1, 2 o 3 horas
 
 ## Seguridad y límites
 
-- No hay `schedule` ni ejecuciones automáticas. No se debe añadir programación hasta confirmar las condiciones operativas y contar con autorización expresa.
+- No hay `schedule` ni ejecuciones automáticas. El runner estándar `ubuntu-latest` de este repositorio público es gratuito e ilimitado según GitHub; los runners grandes sí se cobran. Aun así, una programación no garantiza puntualidad: GitHub puede retrasarla o descartar ejecuciones con alta carga y desactiva schedules en repositorios públicos tras 60 días sin actividad. No activar `schedule` sin autorización expresa.
 - El workflow no recibe `YOUTUBE_TOKEN_JSON`, no ejecuta `--upload` y no publica videos. Los resultados se guardan únicamente en Google Drive privado.
 - No se aprueban pistas automáticamente. La licencia comercial, autoridad del publicador y derechos de composición, interpretación y master requieren evidencia y revisión humana.
 - No se deben guardar secretos, tokens, audios, bases de datos ni videos en este repositorio público.
