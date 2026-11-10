@@ -1,5 +1,5 @@
 name: Refresh private Ketsa jazz-soul review library
-# Build 60-second excerpts with 8-second crossfades, ordered by source-tag groove similarity; validate safe playlist organizer and prune only the known rejected first-generation output; no approval or publication.
+# Build 60-second excerpts with 8-second groove-matched crossfades; normalize scene backgrounds and render all preview video at 2560x1440 2K QHD; validate private-only package and exact rejected-output pruning.
 
 on:
   push:
