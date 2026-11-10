@@ -96,17 +96,21 @@ jobs:
           python -m compileall -q .
           python -m unittest discover -s tests -v
 
-      - name: Restore private state from Google Drive
+      - name: Restore only the data needed for this cloud task
         id: restore
         working-directory: agent
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
         run: |
-          python main.py drive-pull
+          if [[ "${{ inputs.task }}" == "build-evergreen" ]]; then
+            python main.py drive-pull-library
+          else
+            python main.py drive-pull-state
+          fi
           python main.py drive-status
 
       - name: Show approved library status
-        if: ${{ steps.restore.outcome == 'success' }}
+        if: ${{ steps.restore.outcome == 'success' && inputs.task == 'build-evergreen' }}
         working-directory: agent
         run: python main.py library-status
 
