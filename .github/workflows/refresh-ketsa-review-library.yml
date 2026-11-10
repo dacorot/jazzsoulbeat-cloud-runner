@@ -1,5 +1,5 @@
 name: Refresh private Ketsa jazz-soul review library
-# Build the private timestamped audition sampler and animated review MP4 before Drive backup; no approval or publication.
+# Build the private timestamped audition sampler and animated review MP4 before Drive backup; Ketsa taxonomy tags enrich style, mood and instrument metadata; no approval or publication.
 
 on:
   push:
