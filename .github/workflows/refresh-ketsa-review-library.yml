@@ -1,5 +1,5 @@
 name: Refresh private Ketsa jazz-soul review library
-# Build private autumn audition at latest agent revision; validate new safe playlist organizer and prune only the known rejected first-generation output; no approval or publication.
+# Build 60-second excerpts with 8-second crossfades, ordered by source-tag groove similarity; validate safe playlist organizer and prune only the known rejected first-generation output; no approval or publication.
 
 on:
   push:
