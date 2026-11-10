@@ -43,6 +43,11 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Install FFmpeg for private audition sampler
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ffmpeg
+
       - name: Install dependencies
         working-directory: agent
         run: |
@@ -61,6 +66,7 @@ jobs:
         working-directory: agent
         run: |
           python main.py download-ketsa --limit 40
+          python main.py build-ketsa-review-pack --seconds 25
           python - <<'PY'
           import csv
           from pathlib import Path
