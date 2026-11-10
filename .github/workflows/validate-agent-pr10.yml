@@ -80,7 +80,7 @@ jobs:
           JSB_BACKGROUND_IMAGE: validation-background.jpg
         run: |
           set -euo pipefail
-          python -c "from PIL import Image; Image.new('RGB', (1920, 1080), (30, 24, 20)).save('validation-background.jpg', quality=90)"
+          python -c "from PIL import Image; Image.new('RGB', (2560, 1440), (30, 24, 20)).save('validation-background.jpg', quality=90)"
           mkdir -p tracks/ci
           ffmpeg -nostdin -y -loglevel error -f lavfi -i "sine=frequency=220:duration=60" -c:a libmp3lame -b:a 192k tracks/ci/fixture.mp3
           python - <<'PY'
@@ -131,9 +131,9 @@ jobs:
           video = next(s for s in streams if s["codec_type"] == "video")
           audio = next(s for s in streams if s["codec_type"] == "audio")
           assert video["codec_name"] == "h264", video
-          assert (video["width"], video["height"]) == (1920, 1080), video
+          assert (video["width"], video["height"]) == (2560, 1440), video
           assert audio["codec_name"] == "aac" and audio["channels"] == 2, audio
-          print(f"PASS: {duration:.2f}s H.264 1920x1080 + AAC stereo")
+          print(f"PASS: {duration:.2f}s H.264 2560x1440 2K QHD + AAC stereo")
           print("PASS: mix.mp3 and MUSIC_SOURCE.txt present")
           PY
           rm -f "$VIDEO" production-probe.json "$RUN_DIR/mix.mp3" "$RUN_DIR/thumb.jpg" "$RUN_DIR/description.txt" "$RUN_DIR/MUSIC_SOURCE.txt"
