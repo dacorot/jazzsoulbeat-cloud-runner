@@ -1,4 +1,5 @@
 name: Refresh private Ketsa jazz-soul review library
+# Build the private timestamped audition sampler and animated review MP4 before Drive backup; no approval or publication.
 
 on:
   push:
