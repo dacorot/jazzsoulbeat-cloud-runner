@@ -104,6 +104,32 @@ jobs:
           python main.py drive-push
           python main.py drive-status
 
+      - name: Require complete private audition package
+        working-directory: agent
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path("output/ketsa-review")
+          required = (
+              root / "KETSA_CANDIDATE_AUDITION.mp3",
+              root / "KETSA_AUDITION_INDEX.csv",
+              root / "KETSA_AUDITION_README.txt",
+              root / "KETSA_CANDIDATE_AUDITION_REVIEW_ONLY.mp4",
+              root / "KETSA_AUDITION_VIDEO_PROVENANCE.json",
+          )
+          missing = [str(path) for path in required if not path.is_file() or path.stat().st_size == 0]
+          if missing:
+              raise SystemExit("Incomplete audition package: " + ", ".join(missing))
+          provenance = json.loads(required[-1].read_text(encoding="utf-8"))
+          if provenance.get("review_video", {}).get("status") != "created":
+              raise SystemExit("Review MP4 is not confirmed as created.")
+          if int(provenance.get("candidate_count", 0)) < 1:
+              raise SystemExit("No Jazz Soul Beat candidates were included in the audition.")
+          print("PASS: sampler, index, README, animated MP4 and provenance are present.")
+          print("PASS: all assets remain private audition material; no rights approval or publication.")
+          PY
+
       - name: Confirm publication safety
         run: |
           echo "Review-library refresh only: no YouTube OAuth, no upload, no scheduling, no public publication, no paid service."
