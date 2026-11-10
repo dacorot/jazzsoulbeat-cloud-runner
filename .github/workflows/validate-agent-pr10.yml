@@ -2,7 +2,7 @@ name: Validate Jazz Soul Beat agent PR #11
 # Isolated synthetic fixture validates metadata gates, FFmpeg mixing and scene-aware animation; it is not production music.
 # Every run checks out the current private PR branch and logs its exact commit SHA. The synthetic fixture supplies explicit test-only metadata to exercise the production gate. The suite also exercises Ketsa policy-link validation and the isolated audition-pack guards. It also asserts license links and modification notices in per-track credits. Latest unit-test assertion wording has been aligned with the explicit failure message. Tracklist timestamps now subtract the shared crossfade duration. The first minute now uses YouTube-friendly zero-padded MM:SS timestamps. The review-pack command now optionally renders a private ambient-motion MP4 and provenance hashes. Provenance now records the exact private-agent and controller revisions.
 # Fixture audio is synthetic and test-only; it is never approved in the production library or uploaded.
-# The suite now also verifies prefix-scoped Drive restores used to avoid downloading old video archives for review-only jobs.
+# The suite now also verifies prefix-scoped Drive restores and early stopping in quality-ranked Ketsa discovery to avoid unnecessary downloads.
 
 on:
   push:
