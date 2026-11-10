@@ -73,7 +73,7 @@ jobs:
           JSB_AGENT_REVISION: ${{ steps.agent_revision.outputs.sha }}
         run: |
           python main.py download-ketsa --limit 40
-          python main.py build-ketsa-review-pack --seconds 25 --theme autumn --crossfade 4
+          python main.py build-ketsa-review-pack --seconds 60 --theme autumn --crossfade 8
           python - <<'PY'
           import csv
           from pathlib import Path
