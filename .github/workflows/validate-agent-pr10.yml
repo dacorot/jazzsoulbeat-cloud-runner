@@ -1,5 +1,5 @@
 name: Validate Jazz Soul Beat agent PR #11
-# Isolated CI fixture validates approved-track mixing, scene-aware animation and Ketsa quality-ranked intake.
+# Isolated CI fixture validates style-gated track approval, metadata-based curation, real mixing and scene-aware animation.
 # Fixture audio is synthetic and test-only; it is never approved in the production library or uploaded.
 
 on:
