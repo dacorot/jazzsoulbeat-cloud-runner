@@ -64,6 +64,9 @@ jobs:
 
       - name: Discover and download up to 40 best-matching Ketsa tracks
         working-directory: agent
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
           python main.py download-ketsa --limit 40
           python main.py build-ketsa-review-pack --seconds 25
