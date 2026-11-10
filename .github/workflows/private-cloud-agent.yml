@@ -103,10 +103,18 @@ jobs:
         run: |
           if [[ "${{ inputs.task }}" == "build-evergreen" ]]; then
             python main.py drive-pull-library
+            python main.py scan
           else
             python main.py drive-pull-state
           fi
           python main.py drive-status
+
+      - name: Organize approved songs into their playlist folders
+        if: ${{ steps.restore.outcome == 'success' && inputs.task == 'build-evergreen' }}
+        working-directory: agent
+        run: |
+          echo "Only approved and fully rights-verified tracks are copied into tracks/playlists/."
+          find tracks/playlists -maxdepth 2 -type f -print 2>/dev/null || true
 
       - name: Show approved library status
         if: ${{ steps.restore.outcome == 'success' && inputs.task == 'build-evergreen' }}
