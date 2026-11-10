@@ -56,12 +56,12 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
-      - name: Restore private review library from Google Drive
+      - name: Restore only existing Ketsa review audio from private Google Drive
         working-directory: agent
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
         run: |
-          python main.py drive-pull
+          python main.py drive-pull-ketsa-review
           python main.py drive-status
 
       - name: Discover and download up to 40 best-matching Ketsa tracks
