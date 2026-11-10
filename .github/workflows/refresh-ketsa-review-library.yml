@@ -33,8 +33,10 @@ jobs:
           persist-credentials: false
 
       - name: Record exact agent revision
+        id: agent_revision
         working-directory: agent
         run: |
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
           git rev-parse HEAD
           git log -1 --pretty=%s
 
@@ -67,6 +69,7 @@ jobs:
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          JSB_AGENT_REVISION: ${{ steps.agent_revision.outputs.sha }}
         run: |
           python main.py download-ketsa --limit 40
           python main.py build-ketsa-review-pack --seconds 25
