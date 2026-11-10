@@ -1,6 +1,6 @@
 name: Validate Jazz Soul Beat agent PR #11
 # Isolated synthetic fixture validates metadata gates, FFmpeg mixing and scene-aware animation; it is not production music.
-# Every run checks out the current private PR branch and logs its exact commit SHA.
+# Every run checks out the current private PR branch and logs its exact commit SHA. The synthetic fixture supplies explicit test-only metadata to exercise the production gate.
 # Fixture audio is synthetic and test-only; it is never approved in the production library or uploaded.
 
 on:
