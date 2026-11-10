@@ -1,5 +1,5 @@
 name: Validate Jazz Soul Beat agent PR #11
-# Isolated CI fixture validates style-gated track approval, metadata-based curation, real mixing and scene-aware animation.
+# Isolated synthetic fixture validates metadata gates, FFmpeg mixing and scene-aware animation; it is not production music.
 # Fixture audio is synthetic and test-only; it is never approved in the production library or uploaded.
 
 on:
@@ -89,18 +89,20 @@ jobs:
           c.execute("DELETE FROM tracks")
           c.execute(
               """INSERT INTO tracks(file,title,artist,license,source_url,approved,duration,
-                 rights_verified,license_url,collection,season)
-                 VALUES(?,?,?,?,?,?,?,?,?,?,?)""",
+                 rights_verified,license_url,collection,season,genre,instruments,mood,energy)
+                 VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
               (track, "CI TEST FIXTURE — NOT FOR RELEASE", "Jazz Soul Beat CI",
                "TEST ONLY", "https://example.invalid/ci-fixture", 1, 60.0, 1,
-               "https://creativecommons.org/licenses/by/4.0/", "evergreen", ""),
+               "https://creativecommons.org/licenses/by/4.0/", "evergreen", "",
+               "jazz (synthetic CI fixture only)", "synthetic sine tone; no real instruments",
+               "test fixture only", "test"),
           )
           c.commit()
           c.close()
           print("Inserted isolated synthetic CI fixture; no production rights are asserted.")
           PY
 
-      - name: Render short integration video through the real-track mix pipeline
+      - name: Render short integration video through the approved-track pipeline using an isolated synthetic fixture
         working-directory: agent
         env:
           JSB_BACKGROUND_IMAGE: validation-background.jpg
