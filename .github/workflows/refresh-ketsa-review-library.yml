@@ -1,5 +1,5 @@
 name: Refresh private Ketsa jazz-soul review library
-# Build the private timestamped audition sampler and animated review MP4 before Drive backup; Ketsa taxonomy tags enrich style, mood and instrument metadata; no approval or publication.
+# Build private autumn-specific audition: human-free seasonal scene, falling leaves, real 4s music crossfades, and provenance; no approval or publication.
 
 on:
   push:
@@ -73,7 +73,7 @@ jobs:
           JSB_AGENT_REVISION: ${{ steps.agent_revision.outputs.sha }}
         run: |
           python main.py download-ketsa --limit 40
-          python main.py build-ketsa-review-pack --seconds 25
+          python main.py build-ketsa-review-pack --seconds 25 --theme autumn --crossfade 4
           python - <<'PY'
           import csv
           from pathlib import Path
