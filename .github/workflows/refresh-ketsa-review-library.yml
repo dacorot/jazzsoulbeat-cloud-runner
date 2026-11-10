@@ -76,6 +76,16 @@ jobs:
           print(f"Candidates staged: {len(rows)}")
           for row in rows[:20]:
               print(f"{row.get('priority_score','0'):>3} | {row.get('title','')} | {row.get('genres','')[:110]}")
+          individual = [row for row in rows
+                        if row.get("intake_type") == "individual_track_candidate"
+                        and row.get("file") and "PENDING" in (row.get("review_status") or "").upper()]
+          duration = sum(float(row.get("duration_seconds") or 0) for row in individual)
+          with_instruments = sum(bool((row.get("instruments") or "").strip()) for row in individual)
+          rights_verified = sum((row.get("rights_verified") or "").strip().lower() == "yes" for row in individual)
+          print(f"Downloaded/present individual candidates: {len(individual)}")
+          print(f"Candidate source-audio duration: {duration/60:.1f} minutes")
+          print(f"Explicit instrument tags from Ketsa: {with_instruments}/{len(individual)}")
+          print(f"Candidates with full rights verification: {rights_verified}/{len(individual)}")
           print("All candidates remain pending; none is approved for publication.")
           PY
 
