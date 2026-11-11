@@ -144,4 +144,4 @@ jobs:
         run: |
           echo "Production render only: no YouTube credentials, upload, Google Drive restore, or Drive push."
 
-# Revalidate latest private-agent prompt correction: 3d5ed29adb7b0e340fe9bbdbfd389f6d00d84371
+# Revalidate current private-agent head f87c3cc5b9b97a4d0e91a44aea5761bda846187a after the new official-source catalog and audit modules.
