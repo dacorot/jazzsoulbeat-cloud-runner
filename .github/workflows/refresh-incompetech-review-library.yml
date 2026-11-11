@@ -1,4 +1,5 @@
 name: Refresh private Incompetech review library
+# Refresh trigger: expanded official Christmas and jazz candidates; all remain review-only.
 
 on:
   push:
@@ -12,7 +13,7 @@ permissions:
 
 concurrency:
   group: jazz-soul-beat-incompetech-review-refresh
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   refresh:
