@@ -17,7 +17,7 @@ permissions:
 
 concurrency:
   group: validate-jazzsoulbeat-quality-fix
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   validate:
@@ -53,11 +53,9 @@ jobs:
       - name: Verify preinstalled FFmpeg
         run: |
           command -v ffmpeg
-          ffmpeg -version | head -n 3
+          ffmpeg -version | head -n 2
           command -v ffprobe
           ffprobe -version | head -n 2
-          ffmpeg -version
-          ffprobe -version
 
       - name: Install dependencies
         working-directory: agent
