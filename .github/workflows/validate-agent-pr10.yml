@@ -50,10 +50,12 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install FFmpeg
+      - name: Verify preinstalled FFmpeg
         run: |
-          sudo apt-get update
-          sudo apt-get install --yes ffmpeg
+          command -v ffmpeg
+          ffmpeg -version | head -n 3
+          command -v ffprobe
+          ffprobe -version | head -n 2
           ffmpeg -version
           ffprobe -version
 
