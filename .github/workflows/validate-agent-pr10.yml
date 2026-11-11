@@ -155,4 +155,4 @@ jobs:
         run: |
           echo "Production render only: no YouTube credentials, upload, Google Drive restore, or Drive push."
 
-# Latest validation trigger: validate private-agent head f651bfaca8b4fa6da86f3e8465c89ffc32fd89a0; ensure Drive HTTP 308 resumable progress is handled correctly.
+# Latest validation trigger: validate current private-agent PR #11 head after the approved cinematic anime art-direction revision, optional environment-only scenes, and 24-second default equal-power crossfades. The review comparison remains private; this CI fixture is synthetic only.
