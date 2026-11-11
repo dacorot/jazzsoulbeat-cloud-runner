@@ -155,4 +155,4 @@ jobs:
         run: |
           echo "Production render only: no YouTube credentials, upload, Google Drive restore, or Drive push."
 
-# Trigger validation for PR #11 against private-agent head ee48d678ab8b90ad2ebda0dc2545a01c601ddc63; validate cached Ketsa manifest restore and anime-only audition README.
+# Trigger validation for PR #11 against private-agent head 80e96e4b0bfd4d4042adf4c6a5a3f56b79d6b239; verify expanded official Christmas catalog and pending-only review tests.
