@@ -11,6 +11,7 @@ on:
 
 permissions:
   contents: read
+  statuses: write
 
 concurrency:
   group: jazzsoulbeat-ketsa-library-refresh
@@ -89,4 +90,18 @@ jobs:
       - name: Confirm publication safety
         run: |
           echo "Review-library refresh only: no YouTube OAuth, no upload, no scheduling, no public publication, no paid service."
+
+      - name: Record Ketsa audit result on commit
+        if: always()
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESULT: ${{ job.status }}
+        run: |
+          state=success
+          if [ "$RESULT" != "success" ]; then state=failure; fi
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state="$state" \
+            -f context="Jazz Soul Beat / Ketsa audit" \
+            -f description="Ketsa audit workflow: $RESULT; rights approval flags untouched."
 \n\n# Refresh trigger: rerun audit after normalizing Ketsa's rotating download cache-buster; agent commit dd44368673b0a7e483b23933bd35a06f8f163cda.\n
