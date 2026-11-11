@@ -92,6 +92,11 @@ jobs:
           python main.py build-ketsa-review-pack --seconds 360 --theme evergreen --crossfade 18
           python -c 'import csv; from pathlib import Path; p=Path("output/ketsa_candidates.csv"); rows=list(csv.DictReader(p.open(newline="", encoding="utf-8-sig"))); individual=[r for r in rows if r.get("intake_type")=="individual_track_candidate" and r.get("file") and "PENDING" in (r.get("review_status") or "").upper()]; print(f"Cached candidates: {len(rows)}; pending individual tracks: {len(individual)}")'
 
+      - name: Audit Ketsa commercial license, track pages, exact audio hashes and audition list
+        timeout-minutes: 20
+        working-directory: agent
+        run: python rights_audit.py ketsa
+
       - name: Persist review-only candidates and receipts in private Google Drive
         working-directory: agent
         env:
