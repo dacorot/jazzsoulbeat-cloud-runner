@@ -69,6 +69,10 @@ jobs:
           test -s tracks/review/incompetech/download_receipt.json
           python -c 'import csv; from pathlib import Path; p=Path("output/incompetech_candidates.csv"); rows=list(csv.DictReader(p.open(newline="", encoding="utf-8-sig"))); holiday=[r for r in rows if "Holiday" in (r.get("genre") or "")]; pending=all("PENDING" in (r.get("review_status") or "").upper() for r in rows); print("Catalog candidates:", len(rows), "holiday candidates:", len(holiday), "all pending:", pending)'
 
+      - name: Audit Incompetech commercial license, catalog identity and audio hashes
+        working-directory: agent
+        run: python rights_audit.py incompetech
+
       - name: Persist candidate audio and source evidence to private Google Drive
         working-directory: agent
         env:
