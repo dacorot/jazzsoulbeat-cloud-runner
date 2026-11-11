@@ -1,7 +1,7 @@
 name: Refresh private Ketsa jazz-soul review library
 # Build the first eight eligible full-length candidate previews (over 3 minutes each, up to 6 minutes) with 18-second equal-power crossfades; normalize scene backgrounds and render 2560x1440 2K QHD; validate private-only package and exact rejected-output pruning.
 
-# Refresh trigger: rebuild the private Ketsa audition package against the latest agent head f5d5029af8bc4d23501ca4753e801ae9184e18da after loop and scene fixes.
+# Refresh trigger: rebuild the private Ketsa audition from the cached 60-track review library and source-audited candidate manifest; latest agent includes visual, loop and Drive timeout fixes.
 on:
   push:
     branches: [main]
@@ -14,7 +14,7 @@ permissions:
 
 concurrency:
   group: jazzsoulbeat-ketsa-library-refresh
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   refresh:
@@ -79,36 +79,18 @@ jobs:
           python main.py drive-pull-ketsa-review
           python main.py drive-status
 
-      - name: Discover and download up to 40 best-matching Ketsa tracks
+      - name: Rebuild the private audition from cached, source-audited Ketsa candidates
+        timeout-minutes: 25
         working-directory: agent
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           JSB_AGENT_REVISION: ${{ steps.agent_revision.outputs.sha }}
         run: |
-          python main.py download-ketsa --limit 40
-          python main.py build-ketsa-review-pack --seconds 360 --theme autumn --crossfade 18
-          python - <<'PY'
-          import csv
-          from pathlib import Path
-          path = Path("output/ketsa_candidates.csv")
-          with path.open(newline="", encoding="utf-8-sig") as handle:
-              rows = list(csv.DictReader(handle))
-          print(f"Candidates staged: {len(rows)}")
-          for row in rows[:20]:
-              print(f"{row.get('priority_score','0'):>3} | {row.get('title','')} | {row.get('genres','')[:110]}")
-          individual = [row for row in rows
-                        if row.get("intake_type") == "individual_track_candidate"
-                        and row.get("file") and "PENDING" in (row.get("review_status") or "").upper()]
-          duration = sum(float(row.get("duration_seconds") or 0) for row in individual)
-          with_instruments = sum(bool((row.get("instruments") or "").strip()) for row in individual)
-          rights_verified = sum((row.get("rights_verified") or "").strip().lower() == "yes" for row in individual)
-          print(f"Downloaded/present individual candidates: {len(individual)}")
-          print(f"Candidate source-audio duration: {duration/60:.1f} minutes")
-          print(f"Explicit instrument tags from Ketsa: {with_instruments}/{len(individual)}")
-          print(f"Candidates with full rights verification: {rights_verified}/{len(individual)}")
-          print("All candidates remain pending; none is approved for publication.")
-          PY
+          test -s output/ketsa_candidates.csv
+          test -d tracks/review/ketsa
+          python main.py build-ketsa-review-pack --seconds 360 --theme evergreen --crossfade 18
+          python -c 'import csv; from pathlib import Path; p=Path("output/ketsa_candidates.csv"); rows=list(csv.DictReader(p.open(newline="", encoding="utf-8-sig"))); individual=[r for r in rows if r.get("intake_type")=="individual_track_candidate" and r.get("file") and "PENDING" in (r.get("review_status") or "").upper()]; print(f"Cached candidates: {len(rows)}; pending individual tracks: {len(individual)}")'
 
       - name: Persist review-only candidates and receipts in private Google Drive
         working-directory: agent
