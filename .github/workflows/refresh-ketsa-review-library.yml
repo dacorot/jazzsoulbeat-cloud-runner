@@ -47,24 +47,6 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install FFmpeg for private audition sampler
-        timeout-minutes: 12
-        run: |
-          set -euo pipefail
-          if ! command -v ffmpeg >/dev/null 2>&1 || ! command -v ffprobe >/dev/null 2>&1; then
-            python -m pip install --disable-pip-version-check ffmpeg-downloader==0.5.3
-            python -m ffmpeg_downloader install @gpl
-            FFMPEG_BIN_DIR="$(python -c 'import ffmpeg_downloader as f; from pathlib import Path; p=Path(f.ffmpeg_path); q=Path(f.ffprobe_path); assert p.is_file(), p; assert q.is_file(), q; print(p.parent)')"
-            echo "$FFMPEG_BIN_DIR" >> "$GITHUB_PATH"
-            echo "Verified FFmpeg directory: $FFMPEG_BIN_DIR"
-          else
-            echo "Using FFmpeg already present on the GitHub-hosted runner."
-          fi
-          command -v ffmpeg
-          ffmpeg -version | head -n 2
-          command -v ffprobe
-          ffprobe -version | head -n 2
-
       - name: Install dependencies
         working-directory: agent
         run: |
@@ -79,20 +61,12 @@ jobs:
           python main.py drive-pull-ketsa-review
           python main.py drive-status
 
-      - name: Rebuild the private audition from cached, source-audited Ketsa candidates
-        timeout-minutes: 25
-        working-directory: agent
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          JSB_AGENT_REVISION: ${{ steps.agent_revision.outputs.sha }}
-        run: |
-          test -s output/ketsa_candidates.csv
-          test -d tracks/review/ketsa
-          python main.py build-ketsa-review-pack --seconds 360 --theme evergreen --crossfade 18
-          python -c 'import csv; from pathlib import Path; p=Path("output/ketsa_candidates.csv"); rows=list(csv.DictReader(p.open(newline="", encoding="utf-8-sig"))); individual=[r for r in rows if r.get("intake_type")=="individual_track_candidate" and r.get("file") and "PENDING" in (r.get("review_status") or "").upper()]; print(f"Cached candidates: {len(rows)}; pending individual tracks: {len(individual)}")'
-
       - name: Audit Ketsa commercial license, track pages, exact audio hashes and audition list
+        timeout-minutes: 20
+        working-directory: agent
+        run: python rights_audit.py ketsa
+
+      - name: Audit Ketsa commercial license, track pages, exact audio hashes and audition shortlist
         timeout-minutes: 20
         working-directory: agent
         run: python rights_audit.py ketsa
@@ -105,31 +79,14 @@ jobs:
           python main.py drive-push
           python main.py drive-status
 
-      - name: Require complete private audition package
+      - name: Require complete Ketsa rights audit
         working-directory: agent
         run: |
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          root = Path("output/ketsa-review")
-          required = (
-              root / "KETSA_CANDIDATE_AUDITION.mp3",
-              root / "KETSA_AUDITION_INDEX.csv",
-              root / "KETSA_AUDITION_README.txt",
-              root / "KETSA_CANDIDATE_AUDITION_REVIEW_ONLY.mp4",
-              root / "KETSA_AUDITION_VIDEO_PROVENANCE.json",
-          )
-          missing = [str(path) for path in required if not path.is_file() or path.stat().st_size == 0]
-          if missing:
-              raise SystemExit("Incomplete audition package: " + ", ".join(missing))
-          provenance = json.loads(required[-1].read_text(encoding="utf-8"))
-          if provenance.get("review_video", {}).get("status") != "created":
-              raise SystemExit("Review MP4 is not confirmed as created.")
-          if int(provenance.get("candidate_count", 0)) < 1:
-              raise SystemExit("No Jazz Soul Beat candidates were included in the audition.")
-          print("PASS: sampler, index, README, animated MP4 and provenance are present.")
-          print("PASS: all assets remain private audition material; no rights approval or publication.")
-          PY
+          test -s output/ketsa-review/KETSA_RIGHTS_AUDIT.csv
+          test -s output/ketsa-review/KETSA_AUDITION_RIGHTS.csv
+          test -s output/ketsa-review/KETSA_RIGHTS_EVIDENCE.json
+          echo "PASS: Ketsa license, track-page, file-provenance and audition-shortlist reports are present."
+          echo "PASS: no rights approval, library mutation or public publication was performed."
 
       - name: Confirm publication safety
         run: |
