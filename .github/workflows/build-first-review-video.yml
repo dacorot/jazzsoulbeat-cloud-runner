@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: jazz-soul-beat-first-private-review-build-ffmpeg-portable-v8
+  group: jazz-soul-beat-first-private-review-build-ffmpeg-portable-v9
   cancel-in-progress: false
 
 jobs:
@@ -74,11 +74,12 @@ jobs:
           python -m unittest discover -s tests -v
 
       - name: Restore the approved music library and private project state
+        timeout-minutes: 15
         working-directory: agent
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
         run: |
-          python main.py drive-pull
+          python main.py drive-pull-library
           python main.py drive-status
           python main.py library-status
 
