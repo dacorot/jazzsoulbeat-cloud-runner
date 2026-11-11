@@ -146,4 +146,4 @@ jobs:
         run: |
           echo "Production render only: no YouTube credentials, upload, Google Drive restore, or Drive push."
 
-# Trigger validation for PR #11 private-agent branch after the ambient-cycle test correction (latest commit 7927a9a6717a9e8275ffec69ec73f097f73ddcfe).
+# Trigger validation for PR #11 against current private-agent head 9e0185ca643e2a381851b1fd0025446560fd83cf; synthetic fixture only.
