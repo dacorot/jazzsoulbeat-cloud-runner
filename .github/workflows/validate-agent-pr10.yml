@@ -155,4 +155,4 @@ jobs:
         run: |
           echo "Production render only: no YouTube credentials, upload, Google Drive restore, or Drive push."
 
-# Trigger validation for PR #11 against private-agent head 80e96e4b0bfd4d4042adf4c6a5a3f56b79d6b239; verify expanded official Christmas catalog and pending-only review tests.
+# Latest validation trigger: check the exact private-agent revision 7443e7fdd846f3afdf3221821d9a30184a6536c5 after removing scene-incompatible overlays.
