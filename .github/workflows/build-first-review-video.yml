@@ -134,3 +134,5 @@ jobs:
           echo "The review package is stored only in the private Google Drive agent folder."
 
 # Refresh trigger: run against private-agent head 80e96e4b0bfd4d4042adf4c6a5a3f56b79d6b239; FFmpeg is installed through the pinned Python downloader when not preinstalled.
+
+# Refresh trigger: build review package against latest private-agent head 7443e7fdd846f3afdf3221821d9a30184a6536c5.
