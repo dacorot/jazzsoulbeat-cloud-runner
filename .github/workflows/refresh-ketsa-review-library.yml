@@ -1,7 +1,7 @@
 name: Refresh private Ketsa jazz-soul review library
 # Build the first eight eligible full-length candidate previews (over 3 minutes each, up to 6 minutes) with 18-second equal-power crossfades; normalize scene backgrounds and render 2560x1440 2K QHD; validate private-only package and exact rejected-output pruning.
 
-# Refresh trigger: rerun against the latest private-agent branch head after anime prompt length and regression-test fixes.
+# Refresh trigger: rebuild the private Ketsa audition package against the latest agent branch and portable FFmpeg setup.
 on:
   push:
     branches: [main]
@@ -48,9 +48,22 @@ jobs:
           python-version: "3.11"
 
       - name: Install FFmpeg for private audition sampler
+        timeout-minutes: 12
         run: |
-          sudo apt-get update
-          sudo apt-get install --yes ffmpeg
+          set -euo pipefail
+          if ! command -v ffmpeg >/dev/null 2>&1 || ! command -v ffprobe >/dev/null 2>&1; then
+            python -m pip install --disable-pip-version-check ffmpeg-downloader==0.5.3
+            python -m ffmpeg_downloader install @gpl
+            FFMPEG_BIN_DIR="$(python -c 'import ffmpeg_downloader as f; from pathlib import Path; p=Path(f.ffmpeg_path); q=Path(f.ffprobe_path); assert p.is_file(), p; assert q.is_file(), q; print(p.parent)')"
+            echo "$FFMPEG_BIN_DIR" >> "$GITHUB_PATH"
+            echo "Verified FFmpeg directory: $FFMPEG_BIN_DIR"
+          else
+            echo "Using FFmpeg already present on the GitHub-hosted runner."
+          fi
+          command -v ffmpeg
+          ffmpeg -version | head -n 2
+          command -v ffprobe
+          ffprobe -version | head -n 2
 
       - name: Install dependencies
         working-directory: agent
