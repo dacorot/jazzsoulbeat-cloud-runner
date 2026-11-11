@@ -155,4 +155,4 @@ jobs:
         run: |
           echo "Production render only: no YouTube credentials, upload, Google Drive restore, or Drive push."
 
-# Latest validation trigger: validate private-agent head c338276d23f992040fbb25664f6e524582a17e63 with small-file multipart Drive uploads and resumable redirect retry.
+# Latest validation trigger: validate private-agent head f651bfaca8b4fa6da86f3e8465c89ffc32fd89a0; ensure Drive HTTP 308 resumable progress is handled correctly.
