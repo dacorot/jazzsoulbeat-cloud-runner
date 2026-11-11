@@ -1,5 +1,5 @@
 name: Refresh private Ketsa jazz-soul review library
-# Build 60-second excerpts with 8-second groove-matched crossfades; normalize scene backgrounds and render all preview video at 2560x1440 2K QHD; validate private-only package and exact rejected-output pruning.
+# Build up to eight full-length candidate previews (over 3 minutes each, up to 6 minutes) with 18-second equal-power crossfades; normalize scene backgrounds and render 2560x1440 2K QHD; validate private-only package and exact rejected-output pruning.
 
 on:
   push:
@@ -73,7 +73,7 @@ jobs:
           JSB_AGENT_REVISION: ${{ steps.agent_revision.outputs.sha }}
         run: |
           python main.py download-ketsa --limit 40
-          python main.py build-ketsa-review-pack --seconds 60 --theme autumn --crossfade 8
+          python main.py build-ketsa-review-pack --seconds 360 --theme autumn --crossfade 18
           python - <<'PY'
           import csv
           from pathlib import Path
