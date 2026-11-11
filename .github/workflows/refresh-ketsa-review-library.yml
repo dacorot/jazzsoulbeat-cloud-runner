@@ -107,3 +107,5 @@ jobs:
 
 
 # Refresh trigger: corrected audit uses stable Ketsa download IDs and records a commit status.
+
+# Trigger corrected stable-download-ID Ketsa rights audit after the audit-code fix.
