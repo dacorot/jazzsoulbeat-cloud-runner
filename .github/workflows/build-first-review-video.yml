@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: jazz-soul-beat-first-private-review-build-ffmpeg-portable-v5
+  group: jazz-soul-beat-first-private-review-build-ffmpeg-portable-v6
   cancel-in-progress: false
 
 jobs:
@@ -49,7 +49,7 @@ jobs:
           set -euo pipefail
           if ! command -v ffmpeg >/dev/null 2>&1 || ! command -v ffprobe >/dev/null 2>&1; then
             python -m pip install --disable-pip-version-check ffmpeg-downloader==0.5.3
-            python -m ffmpeg_downloader install 8.1.1.post2@gpl
+            python -m ffmpeg_downloader install @gpl
             FFMPEG_BIN_DIR="$(python -c 'import ffmpeg_downloader as f; from pathlib import Path; p=Path(f.ffmpeg_path); q=Path(f.ffprobe_path); assert p.is_file(), p; assert q.is_file(), q; print(p.parent)')"
             echo "$FFMPEG_BIN_DIR" >> "$GITHUB_PATH"
             echo "Verified FFmpeg directory: $FFMPEG_BIN_DIR"
