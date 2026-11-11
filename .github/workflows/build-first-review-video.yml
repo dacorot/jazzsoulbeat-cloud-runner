@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: jazz-soul-beat-first-private-review-build-ffmpeg-portable-v6
+  group: jazz-soul-beat-first-private-review-build-ffmpeg-portable-v7
   cancel-in-progress: false
 
 jobs:
