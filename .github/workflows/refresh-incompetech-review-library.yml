@@ -1,5 +1,5 @@
 name: Refresh private Incompetech review library
-# Refresh trigger: retry private Incompetech candidate persistence with bounded resumable Drive uploads; include expanded 43-track holiday and jazz catalog.
+# Refresh trigger: use the latest private-agent Drive multipart/resumable retry fix while staging all 43 official jazz and holiday tracks.
 
 on:
   push:
