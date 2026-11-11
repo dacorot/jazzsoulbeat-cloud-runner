@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: read
+  statuses: write
 
 concurrency:
   group: jazzsoulbeat-drive-reference-folders
@@ -43,6 +44,7 @@ jobs:
           python -m pip install -r requirements.txt
 
       - name: Create or reuse reference folders in private Drive
+        id: create_folders
         working-directory: agent
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
@@ -50,3 +52,17 @@ jobs:
 
       - name: Confirm private-only operation
         run: echo "Folders created or reused inside the existing private Jazz Soul Beat Drive storage. No sharing or publication changed."
+
+      - name: Record folder setup result on commit
+        if: always()
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESULT: ${{ job.status }}
+        run: |
+          state=success
+          if [ "$RESULT" != "success" ]; then state=failure; fi
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state="$state" \
+            -f context="Jazz Soul Beat / reference folders" \
+            -f description="Private Drive folder setup: $RESULT; sharing unchanged."
