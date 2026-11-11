@@ -1,7 +1,7 @@
 name: Refresh private Ketsa jazz-soul review library
 # Build the first eight eligible full-length candidate previews (over 3 minutes each, up to 6 minutes) with 18-second equal-power crossfades; normalize scene backgrounds and render 2560x1440 2K QHD; validate private-only package and exact rejected-output pruning.
 
-# Refresh trigger: rebuild the private Ketsa audition package against the latest agent branch and portable FFmpeg setup.
+# Refresh trigger: rebuild the private Ketsa audition package against the latest agent head f5d5029af8bc4d23501ca4753e801ae9184e18da after loop and scene fixes.
 on:
   push:
     branches: [main]
