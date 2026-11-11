@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: jazz-soul-beat-first-private-review-build-ffmpeg-fix
+  group: jazz-soul-beat-first-private-review-build-ffmpeg-fix-v3
   cancel-in-progress: false
 
 jobs:
@@ -48,9 +48,12 @@ jobs:
         run: |
           set -euo pipefail
           if ! command -v ffmpeg >/dev/null 2>&1 || ! command -v ffprobe >/dev/null 2>&1; then
-            echo "FFmpeg is not preinstalled; installing from Ubuntu repositories."
-            timeout 8m sudo apt-get update -o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30
-            timeout 4m sudo apt-get install --yes --no-install-recommends ffmpeg
+            echo "FFmpeg is not preinstalled; trying the runner's cached Ubuntu package index first."
+            if ! timeout 3m sudo apt-get install --yes --no-install-recommends ffmpeg; then
+              echo "Cached package index unavailable; refreshing it with bounded retries."
+              timeout 5m sudo apt-get update -o Acquire::Retries=2 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20
+              timeout 4m sudo apt-get install --yes --no-install-recommends ffmpeg
+            fi
           else
             echo "Using FFmpeg already present on the GitHub-hosted runner."
           fi
