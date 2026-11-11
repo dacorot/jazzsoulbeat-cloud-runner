@@ -57,19 +57,9 @@ jobs:
           if ! command -v ffmpeg >/dev/null 2>&1 || ! command -v ffprobe >/dev/null 2>&1; then
             python -m pip install --disable-pip-version-check ffmpeg-downloader==0.5.3
             python -m ffmpeg_downloader install 8.1.1.post2@gpl
-            python - <<'PY'
-            import os
-            from pathlib import Path
-            import ffmpeg_downloader as ffdl
-            ffmpeg = Path(ffdl.ffmpeg_path)
-            ffprobe = Path(ffdl.ffprobe_path)
-            assert ffmpeg.is_file(), ffmpeg
-            assert ffprobe.is_file(), ffprobe
-            with open(os.environ["GITHUB_PATH"], "a", encoding="utf-8") as path_file:
-                path_file.write(str(ffmpeg.parent) + "\n")
-            print(f"Verified FFmpeg: {ffmpeg}")
-            print(f"Verified FFprobe: {ffprobe}")
-            PY
+            FFMPEG_BIN_DIR="$(python -c 'import ffmpeg_downloader as f; from pathlib import Path; p=Path(f.ffmpeg_path); q=Path(f.ffprobe_path); assert p.is_file(), p; assert q.is_file(), q; print(p.parent)')"
+            echo "$FFMPEG_BIN_DIR" >> "$GITHUB_PATH"
+            echo "Verified FFmpeg directory: $FFMPEG_BIN_DIR"
           else
             echo "Using FFmpeg already present on the GitHub-hosted runner."
           fi
@@ -165,4 +155,4 @@ jobs:
         run: |
           echo "Production render only: no YouTube credentials, upload, Google Drive restore, or Drive push."
 
-# Trigger validation for PR #11 against private-agent head e2c3fc49e653a91f602bbafe111dfd1f39d44983; portable FFmpeg build; synthetic fixture only.
+# Trigger validation for PR #11 against private-agent head e2c3fc49e653a91f602bbafe111dfd1f39d44983; portable FFmpeg setup syntax fix; synthetic fixture only.
