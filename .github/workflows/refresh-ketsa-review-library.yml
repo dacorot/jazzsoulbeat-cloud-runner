@@ -89,3 +89,4 @@ jobs:
       - name: Confirm publication safety
         run: |
           echo "Review-library refresh only: no YouTube OAuth, no upload, no scheduling, no public publication, no paid service."
+\n\n# Refresh trigger: rerun audit after normalizing Ketsa's rotating download cache-buster; agent commit dd44368673b0a7e483b23933bd35a06f8f163cda.\n
