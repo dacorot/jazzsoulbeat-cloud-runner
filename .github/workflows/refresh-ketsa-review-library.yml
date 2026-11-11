@@ -104,4 +104,6 @@ jobs:
             -f state="$state" \
             -f context="Jazz Soul Beat / Ketsa audit" \
             -f description="Ketsa audit workflow: $RESULT; rights approval flags untouched."
-\n\n# Refresh trigger: rerun audit after normalizing Ketsa's rotating download cache-buster; agent commit dd44368673b0a7e483b23933bd35a06f8f163cda.\n
+
+
+# Refresh trigger: corrected audit uses stable Ketsa download IDs and records a commit status.
