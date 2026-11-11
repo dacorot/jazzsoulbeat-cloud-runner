@@ -61,15 +61,13 @@ jobs:
           python main.py drive-pull-ketsa-review
           python main.py drive-status
 
-      - name: Audit Ketsa commercial license, track pages, exact audio hashes and audition list
-        timeout-minutes: 20
+      - name: Rebuild official Ketsa candidate list and reuse or download exact review files
+        timeout-minutes: 45
         working-directory: agent
-        run: python rights_audit.py ketsa
-
-      - name: Audit Ketsa commercial license, track pages, exact audio hashes and audition shortlist
-        timeout-minutes: 20
-        working-directory: agent
-        run: python rights_audit.py ketsa
+        run: |
+          python main.py download-ketsa --limit 40
+          python -c 'import csv; from pathlib import Path; p=Path("output/ketsa_candidates.csv"); rows=list(csv.DictReader(p.open(newline="", encoding="utf-8-sig"))); print("Ketsa candidates:", len(rows)); assert len(rows) > 0; assert all(r.get("source_url") and r.get("download_url") for r in rows)'
+          python rights_audit.py ketsa
 
       - name: Persist review-only candidates and receipts in private Google Drive
         working-directory: agent
