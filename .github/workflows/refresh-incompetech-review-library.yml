@@ -57,6 +57,7 @@ jobs:
         timeout-minutes: 15
         working-directory: agent
         run: |
+          python main.py discover-incompetech
           python main.py audit-incompetech-sources
           python main.py audit-incompetech-track-pages
           python main.py download-incompetech
