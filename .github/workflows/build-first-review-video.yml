@@ -101,9 +101,9 @@ jobs:
           video = next(s for s in streams if s["codec_type"] == "video")
           audio = next(s for s in streams if s["codec_type"] == "audio")
           assert 3590 <= duration <= 3610, duration
-          assert video["codec_name"] == "h264" and (video["width"], video["height"]) == (1920, 1080), video
+          assert video["codec_name"] == "h264" and (video["width"], video["height"]) == (2560, 1440), video
           assert audio["codec_name"] == "aac" and audio["channels"] == 2, audio
-          print(f"PASS: {duration:.2f}s | H.264 1920x1080 | AAC stereo | {data['format']['size']} bytes")
+          print(f"PASS: {duration:.2f}s | H.264 2560x1440 QHD | AAC stereo | {data['format']['size']} bytes")
           PY
           echo "Review package: $RUN_DIR"
           find "$RUN_DIR" -maxdepth 1 -type f -printf '%f %s bytes\n' | sort
