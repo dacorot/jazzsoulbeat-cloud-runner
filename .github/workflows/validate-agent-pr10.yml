@@ -155,4 +155,4 @@ jobs:
         run: |
           echo "Production render only: no YouTube credentials, upload, Google Drive restore, or Drive push."
 
-# Latest validation trigger: validate current private-agent PR #11 head after the approved cinematic anime art-direction revision, optional environment-only scenes, and 24-second default equal-power crossfades. The review comparison remains private; this CI fixture is synthetic only.
+# Latest validation trigger: rerun complete unit and synthetic integration suite after aligning visual prompt assertions, crossfade timestamps and exact-duration expectations with the 24-second default. No real candidate audio or publication is used.
