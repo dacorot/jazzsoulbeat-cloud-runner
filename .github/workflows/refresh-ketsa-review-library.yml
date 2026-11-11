@@ -1,7 +1,7 @@
 name: Refresh private Ketsa jazz-soul review library
 # Build the first eight eligible full-length candidate previews (over 3 minutes each, up to 6 minutes) with 18-second equal-power crossfades; normalize scene backgrounds and render 2560x1440 2K QHD; validate private-only package and exact rejected-output pruning.
 
-# Refresh trigger: rebuild cached Ketsa audition with the Drive HTTP 308 resumable-progress fix, multipart small uploads and mature anime guidance.
+# Refresh trigger: rebuild cached Ketsa audition and expose track-level audit diagnostics from the private agent.
 on:
   push:
     branches: [main]
