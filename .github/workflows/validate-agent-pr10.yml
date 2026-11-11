@@ -143,3 +143,5 @@ jobs:
       - name: Confirm no publishing or Drive writes
         run: |
           echo "Production render only: no YouTube credentials, upload, Google Drive restore, or Drive push."
+
+# Revalidate latest private-agent prompt correction: 3d5ed29adb7b0e340fe9bbdbfd389f6d00d84371
