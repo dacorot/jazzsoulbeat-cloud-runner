@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: jazz-soul-beat-first-private-review-build-ffmpeg-fix-v3
+  group: jazz-soul-beat-first-private-review-build-ffmpeg-portable-v4
   cancel-in-progress: false
 
 jobs:
@@ -48,12 +48,21 @@ jobs:
         run: |
           set -euo pipefail
           if ! command -v ffmpeg >/dev/null 2>&1 || ! command -v ffprobe >/dev/null 2>&1; then
-            echo "FFmpeg is not preinstalled; trying the runner's cached Ubuntu package index first."
-            if ! timeout 3m sudo apt-get install --yes --no-install-recommends ffmpeg; then
-              echo "Cached package index unavailable; refreshing it with bounded retries."
-              timeout 5m sudo apt-get update -o Acquire::Retries=2 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20
-              timeout 4m sudo apt-get install --yes --no-install-recommends ffmpeg
-            fi
+            python -m pip install --disable-pip-version-check ffmpeg-downloader==0.5.3
+            python -m ffmpeg_downloader install 8.1.1.post2@gpl
+            python - <<'PY'
+            import os
+            from pathlib import Path
+            import ffmpeg_downloader as ffdl
+            ffmpeg = Path(ffdl.ffmpeg_path)
+            ffprobe = Path(ffdl.ffprobe_path)
+            assert ffmpeg.is_file(), ffmpeg
+            assert ffprobe.is_file(), ffprobe
+            with open(os.environ["GITHUB_PATH"], "a", encoding="utf-8") as path_file:
+                path_file.write(str(ffmpeg.parent) + "\\n")
+            print(f"Verified FFmpeg: {ffmpeg}")
+            print(f"Verified FFprobe: {ffprobe}")
+            PY
           else
             echo "Using FFmpeg already present on the GitHub-hosted runner."
           fi
