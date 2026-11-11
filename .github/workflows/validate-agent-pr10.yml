@@ -66,7 +66,7 @@ jobs:
             assert ffmpeg.is_file(), ffmpeg
             assert ffprobe.is_file(), ffprobe
             with open(os.environ["GITHUB_PATH"], "a", encoding="utf-8") as path_file:
-                path_file.write(str(ffmpeg.parent) + "\\n")
+                path_file.write(str(ffmpeg.parent) + "\n")
             print(f"Verified FFmpeg: {ffmpeg}")
             print(f"Verified FFprobe: {ffprobe}")
             PY
