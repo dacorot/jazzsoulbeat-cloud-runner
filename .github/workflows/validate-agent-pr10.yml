@@ -156,4 +156,4 @@ jobs:
         run: |
           echo "Production render only: no YouTube credentials, upload, Google Drive restore, or Drive push."
 
-# Trigger validation for PR #11 against private-agent head fdb6e0af7694fd6beaede4774fe591443a68c486-retry; synthetic fixture only.
+# Trigger validation for PR #11 against private-agent head e2c3fc49e653a91f602bbafe111dfd1f39d44983; synthetic fixture only.
