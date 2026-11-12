@@ -51,6 +51,7 @@ jobs:
           roots = [
               ("user_shared_reference_folder", "19Ujsr_XC2ZDlDegrmDwKwfczM4wvIHcO"),
               ("user_shared_secondary_folder", "17sZt8cCTGIDOnjuYp9soPqC_rA5apZcV"),
+              ("private_agent_storage_root", store.ensure_folder()),
           ]
           q = "name = 'JAZZ SOUL BEAT – BIBLIOTECA DE REFERENCIAS' and mimeType = 'application/vnd.google-apps.folder' and trashed = false"
           found = service.files().list(q=q, spaces="drive", pageSize=20,
@@ -88,12 +89,12 @@ jobs:
               except Exception as exc:
                   inventory.append({"audit_root": label, "id": folder_id, "error": str(exc)})
 
-          # Also search recent user-uploaded images across Drive, excluding agent-managed assets.
+          # Also search recent user-uploaded files across Drive, excluding agent-managed assets.
           recent = []
           token = None
           while True:
               page = service.files().list(
-                  q="mimeType contains 'image/' and trashed = false and modifiedTime > '2026-11-01T00:00:00'",
+                  q="trashed = false and modifiedTime > '2026-11-01T00:00:00'",
                   spaces="drive", pageSize=100, pageToken=token, orderBy="modifiedTime desc",
                   fields="nextPageToken,files(id,name,mimeType,size,modifiedTime,webViewLink,description,originalFilename,parents,appProperties,owners(displayName,emailAddress))",
                   supportsAllDrives=True, includeItemsFromAllDrives=True, corpora="allDrives").execute()
@@ -101,7 +102,7 @@ jobs:
                   if (item.get("appProperties") or {}).get("agent") == "jazz-soul-beat":
                       continue
                   item["audit_root"] = "recent_user_uploads"
-                  item["parent_folder_name"] = "Recent Drive images (read-only search)"
+                  item["parent_folder_name"] = "Recent Drive files (read-only search)"
                   recent.append(item)
               token = page.get("nextPageToken")
               if not token:
