@@ -160,8 +160,9 @@ jobs:
               writer = csv.DictWriter(handle, fieldnames=fields)
               writer.writeheader()
               writer.writerows(master)
-          # Build a long-track priority queue without approving any candidate.
-          priority_fields = fields + ["previous_user_selection", "selection_order", "triage_priority", "duplicate_title_artist_key"]
+          # Build a priority queue for long candidates AND every previously selected track,
+          # even when duration metadata is missing. Missing duration is an intake task, not exclusion.
+          priority_fields = fields + ["previous_user_selection", "selection_order", "triage_priority", "duplicate_title_artist_key", "duration_triage"]
           selected_order = {
               "thatsfabulous": 1,
               "neverheard": 2,
@@ -172,38 +173,49 @@ jobs:
           def title_key(value):
               return "".join(char for char in str(value).casefold() if char.isalnum())
           source_rank = {"incompetech": 1, "ketsa": 2, "commons": 3, "ccmixter": 4, "internet_archive": 5}
-          long_tracks = [
+          priority_tracks = [
               row for row in master
-              if row["duration_seconds"]
-              and float(row["duration_seconds"]) > 180
-              and row["source_url"]
+              if row["source_url"]
               and row["license_url"]
+              and (
+                  (row["duration_seconds"] and float(row["duration_seconds"]) > 180)
+                  or title_key(row["title"]) in selected_order
+              )
           ]
-          long_tracks.sort(key=lambda row: (
+          priority_tracks.sort(key=lambda row: (
               selected_order.get(title_key(row["title"]), 99),
               source_rank.get(row["source_catalog"].casefold(), 9),
               row["title"].casefold(),
               row["artist"].casefold(),
           ))
           seen_keys = set()
-          for row in long_tracks:
+          for row in priority_tracks:
               key = (row["title"].strip().casefold(), row["artist"].strip().casefold())
               row["duplicate_title_artist_key"] = "yes" if key in seen_keys else "no"
               seen_keys.add(key)
               order = selected_order.get(title_key(row["title"]))
               row["previous_user_selection"] = "yes" if order is not None else "no"
               row["selection_order"] = str(order or "")
-              row["triage_priority"] = {
+              row["duration_triage"] = (
+                  "KNOWN — over 180 seconds; verify actual audio"
+                  if row["duration_seconds"] and float(row["duration_seconds"]) > 180
+                  else "MISSING — verify exact audio duration before production"
+              )
+              base_priority = {
                   "incompetech": "P1 — official creator catalogue; inspect exact item and attribution",
                   "ketsa": "P1 — official creator catalogue; inspect exact item and attribution",
                   "commons": "P2 — inspect file page, uploader authority and license",
                   "ccmixter": "P2 — inspect sample declarations and uploader grant",
                   "internet_archive": "P3 — inspect uploader authority and full rights chain",
               }.get(row["source_catalog"].casefold(), "P3 — manual source and rights review")
+              row["triage_priority"] = (
+                  "P0 — previously user-selected; resolve duration and rights first; " + base_priority
+                  if order is not None else base_priority
+              )
           with (root / "MUSIC_PRIORITY_REVIEW.csv").open("w", newline="", encoding="utf-8-sig") as handle:
               writer = csv.DictWriter(handle, fieldnames=priority_fields)
               writer.writeheader()
-              writer.writerows(long_tracks)
+              writer.writerows(priority_tracks)
           lines = [
               "# Jazz Soul Beat — music discovery",
               "",
@@ -229,9 +241,9 @@ jobs:
               f"Rows with parseable duration: {len(valid_durations)}",
               f"Rows missing/unparseable duration: {len(master) - len(valid_durations)}",
               f"Rows longer than 180 seconds (metadata only): {sum(value > 180 for value in valid_durations)}",
-              f"Priority review rows (>180s, source and license URL present): {len(long_tracks)}",
-              f"Previously user-selected Ketsa titles found in priority queue: {sum(row['previous_user_selection'] == 'yes' for row in long_tracks)} of 5",
-              f"Repeated title/artist keys within priority review: {sum(row['duplicate_title_artist_key'] == 'yes' for row in long_tracks)}",
+              f"Priority review rows (>180s, source and license URL present): {len(priority_tracks)}",
+              f"Previously user-selected Ketsa titles found in priority queue: {sum(row['previous_user_selection'] == 'yes' for row in priority_tracks)} of 5",
+              f"Repeated title/artist keys within priority review: {sum(row['duplicate_title_artist_key'] == 'yes' for row in priority_tracks)}",
               f"Unique title/artist keys: {len(unique_track_keys)}",
               "",
               "Duration and duplicate counts are metadata triage only. They do not verify that a file is a complete music track or that its rights chain is valid.",
