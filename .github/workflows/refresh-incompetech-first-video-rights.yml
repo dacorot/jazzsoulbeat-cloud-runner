@@ -88,6 +88,16 @@ jobs:
           provenance["youtube_upload"] = "not attempted"
           provenance["drive_visibility"] = "private"
           provenance_path.write_text(json.dumps(provenance, ensure_ascii=False, indent=2), encoding="utf-8")
+          manifest_path = out / "first-video-review" / "MUSIC_SOURCE_REVIEW_ONLY.txt"
+          manifest = manifest_path.read_text(encoding="utf-8")
+          rights_note = (
+              "RIGHTS REVIEW NOTE: The current official FAQ states CC BY 4.0 and monetized YouTube use with attribution. "
+              "The older copyright page still links to CC BY 3.0 US, while the agent section identifies the creator but does not state the license version. "
+              "This version discrepancy is flagged for human review. No track is approved and rights_verified remains no."
+          )
+          if rights_note not in manifest:
+              manifest = manifest.rstrip() + "\\n\\n" + rights_note + "\\n"
+              manifest_path.write_text(manifest, encoding="utf-8")
           assert len(provenance["tracks"]) == 16
           assert provenance["rights_verified_count"] == 0
           assert all(track["rights_verified"] == "no" for track in provenance["tracks"])
