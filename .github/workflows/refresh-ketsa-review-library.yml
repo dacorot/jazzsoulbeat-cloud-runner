@@ -3,6 +3,9 @@ name: Refresh private Ketsa jazz-soul review library
 
 # Refresh trigger: rebuild cached Ketsa audition and expose track-level audit diagnostics from the private agent.
 on:
+  push:
+    paths:
+      - ".run-ketsa-review-batch"
   schedule:
     - cron: "30 12 1 * *"
   workflow_dispatch:
@@ -46,11 +49,13 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
+      - name: Install dependencies and validate the complete agent test suite
         working-directory: agent
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
+          python -m compileall -q .
+          python -m unittest discover -s tests -v
 
       - name: Restore only existing Ketsa review audio from private Google Drive
         working-directory: agent
@@ -64,8 +69,9 @@ jobs:
         timeout-minutes: 45
         working-directory: agent
         run: |
-          python main.py download-ketsa --limit 40
-          python -c 'import csv; from pathlib import Path; p=Path("output/ketsa_candidates.csv"); rows=list(csv.DictReader(p.open(newline="", encoding="utf-8-sig"))); print("Ketsa candidates:", len(rows)); assert len(rows) > 0; assert all(r.get("source_url") and r.get("download_url") for r in rows)'
+          python main.py download-ketsa --limit 100
+          python -c 'import csv; from pathlib import Path; p=Path("output/ketsa_candidates.csv"); rows=list(csv.DictReader(p.open(newline="", encoding="utf-8-sig"))); print("Ketsa candidates staged:", len(rows)); print("Owner-selected titles:", [(r.get("selection_order"), r.get("title"), r.get("duration_seconds") or "duration pending") for r in rows if r.get("previous_user_selection") == "yes"]); assert len(rows) > 0; assert all(r.get("source_url") and r.get("download_url") for r in rows)'
+          python main.py build-ketsa-review-pack --seconds 360 --theme evergreen --crossfade 18
           python rights_audit.py ketsa
 
       - name: Persist review-only candidates and receipts in private Google Drive
@@ -84,6 +90,18 @@ jobs:
           test -s output/ketsa-review/KETSA_RIGHTS_EVIDENCE.json
           echo "PASS: Ketsa license, track-page, file-provenance and audition-shortlist reports are present."
           echo "PASS: no rights approval, library mutation or public publication was performed."
+
+      - name: Preserve private audition and evidence package
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jazz-soul-beat-ketsa-review-package
+          path: |
+            agent/output/ketsa-review/*
+            agent/tracks/review/ketsa/download_receipt.json
+            agent/output/ketsa_candidates.csv
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Confirm publication safety
         run: |
