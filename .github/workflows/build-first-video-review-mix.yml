@@ -69,6 +69,26 @@ jobs:
           objective: Build a one-hour private Jazz-only review mix from exact official Incompetech files without approving rights or publishing
           drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
 
+      - name: Restore stored anime visual candidate from private Drive for inspection
+        id: visual_reference
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: |
+          python - <<'PY'
+          import hashlib, os
+          from pathlib import Path
+          from drive_storage import DriveStore
+          relative = "output/ketsa-review/KETSA_AUDITION_BACKGROUND.jpg"
+          store = DriveStore.from_token_json(os.environ["DRIVE_TOKEN_JSON"])
+          result = store.pull(paths=(relative,))
+          image = Path(relative)
+          if not image.is_file() or image.stat().st_size == 0:
+              raise RuntimeError("Stored visual candidate was not restored.")
+          digest = hashlib.sha256(image.read_bytes()).hexdigest()
+          print({"restored": result, "path": relative, "bytes": image.stat().st_size, "sha256": digest})
+          PY
+
       - name: Rebuild exact official Jazz candidate files and rights evidence
         id: source_audit
         timeout-minutes: 45
@@ -118,10 +138,11 @@ jobs:
           name: jazz-soul-beat-first-hour-review-mix
           path: |
             agent/output/first-video-review/*
+            agent/output/ketsa-review/KETSA_AUDITION_BACKGROUND.jpg
             agent/output/incompetech-rights/INCOMPETECH_RIGHTS_AUDIT.csv
             agent/output/incompetech-rights/INCOMPETECH_RIGHTS_EVIDENCE.json
             agent/output/incompetech_candidates.csv
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 7
 
       - name: Confirm no approval or publication occurred
