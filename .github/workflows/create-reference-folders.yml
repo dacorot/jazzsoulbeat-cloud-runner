@@ -7,6 +7,7 @@ on:
       - ".github/workflows/create-reference-folders.yml"
       # Also reports file names in the private reference folders; no sharing changes.
       # Also lists files directly in the private reference-library root.
+      # Also inventories the private storage root for uploaded source assets.
   workflow_dispatch:
 
 permissions:
