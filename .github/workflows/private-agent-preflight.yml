@@ -1,8 +1,5 @@
 name: Private agent preflight (no upload)
 on:
-  push:
-    paths:
-      - "preflight-once.trigger"
   workflow_dispatch:
   schedule:
     - cron: "41 12 * * 2"
