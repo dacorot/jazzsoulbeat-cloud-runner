@@ -71,6 +71,7 @@ jobs:
 
       - name: Restore stored anime visual candidate from private Drive for inspection
         id: visual_reference
+        continue-on-error: true
         working-directory: agent
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
