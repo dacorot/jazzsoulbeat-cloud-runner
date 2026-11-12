@@ -34,11 +34,13 @@ jobs:
           python -m pip install -r requirements.txt
       - name: Discover candidates from Wikimedia Commons
         id: commons
+        timeout-minutes: 8
         continue-on-error: true
         working-directory: agent
         run: python main.py discover-commons --limit 200
       - name: Discover candidates from Internet Archive CC BY and CC0 audio
         id: internet_archive
+        timeout-minutes: 20
         continue-on-error: true
         working-directory: agent
         run: |
@@ -51,21 +53,25 @@ jobs:
           PY
       - name: Discover candidates from Openverse commercial CC BY and CC0 audio
         id: openverse
+        timeout-minutes: 8
         continue-on-error: true
         working-directory: agent
         run: python main.py discover-openverse --limit 300
       - name: Discover candidates from official Incompetech catalogue
         id: incompetech
+        timeout-minutes: 5
         continue-on-error: true
         working-directory: agent
         run: python main.py discover-incompetech
       - name: Discover candidates from ccMixter
         id: ccmixter
+        timeout-minutes: 15
         continue-on-error: true
         working-directory: agent
         run: python main.py discover-ccmixter --limit 200
       - name: Discover candidates from Ketsa official catalogue
         id: ketsa
+        timeout-minutes: 20
         continue-on-error: true
         working-directory: agent
         run: python main.py discover-ketsa --limit 100
