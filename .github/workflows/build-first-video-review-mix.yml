@@ -1,5 +1,6 @@
 name: Build private first-hour Jazz review mix
 # Rebuild against latest agent branch after excluding guest performers and adding creator copyright evidence.
+# Re-run after fixing official Agent Section schema detection; regenerate the current 16-track review package.
 
 on:
   push:
