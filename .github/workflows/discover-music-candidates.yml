@@ -89,8 +89,10 @@ jobs:
           fields = [
               "source_catalog", "title", "artist", "duration_seconds", "duration_raw", "genre",
               "instruments", "mood", "license_name", "license_url", "source_url",
-              "download_url", "screening_status", "rights_status", "review_status",
-              "human_decision", "archive_identifier", "filename", "format", "size_bytes",
+              "download_url", "screening_status", "rights_status", "rights_verified",
+              "permission", "uploader_authority", "composition_rights", "performance_rights",
+              "recording_rights", "review_status", "human_decision", "archive_identifier",
+              "filename", "format", "size_bytes",
               "provider", "source", "filetype", "openverse_id", "attribution",
           ]
           def first(row, *keys):
@@ -135,7 +137,13 @@ jobs:
                       "source_url": first(row, "source_url"),
                       "download_url": first(row, "download_url"),
                       "screening_status": first(row, "screening_status"),
-                      "rights_status": first(row, "rights_verified", "permission", "uploader_authority", "rights_status"),
+                      "rights_status": first(row, "rights_status"),
+                      "rights_verified": first(row, "rights_verified"),
+                      "permission": first(row, "permission"),
+                      "uploader_authority": first(row, "uploader_authority"),
+                      "composition_rights": first(row, "composition_rights"),
+                      "performance_rights": first(row, "performance_rights"),
+                      "recording_rights": first(row, "recording_rights"),
                       "review_status": first(row, "review_status", "screening_notes", "review_notes"),
                       "human_decision": "PENDING — NOT APPROVED",
                       "archive_identifier": first(row, "archive_identifier"),
@@ -152,6 +160,37 @@ jobs:
               writer = csv.DictWriter(handle, fieldnames=fields)
               writer.writeheader()
               writer.writerows(master)
+          # Build a long-track priority queue without approving any candidate.
+          priority_fields = fields + ["triage_priority", "duplicate_title_artist_key"]
+          source_rank = {"incompetech": 1, "ketsa": 2, "commons": 3, "ccmixter": 4, "internet_archive": 5}
+          long_tracks = [
+              row for row in master
+              if row["duration_seconds"]
+              and float(row["duration_seconds"]) > 180
+              and row["source_url"]
+              and row["license_url"]
+          ]
+          long_tracks.sort(key=lambda row: (
+              source_rank.get(row["source_catalog"].casefold(), 9),
+              row["title"].casefold(),
+              row["artist"].casefold(),
+          ))
+          seen_keys = set()
+          for row in long_tracks:
+              key = (row["title"].strip().casefold(), row["artist"].strip().casefold())
+              row["duplicate_title_artist_key"] = "yes" if key in seen_keys else "no"
+              seen_keys.add(key)
+              row["triage_priority"] = {
+                  "incompetech": "P1 — official creator catalogue; inspect exact item and attribution",
+                  "ketsa": "P1 — official creator catalogue; inspect exact item and attribution",
+                  "commons": "P2 — inspect file page, uploader authority and license",
+                  "ccmixter": "P2 — inspect sample declarations and uploader grant",
+                  "internet_archive": "P3 — inspect uploader authority and full rights chain",
+              }.get(row["source_catalog"].casefold(), "P3 — manual source and rights review")
+          with (root / "MUSIC_PRIORITY_REVIEW.csv").open("w", newline="", encoding="utf-8-sig") as handle:
+              writer = csv.DictWriter(handle, fieldnames=priority_fields)
+              writer.writeheader()
+              writer.writerows(long_tracks)
           lines = [
               "# Jazz Soul Beat — music discovery",
               "",
@@ -177,6 +216,8 @@ jobs:
               f"Rows with parseable duration: {len(valid_durations)}",
               f"Rows missing/unparseable duration: {len(master) - len(valid_durations)}",
               f"Rows longer than 180 seconds (metadata only): {sum(value > 180 for value in valid_durations)}",
+              f"Priority review rows (>180s, source and license URL present): {len(long_tracks)}",
+              f"Repeated title/artist keys within priority review: {sum(row['duplicate_title_artist_key'] == 'yes' for row in long_tracks)}",
               f"Unique title/artist keys: {len(unique_track_keys)}",
               "",
               "Duration and duplicate counts are metadata triage only. They do not verify that a file is a complete music track or that its rights chain is valid.",
@@ -206,6 +247,7 @@ jobs:
           path: |
             agent/output/*_candidates.csv
             agent/output/MUSIC_CANDIDATE_REVIEW.csv
+            agent/output/MUSIC_PRIORITY_REVIEW.csv
             agent/output/MUSIC_DISCOVERY_SUMMARY.md
           if-no-files-found: warn
           retention-days: 14
