@@ -60,7 +60,8 @@ jobs:
         with:
           cycle_id: ${{ steps.pdca_start.outputs.cycle_id }}
           result_json: '{"workflow":"weekly-performance-review","run_id":"${{ github.run_id }}","report_generation":"${{ steps.reports.outcome }}"}'
-          checks_json: '[{"name":"seven_day_kpi_report","passed":${{ steps.reports.outcome == 'success' }}},{"name":"thirty_day_kpi_report","passed":${{ steps.reports.outcome == 'success' }}},{"name":"ninety_day_kpi_report","passed":${{ steps.reports.outcome == 'success' }}}]'
+          checks_json: >-
+            [{"name":"seven_day_kpi_report","passed":${{ steps.reports.outcome == 'success' }}},{"name":"thirty_day_kpi_report","passed":${{ steps.reports.outcome == 'success' }}},{"name":"ninety_day_kpi_report","passed":${{ steps.reports.outcome == 'success' }}}]
           evidence: 'GitHub Actions run ${{ github.run_id }}; weekly, monthly and quarterly rolling KPI report files'
           drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
       - name: Persist KPI reports to private Drive
