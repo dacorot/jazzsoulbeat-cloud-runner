@@ -14,6 +14,7 @@ All human-facing times use Colombia (America/Bogota, UTC-5). GitHub Actions cron
 | Daily, 07:00 | build-first-review-video.yml | Attempt a private one-hour review video only when the complete approved and rights-verified music gate passes. |
 | Daily, 07:30 | discover-music-candidates.yml | Refresh candidate catalogues and consolidated review queues. Candidate discovery never approves tracks. |
 | Monday, 07:17 | audit-openlofi-rights.yml | Recheck Open Lo-Fi source statements, audio hashes and rights evidence; read-only. |
+| Monday, 08:17 | performance-weekly-review.yml | Generate 7-day, rolling 30-day and rolling 90-day KPI reports; preserve them in private Drive. |
 | First day monthly, 07:30 | refresh-ketsa-review-library.yml | Refresh official Ketsa candidate audio, audition sampler and rights/provenance reports; review-only. |
 | First day monthly, 08:30 | refresh-incompetech-review-library.yml | Refresh official Incompetech candidates, sampler and rights/provenance reports; review-only. |
 | On demand | private-cloud-agent.yml | Manually requested self-test or approved-library build. |
