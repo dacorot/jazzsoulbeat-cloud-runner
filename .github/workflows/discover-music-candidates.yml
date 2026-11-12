@@ -2,7 +2,8 @@ name: Discover new Jazz Soul Beat music candidates
 on:
   workflow_dispatch:
   schedule:
-    - cron: "30 12 * * 4"
+    # Daily at 07:30 Colombia (UTC-5).
+    - cron: "30 12 * * *"
 permissions:
   contents: read
 concurrency:
