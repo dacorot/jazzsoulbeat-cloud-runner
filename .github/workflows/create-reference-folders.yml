@@ -9,6 +9,7 @@ on:
       # Also lists files directly in the private reference-library root.
       # Also inventories the private storage root for uploaded source assets.
       # Checks the user-shared folder IDs across shared drives.
+      # Searches connected Drive for user-owned visual masters.
   workflow_dispatch:
 
 permissions:
