@@ -11,7 +11,7 @@ Zona horaria humana: Colombia (America/Bogota, UTC-5). Los cron de GitHub se exp
 - **Cada 6 horas, todos los días:** preflight del agente privado: restaurar el estado necesario, compilar, ejecutar pruebas, self-test técnico, comprobar artefactos y persistir únicamente los resultados QA permitidos. Esta ejecución es el pulso de control de salud.
 - **Todos los días, 07:00 Colombia:** intentar construir un nuevo video de revisión de una hora. Solo continúa si existe una hora completa de música aprobada y con derechos verificados; de lo contrario registra el bloqueo y no genera un video incompleto.
 - **Todos los días, 07:30 Colombia:** actualizar la cola de descubrimiento musical y sus métricas. Los candidatos permanecen pendientes; descubrir no equivale a aprobar.
-- **Semanalmente:** auditorías de procedencia y derechos de catálogos en revisión.
+- **Semanalmente:** auditorías de procedencia y derechos de catálogos en revisión; informe KPI de 7 días y comparativos móviles de 30 y 90 días.
 - **Mensualmente:** refresco de catálogos oficiales Ketsa e Incompetech.
 - **A demanda:** ejecuciones manuales para tareas correctivas o trabajos específicos.
 
