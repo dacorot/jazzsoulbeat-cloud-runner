@@ -1,0 +1,75 @@
+name: Reusable private cloud agent QA runner
+on:
+  workflow_call:
+    inputs:
+      agent_repository:
+        description: "Private agent repository in owner/name form"
+        required: true
+        type: string
+      agent_ref:
+        description: "Branch, tag or immutable commit SHA"
+        required: true
+        type: string
+      python_version:
+        description: "Python runtime"
+        required: false
+        default: "3.11"
+        type: string
+    secrets:
+      PRIVATE_REPO_READ_TOKEN:
+        required: true
+      DRIVE_TOKEN_JSON:
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: reusable-private-agent-${{ inputs.agent_repository }}
+  cancel-in-progress: false
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Check out private agent
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.agent_repository }}
+          ref: ${{ inputs.agent_ref }}
+          token: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
+          path: agent
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python_version }}
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ffmpeg
+          ffmpeg -version
+          ffprobe -version
+      - name: Install dependencies
+        working-directory: agent
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then python -m pip install -r requirements.txt; fi
+      - name: Compile and test
+        working-directory: agent
+        run: |
+          python -m compileall -q .
+          python -m unittest discover -s tests -v
+      - name: Build synthetic QA output
+        working-directory: agent
+        run: python main.py self-test
+      - name: Persist QA output to private Drive
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: |
+          python main.py drive-push
+          python main.py drive-status
+      - name: Confirm no public publication
+        if: always()
+        run: |
+          echo "Reusable QA workflow only. No YouTube credentials or upload command are provided."
+          echo "The private agent's approved publishing gate remains under that agent's own controller."
