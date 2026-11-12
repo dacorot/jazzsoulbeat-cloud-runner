@@ -211,6 +211,7 @@ jobs:
         with:
           cycle_id: ${{ steps.pdca_start.outputs.cycle_id }}
           result_json: '{"workflow":"openlofi-staging","run_id":"${{ github.run_id }}","job_status":"${{ job.status }}"}'
-          checks_json: '[{"name":"verified_source_release","passed":${{ steps.download.outcome == 'success' }}},{"name":"40_track_stage_and_hashes","passed":${{ steps.stage_tracks.outcome == 'success' }}},{"name":"private_drive_persistence","passed":${{ steps.persist.outcome == 'success' }}},{"name":"review_only_rights_gate","passed":${{ steps.safety_gate.outcome == 'success' }}},{"name":"no_youtube_publication","passed":true}]'
+          checks_json: >-
+            [{"name":"verified_source_release","passed":${{ steps.download.outcome == 'success' }}},{"name":"40_track_stage_and_hashes","passed":${{ steps.stage_tracks.outcome == 'success' }}},{"name":"private_drive_persistence","passed":${{ steps.persist.outcome == 'success' }}},{"name":"review_only_rights_gate","passed":${{ steps.safety_gate.outcome == 'success' }}},{"name":"no_youtube_publication","passed":true}]
           evidence: 'GitHub Actions run ${{ github.run_id }}; 40-track candidate manifest, hashes and rights evidence'
           drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
