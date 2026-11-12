@@ -3,9 +3,6 @@ name: Refresh private Ketsa jazz-soul review library
 
 # Refresh trigger: rebuild cached Ketsa audition and expose track-level audit diagnostics from the private agent.
 on:
-  push:
-    paths:
-      - ".run-ketsa-review-batch"
   schedule:
     - cron: "30 12 1 * *"
   workflow_dispatch:
