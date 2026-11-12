@@ -1,96 +1,18 @@
 name: Private agent preflight (no upload)
-
 on:
   workflow_dispatch:
   schedule:
     - cron: "41 12 * * 2"
-
 permissions:
   contents: read
-
-concurrency:
-  group: jazz-soul-beat-private-agent-preflight
-  cancel-in-progress: true
-
 jobs:
   validate:
-    name: Test private agent in an ephemeral runner
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - name: Check out this controller
-        uses: actions/checkout@v4
-
-      - name: Check out private agent (read-only token)
-        uses: actions/checkout@v4
-        with:
-          repository: dacorot/jazzsoulbeat-agent
-          ref: fix/real-music-and-cinematic-motion
-          token: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
-          path: agent
-          persist-credentials: false
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install FFmpeg
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes ffmpeg
-          ffmpeg -version
-          ffprobe -version
-
-      - name: Install Python dependencies
-        working-directory: agent
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt
-
-      - name: Compile production modules
-        working-directory: agent
-        run: |
-          python -m py_compile main.py config.py db.py library.py licenses.py curator.py metadata.py mixer.py thumbnail.py video.py youtube_upload.py backgrounds.py selftest.py commons_catalog.py ccmixter_catalog.py incompetech_catalog.py incompetech_download.py incompetech_review.py incompetech_source_audit.py incompetech_track_pages.py ketsa_catalog.py
-
-      - name: Run unit tests
-        working-directory: agent
-        run: python -m unittest discover -s tests -v
-
-      - name: Build synthetic video (no YouTube)
-        working-directory: agent
-        run: python main.py self-test
-
-      - name: Verify synthetic output
-        working-directory: agent
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          folders = sorted(Path("output").glob("self-test-*"))
-          if not folders:
-              raise SystemExit("No se generó la carpeta de prueba.")
-          latest = folders[-1]
-          required = ["test-video.mp4", "test-mix.mp3", "test-thumbnail.jpg", "SELF_TEST.txt"]
-          missing = [name for name in required if not (latest / name).is_file()]
-          if missing:
-              raise SystemExit("Faltan artefactos: " + ", ".join(missing))
-          for name in required:
-              if (latest / name).stat().st_size <= 0:
-                  raise SystemExit(f"Artefacto vacío: {name}")
-          print(f"Preflight sintético correcto: {latest}")
-          print("No se descargó música, no se usó OAuth y no se subió ningún video.")
-          PY
-
-      - name: Persist synthetic QA package to private Drive
-        if: success()
-        working-directory: agent
-        env:
-          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
-        run: |
-          python main.py drive-push
-          python main.py drive-status
-
-      - name: Confirm no public publishing
-        if: always()
-        run: |
-          echo "Synthetic QA only. No YouTube credentials, upload, schedule or public publishing."
+    name: Reusable private-agent QA
+    uses: ./.github/workflows/reusable-private-agent.yml
+    with:
+      agent_repository: dacorot/jazzsoulbeat-agent
+      agent_ref: fix/real-music-and-cinematic-motion
+      python_version: "3.11"
+    secrets:
+      PRIVATE_REPO_READ_TOKEN: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
+      DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
