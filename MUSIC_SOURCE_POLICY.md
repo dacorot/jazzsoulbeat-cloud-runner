@@ -11,6 +11,7 @@ Last checked: 2026-11-12
 - The agent further limits candidates to canonical CC BY 3.0/4.0 or CC0 1.0 license URLs and duration greater than 180 seconds.
 - Openverse is an aggregator. It explicitly does not warrant the accuracy of the licensing information. Every source page, uploader authority, composition, performance, master recording, samples, synchronization rights and attribution must still be checked.
 - Use the API only. Do not scrape Openverse or bypass its rate limits. Do not parallelize requests to evade rate restrictions.
+- The first cloud-runner request returned HTTP 401 without credentials. The agent supports optional OAuth using GitHub Actions secrets `OPENVERSE_CLIENT_ID` and `OPENVERSE_CLIENT_SECRET`. Registration is free but requires a developer application and email verification. These secrets are not currently configured; do not fabricate credentials or treat Openverse as an active source until authenticated access succeeds.
 - Discovery is read-only. No downloads, approvals or imports occur in the discovery workflow.
 
 ## Jamendo
