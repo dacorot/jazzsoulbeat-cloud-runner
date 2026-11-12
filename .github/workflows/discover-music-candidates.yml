@@ -1,6 +1,9 @@
 name: Discover new Jazz Soul Beat music candidates
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [".github/workflows/discover-music-candidates.yml"]
   schedule:
     - cron: "30 12 * * 4"
 permissions:
