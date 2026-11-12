@@ -66,10 +66,10 @@ jobs:
                       import json
                       provenance = json.loads(provenance_path.read_text(encoding="utf-8"))
                       exclusions = provenance.get("excluded_tracks", {})
-                      if "USUAN2300005" in exclusions:
+                      if all(key in exclusions for key in ("USUAN2300005", "USUAN1900030")):
                           accepted = True
                           break
-              print(f"Waiting for performer-filtered first-hour review mix in private Drive ({attempt+1}/40)")
+              print(f"Waiting for contributor-filtered first-hour review mix in private Drive ({attempt+1}/40)")
               time.sleep(15)
           if not accepted:
               raise RuntimeError("A fresh mix excluding the named guest performer did not appear in private Drive within 20 minutes.")
