@@ -25,3 +25,28 @@ Last checked: 2026-11-12
 ## Non-negotiable intake boundary
 
 A search result, Creative Commons label, API filter, or successful technical audit is not a rights approval. Every candidate remains `PENDING — NOT APPROVED` until the rights evidence and human decision are complete. Never change `rights_verified` or import candidates into production automatically.
+
+
+## User-submitted leads reviewed on 2026-11-12
+
+### Thematic — Jazz Cafe playlist
+- Playlist: https://app.hellothematic.com/playlist/129811
+- The playlist page lists 43 songs in jazz-hop, lo-fi jazz and chill styles.
+- Thematic's published creator terms require the user's own per-song, per-channel license link in every video description.
+- Thematic explicitly prohibits audio-only videos, including playlist videos, visualizers and lyric videos.
+- Not approved for Jazz Soul Beat's music-first long-form playlist format. Do not scrape/download or ingest playlist tracks automatically.
+
+### Envato Elements — Lo-fi catalogue and “That Is Lofi”
+- Catalogue: https://elements.envato.com/royalty-free-music/lofi
+- Item: https://elements.envato.com/that-is-lofi-MYXZMAH
+- The item page lists a 2:06 instrumental track by Feetmusic, a subscription starting at USD 16.50/month, BMI affiliation and Content ID claims that require clearing with an Envato license.
+- Envato's music terms prohibit use where the value of the video is predominantly derived from the music; its FAQ specifically identifies music-first YouTube videos with a single image or image compilation as not permitted.
+- Also conflicts with the project's no-paid-services constraint. Not an approved source.
+
+### Copyright Free Lofi
+- Website: https://copyrightfreelofi.com/
+- Usage policy: https://copyrightfreelofi.com/usage-policy/
+- The published policy permits background music in specified audiovisual/podcast content but prohibits standalone music uploads, music visualizers, music players, lyric videos and similar listening-first content. It also prohibits remixing/editing tracks.
+- Not approved for Jazz Soul Beat's music-first playlist format.
+
+These sources may be revisited only if the channel format or the user's no-paid-services constraint changes. They are not part of the production intake queue.
