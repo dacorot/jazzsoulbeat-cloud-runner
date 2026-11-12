@@ -1,0 +1,196 @@
+name: Stage 40 AI-generated Open Lo-Fi candidates
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/stage-openlofi-review-library.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: jazz-soul-beat-openlofi-review
+  cancel-in-progress: false
+
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Check out controller
+        uses: actions/checkout@v4
+        with:
+          path: controller
+
+      - name: Check out private Jazz Soul Beat agent
+        uses: actions/checkout@v4
+        with:
+          repository: dacorot/jazzsoulbeat-agent
+          ref: fix/real-music-and-cinematic-motion
+          token: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
+          path: agent
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install agent dependencies
+        working-directory: agent
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Download and verify creator-published CC0 AI music collection
+        working-directory: agent
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 --retry-delay 3 \
+            https://github.com/btahir/open-lofi/releases/download/v1.0.0/openlofi.zip \
+            --output /tmp/openlofi.zip
+          echo "0040fb9c8bcc22e5f91d1dbf3fb02b6ceff97e249588369bddf9c1fb26950550  /tmp/openlofi.zip" | sha256sum --check
+          mkdir -p /tmp/openlofi-unpacked
+          python - <<'PY'
+          import zipfile
+          with zipfile.ZipFile("/tmp/openlofi.zip") as z:
+              bad = z.testzip()
+              if bad:
+                  raise SystemExit(f"ZIP integrity failure: {bad}")
+              z.extractall("/tmp/openlofi-unpacked")
+          print("Verified archive and extracted source collection.")
+          PY
+
+      - name: Select, inspect and stage 40 Jazz-Soul-Funk tracks
+        working-directory: agent
+        run: |
+          python - <<'PY'
+          import csv, hashlib, json, shutil
+          from pathlib import Path
+          from mutagen import File as AudioFile
+
+          root = Path.cwd()
+          catalog_path = root / "catalog-openlofi.json"
+          import urllib.request
+          req = urllib.request.Request(
+              "https://raw.githubusercontent.com/btahir/open-lofi/main/catalog.json",
+              headers={"User-Agent": "JazzSoulBeatAgent/1.0"}
+          )
+          with urllib.request.urlopen(req, timeout=45) as response:
+              catalog = json.load(response)
+          (root / "catalog-openlofi.json").write_text(
+              json.dumps(catalog, ensure_ascii=False, indent=2), encoding="utf-8"
+          )
+
+          archive_root = Path("/tmp/openlofi-unpacked")
+          available = {}
+          for path in archive_root.rglob("*.mp3"):
+              available[path.name.casefold()] = path
+
+          wanted = []
+          for category in ("jazzhop", "soul-rnb", "funk-soul"):
+              wanted.extend(t for t in catalog["tracks"] if t.get("category") == category)
+          # 12 Jazz Lounge + 21 Soul + first 7 Funk/Soul = 40.
+          funk = [t for t in wanted if t.get("category") == "funk-soul"]
+          non_funk = [t for t in wanted if t.get("category") != "funk-soul"]
+          selected = non_funk + funk[:7]
+          if len(selected) != 40:
+              raise SystemExit(f"Expected 40 source candidates, found {len(selected)}")
+
+          stage = root / "tracks" / "review" / "openlofi"
+          stage.mkdir(parents=True, exist_ok=True)
+          out = root / "output" / "openlofi-review"
+          out.mkdir(parents=True, exist_ok=True)
+          rows = []
+          for index, track in enumerate(selected, 1):
+              filename = track["filename"]
+              source = available.get(filename.casefold())
+              if source is None:
+                  raise SystemExit(f"Audio file missing from verified release: {filename}")
+              audio = AudioFile(source)
+              if audio is None or not getattr(audio, "info", None):
+                  raise SystemExit(f"Audio unreadable: {filename}")
+              duration = float(audio.info.length)
+              if duration <= 0:
+                  raise SystemExit(f"Invalid duration: {filename}")
+              destination = stage / filename
+              shutil.copy2(source, destination)
+              digest = hashlib.sha256(destination.read_bytes()).hexdigest()
+              category = track["category"]
+              rows.append({
+                  "track_id": f"openlofi-{index:02d}",
+                  "title": track["title"],
+                  "artist": "btahir (creator-stated)",
+                  "category": category,
+                  "file": f"tracks/review/openlofi/{filename}",
+                  "source_url": "https://github.com/btahir/open-lofi",
+                  "download_url": "https://github.com/btahir/open-lofi/releases/tag/v1.0.0",
+                  "license": "CC0 1.0 Universal",
+                  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+                  "license_evidence_url": "https://github.com/btahir/open-lofi#license",
+                  "duration_seconds": round(duration, 3),
+                  "duration_eligible_over_180s": "yes" if duration > 180 else "no",
+                  "sha256": digest,
+                  "review_status": "PENDING — NOT APPROVED",
+                  "rights_chain_status": "CREATOR_STATED_CC0; THIRD_PARTY_CHAIN_NOT_INDEPENDENTLY_VERIFIED",
+                  "rights_notes": "Repository states tracks were generated by its owner using Suno v5, owned by the owner as a premium member, and dedicated under CC0. This is creator-published evidence, not independent proof of every underlying sample, performer or training-data right."
+              })
+
+          csv_path = out / "OPENLOFI_CANDIDATES.csv"
+          with csv_path.open("w", newline="", encoding="utf-8-sig") as f:
+              writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+              writer.writeheader()
+              writer.writerows(rows)
+
+          evidence = {
+              "source_repository": "https://github.com/btahir/open-lofi",
+              "release": "v1.0.0",
+              "release_asset": "openlofi.zip",
+              "release_asset_sha256": "0040fb9c8bcc22e5f91d1dbf3fb02b6ceff97e249588369bddf9c1fb26950550",
+              "catalog_track_count": catalog.get("trackCount"),
+              "creator_statement": "The repository owner states all tracks were generated by them using Suno v5, that they own them as a premium member, and that they are dedicated to the public domain.",
+              "license": "CC0 1.0 Universal",
+              "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+              "selection": "12 Jazz Lounge + 21 Soul/Slow Jams + 7 Funk/Soul tracks",
+              "candidate_count": len(rows),
+              "duration_over_180_seconds": sum(r["duration_eligible_over_180s"] == "yes" for r in rows),
+              "rights_status": "REVIEW ONLY — NO TRACK APPROVED",
+              "residual_risk": "CC0 is a broad creator grant, but this audit does not independently establish the provenance of every sample, performance, composition element, or AI training input.",
+              "tracks": rows
+          }
+          (out / "OPENLOFI_RIGHTS_EVIDENCE.json").write_text(
+              json.dumps(evidence, ensure_ascii=False, indent=2), encoding="utf-8"
+          )
+          (out / "OPENLOFI_LICENSE_AND_REVIEW.txt").write_text(
+              "OPEN LO-FI — PRIVATE REVIEW PACK\n"
+              "40 AI-generated instrumental candidates staged from the creator's v1.0.0 release.\n"
+              "License claimed by creator: CC0 1.0 Universal.\n"
+              "Creator statement: generated by the repository owner using Suno v5 and donated to the public domain.\n"
+              "No track has been approved or added to the production library.\n"
+              "Each file has been SHA-256 hashed and its audio duration inspected.\n"
+              "Tracks shorter than 180 seconds remain review-only and are not eligible for the current one-hour mix pipeline.\n"
+              "Residual third-party provenance risks remain documented in OPENLOFI_RIGHTS_EVIDENCE.json.\n",
+              encoding="utf-8"
+          )
+          eligible = sum(r["duration_eligible_over_180s"] == "yes" for r in rows)
+          print(f"STAGED {len(rows)} tracks; {eligible} exceed 180 seconds.")
+          for r in rows:
+              print(f"{r['track_id']} | {r['title']} | {r['category']} | {r['duration_seconds']:.1f}s | >180s={r['duration_eligible_over_180s']}")
+          PY
+
+      - name: Persist candidate audio and evidence to private Google Drive
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: |
+          python main.py drive-push
+          python main.py drive-status
+
+      - name: Confirm review-only safety
+        working-directory: agent
+        run: |
+          test -s output/openlofi-review/OPENLOFI_CANDIDATES.csv
+          test -s output/openlofi-review/OPENLOFI_RIGHTS_EVIDENCE.json
+          test "$(find tracks/review/openlofi -maxdepth 1 -name '*.mp3' | wc -l)" -eq 40
+          echo "40 AI-generated candidate files staged. No rights flags changed, no production-library import, no YouTube upload or publication."
