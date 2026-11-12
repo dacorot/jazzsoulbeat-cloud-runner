@@ -1,5 +1,5 @@
 name: Refresh private Incompetech review library
-# Refresh trigger: persist all 43 official jazz and holiday candidates using the corrected Drive HTTP 308 resumable-upload transport.
+# Refresh trigger: persist official jazz and holiday candidates and expose a compact, reviewable evidence artifact.
 
 on:
   push:
@@ -54,6 +54,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+
       - name: Start PDCA cycle for Incompetech review refresh
         id: pdca_start
         uses: ./controller/.github/actions/pdca-start
@@ -120,6 +121,28 @@ jobs:
           test -d tracks/review/incompetech
           test -s output/incompetech_candidates.csv
           echo "Review-only candidate staging complete. No YouTube OAuth, upload, public access or publication was attempted."
+
+      - name: Publish compact review evidence as a temporary workflow artifact
+        if: ${{ always() && steps.rights_audit.outcome == 'success' && steps.sampler.outcome == 'success' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: jazz-soul-beat-incompetech-evidence
+          path: |
+            agent/output/incompetech_candidates.csv
+            agent/output/incompetech-review/INCOMPETECH_AUDITION.mp3
+            agent/output/incompetech-review/INCOMPETECH_AUDITION_SUMMARY.md
+            agent/output/incompetech-review/INCOMPETECH_REVIEW_INDEX.csv
+            agent/output/incompetech-review/INCOMPETECH_REVIEW_RIGHTS_EVIDENCE.json
+            agent/output/incompetech-review/INCOMPETECH_AUDITION_PROVENANCE.json
+            agent/output/incompetech-rights/INCOMPETECH_RIGHTS_AUDIT.csv
+            agent/output/incompetech-rights/INCOMPETECH_RIGHTS_EVIDENCE.json
+            agent/tracks/review/incompetech/source_audit.csv
+            agent/tracks/review/incompetech/track_page_audit.csv
+            agent/tracks/review/incompetech/inspection_report.csv
+            agent/tracks/review/incompetech/download_receipt.json
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Verify and close Incompetech PDCA cycle
         if: ${{ always() && steps.pdca_start.outcome == 'success' }}
         uses: ./controller/.github/actions/pdca-finish
