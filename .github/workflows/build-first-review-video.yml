@@ -86,6 +86,35 @@ jobs:
           python main.py drive-status
           python main.py library-status
 
+      - name: Check approved one-hour library gate
+        id: library_gate
+        working-directory: agent
+        run: |
+          python - <<'PY'
+          import os
+          from db import conn
+          from mixer import DEFAULT_CROSSFADE_SECONDS
+          c = conn()
+          try:
+              rows = c.execute(
+                  "SELECT duration FROM tracks WHERE approved=1 AND rights_verified=1 "
+                  "AND duration>180 AND collection='evergreen' AND season='' "
+                  "AND genre<>'' AND instruments<>'' AND mood<>''"
+              ).fetchall()
+          finally:
+              c.close()
+          durations = [float(row["duration"]) for row in rows]
+          usable = sum(durations) - DEFAULT_CROSSFADE_SECONDS * max(0, len(durations)-1)
+          ready = bool(durations) and usable >= 3600
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
+              f.write("ready=" + ("true" if ready else "false") + "\\n")
+          print(f"Eligible approved tracks: {len(durations)}; usable seconds: {usable:.1f}; ready: {ready}")
+          PY
+
+      - name: Skip safely until enough approved music exists
+        if: ${{ steps.library_gate.outputs.ready != 'true' }}
+        run: echo "No build: waiting for a full hour of approved, rights-verified music. No repeats or shortened tracks."
+
       - name: Generate one-hour review video from approved real tracks
         working-directory: agent
         env:
