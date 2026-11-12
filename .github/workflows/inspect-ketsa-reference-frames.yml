@@ -41,13 +41,14 @@ jobs:
           file_id = "1BqYqPn1y8nO6yXigow3vcnB9kDgKqDyz"
           metadata = store.service.files().get(
               fileId=file_id,
-              fields="id,name,mimeType,size,modifiedTime,webViewLink",
+              fields="id,name,mimeType,size,modifiedTime,webViewLink,webContentLink",
+              supportsAllDrives=True,
           ).execute(num_retries=2)
           if metadata.get("mimeType") != "video/mp4":
               raise SystemExit(f"Expected private MP4; got {metadata.get('mimeType')!r}")
           expected = Path("agent/output/ketsa-review/KETSA_AUDITION_VIDEO.mp4")
           expected.parent.mkdir(parents=True, exist_ok=True)
-          request = store.service.files().get(fileId=file_id, alt="media")
+          request = store.service.files().get(fileId=file_id, alt="media", supportsAllDrives=True)
           with expected.open("wb") as handle:
               downloader = MediaIoBaseDownload(handle, request, chunksize=10 * 1024 * 1024)
               done = False
@@ -57,7 +58,8 @@ jobs:
                       print(f"Drive download: {status.progress():.0%}")
           actual_size = expected.stat().st_size
           if metadata.get("size") and actual_size != int(metadata["size"]):
-              raise SystemExit(f"Drive MP4 size mismatch: expected {metadata['size']}, got {actual_size}")
+              prefix = expected.read_bytes()[:240].decode("utf-8", errors="replace")
+              raise SystemExit(f"Drive MP4 size mismatch: expected {metadata['size']}, got {actual_size}; response prefix={prefix!r}; metadata={metadata}")
           print({"metadata": metadata, "downloaded_bytes": actual_size})
           PY
         working-directory: .
