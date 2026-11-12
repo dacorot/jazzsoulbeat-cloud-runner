@@ -37,6 +37,11 @@ jobs:
         continue-on-error: true
         working-directory: agent
         run: python main.py discover-commons --limit 100
+      - name: Discover candidates from official Incompetech catalogue
+        id: incompetech
+        continue-on-error: true
+        working-directory: agent
+        run: python main.py discover-incompetech
       - name: Discover candidates from ccMixter
         id: ccmixter
         continue-on-error: true
@@ -54,7 +59,7 @@ jobs:
           from pathlib import Path
           import csv
           root = Path("output")
-          files = sorted(p for p in root.rglob("*.csv") if any(k in p.name.casefold() for k in ("commons", "ccmixter", "ketsa")))
+          files = sorted(p for p in root.rglob("*.csv") if any(k in p.name.casefold() for k in ("commons", "ccmixter", "ketsa", "incompetech")))
           lines = [
               "# Jazz Soul Beat — music discovery",
               "",
