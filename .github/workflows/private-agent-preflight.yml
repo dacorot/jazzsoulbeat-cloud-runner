@@ -7,7 +7,7 @@ on:
       - ".github/workflows/private-agent-preflight.yml"
       - ".github/workflows/reusable-private-agent.yml"
   schedule:
-    # Every six hours, UTC: 19:00, 01:00, 07:00 and 13:00 Colombia time.
+    # Every six hours, UTC: 19:00, 01:00, 07:00 and 13:00 Colombia time. PDCA and KPI state are persisted after each pulse.
     - cron: "0 */6 * * *"
 permissions:
   contents: read
