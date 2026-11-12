@@ -23,7 +23,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: dacorot/jazzsoulbeat-agent
-          ref: master
+          ref: fix/real-music-and-cinematic-motion
           token: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
           path: agent
           persist-credentials: false
