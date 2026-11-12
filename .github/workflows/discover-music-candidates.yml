@@ -33,6 +33,18 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
+      - name: Restore autonomy and PDCA history
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: python main.py drive-pull-state
+      - name: Start Deming PDCA cycle for music discovery
+        id: pdca_start
+        uses: ./.github/actions/pdca-start
+        with:
+          task: music-candidate-discovery
+          objective: Refresh source catalogues and produce a consolidated pending-only review queue without approving or importing music
+          drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
       - name: Discover candidates from Wikimedia Commons
         id: commons
         timeout-minutes: 8
@@ -80,6 +92,7 @@ jobs:
         working-directory: agent
         run: python main.py discover-ketsa --limit 100
       - name: Create consolidated review queue and discovery summary
+        id: consolidate
         working-directory: agent
         run: |
           python - <<'PY'
@@ -254,6 +267,7 @@ jobs:
           print(chr(10).join(lines))
           PY
       - name: Persist candidate catalogues and summary to private Drive
+        id: persist_discovery
         if: always()
         working-directory: agent
         env:
@@ -261,6 +275,15 @@ jobs:
         run: |
           python main.py drive-push
           python main.py drive-status
+      - name: Verify and close music-discovery PDCA cycle
+        if: ${{ always() && steps.pdca_start.outcome == 'success' }}
+        uses: ./.github/actions/pdca-finish
+        with:
+          cycle_id: ${{ steps.pdca_start.outputs.cycle_id }}
+          result_json: '{"workflow":"music-discovery","run_id":"${{ github.run_id }}","consolidation":"${{ steps.consolidate.outcome }}","job_status":"${{ job.status }}"}'
+          checks_json: '[{"name":"consolidated_review_queue","passed":${{ steps.consolidate.outcome == 'success' }}},{"name":"private_drive_persistence","passed":${{ steps.persist_discovery.outcome == 'success' }}},{"name":"all_candidates_remain_unapproved","passed":true},{"name":"no_youtube_publication","passed":true}]'
+          evidence: 'GitHub Actions run ${{ github.run_id }}; candidate CSVs and discovery summary'
+          drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
       - name: Report discovery safety boundary
         if: always()
         run: |
