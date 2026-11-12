@@ -56,6 +56,9 @@ jobs:
         timeout-minutes: 8
         continue-on-error: true
         working-directory: agent
+        env:
+          OPENVERSE_CLIENT_ID: ${{ secrets.OPENVERSE_CLIENT_ID }}
+          OPENVERSE_CLIENT_SECRET: ${{ secrets.OPENVERSE_CLIENT_SECRET }}
         run: python main.py discover-openverse --limit 300
       - name: Discover candidates from official Incompetech catalogue
         id: incompetech
