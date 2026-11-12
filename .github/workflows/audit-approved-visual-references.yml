@@ -88,6 +88,25 @@ jobs:
               except Exception as exc:
                   inventory.append({"audit_root": label, "id": folder_id, "error": str(exc)})
 
+          # Also search recent user-uploaded images across Drive, excluding agent-managed assets.
+          recent = []
+          token = None
+          while True:
+              page = service.files().list(
+                  q="mimeType contains 'image/' and trashed = false and modifiedTime > '2026-11-01T00:00:00'",
+                  spaces="drive", pageSize=100, pageToken=token, orderBy="modifiedTime desc",
+                  fields="nextPageToken,files(id,name,mimeType,size,modifiedTime,webViewLink,description,originalFilename,parents,appProperties,owners(displayName,emailAddress))",
+                  supportsAllDrives=True, includeItemsFromAllDrives=True, corpora="allDrives").execute()
+              for item in page.get("files", []):
+                  if (item.get("appProperties") or {}).get("agent") == "jazz-soul-beat":
+                      continue
+                  item["audit_root"] = "recent_user_uploads"
+                  item["parent_folder_name"] = "Recent Drive images (read-only search)"
+                  recent.append(item)
+              token = page.get("nextPageToken")
+              if not token:
+                  break
+          inventory.extend(recent)
           out = Path("visual-reference-audit")
           (out / "inventory.json").write_text(json.dumps(inventory, ensure_ascii=False, indent=2), encoding="utf-8")
           candidates = [x for x in inventory if x.get("mimeType", "").startswith("image/") and x.get("id")]
