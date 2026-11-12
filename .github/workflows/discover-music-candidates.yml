@@ -52,32 +52,66 @@ jobs:
         continue-on-error: true
         working-directory: agent
         run: python main.py discover-ketsa --limit 100
-      - name: Create discovery summary
+      - name: Create consolidated review queue and discovery summary
         working-directory: agent
         run: |
           python - <<'PY'
           from pathlib import Path
           import csv
           root = Path("output")
-          files = sorted(p for p in root.rglob("*.csv") if any(k in p.name.casefold() for k in ("commons", "ccmixter", "ketsa", "incompetech")))
+          source_files = sorted(p for p in root.glob("*_candidates.csv"))
+          fields = [
+              "source_catalog", "title", "artist", "duration_seconds", "genre",
+              "instruments", "mood", "license_name", "license_url", "source_url",
+              "download_url", "screening_status", "rights_status", "review_status",
+              "human_decision",
+          ]
+          def first(row, *keys):
+              for key in keys:
+                  value = row.get(key)
+                  if value not in (None, ""):
+                      return str(value).strip()
+              return ""
+          master = []
+          counts = []
+          for path in source_files:
+              with path.open(newline="", encoding="utf-8-sig") as handle:
+                  rows = list(csv.DictReader(handle))
+              counts.append((path.name, len(rows)))
+              for row in rows:
+                  master.append({
+                      "source_catalog": path.stem.replace("_candidates", ""),
+                      "title": first(row, "title", "title_hint", "file_title"),
+                      "artist": first(row, "artist", "artist_hint"),
+                      "duration_seconds": first(row, "duration_seconds", "duration"),
+                      "genre": first(row, "genre", "genres", "discovery_category", "page_tags"),
+                      "instruments": first(row, "instruments"),
+                      "mood": first(row, "mood", "feel"),
+                      "license_name": first(row, "license_name", "page_license", "license_filter"),
+                      "license_url": first(row, "license_url", "license_evidence_url"),
+                      "source_url": first(row, "source_url"),
+                      "download_url": first(row, "download_url"),
+                      "screening_status": first(row, "screening_status"),
+                      "rights_status": first(row, "rights_verified", "permission", "uploader_authority"),
+                      "review_status": first(row, "review_status", "screening_notes", "review_notes"),
+                      "human_decision": "PENDING — NOT APPROVED",
+                  })
+          with (root / "MUSIC_CANDIDATE_REVIEW.csv").open("w", newline="", encoding="utf-8-sig") as handle:
+              writer = csv.DictWriter(handle, fieldnames=fields)
+              writer.writeheader()
+              writer.writerows(master)
           lines = [
               "# Jazz Soul Beat — music discovery",
               "",
-              "Automated candidate discovery only. No audio is approved, no rights flags are changed, and no track enters production automatically.",
+              f"Consolidated candidates: {len(master)}",
+              "",
+              "Automated candidate discovery only. Every row remains pending; no audio is approved, no rights flags are changed and no track enters production automatically.",
               "",
           ]
-          for path in files:
-              try:
-                  with path.open(newline="", encoding="utf-8-sig") as f:
-                      count = max(0, sum(1 for _ in csv.DictReader(f)))
-              except Exception:
-                  count = "unreadable"
-              lines.append(f"- {path.as_posix()}: {count} rows")
-          if not files:
-              lines.append("- No candidate CSVs were produced in this run.")
+          lines.extend(f"- {name}: {count} rows" for name, count in counts)
           lines += [
               "",
-              "Every candidate remains pending manual confirmation of uploader authority, composition, performance, master recording, samples, commercial use, synchronization and channel suitability.",
+              "The master CSV is a review queue, not an approval manifest. Confirm uploader authority, composition, performance, master recording, samples, commercial use, synchronization and channel suitability before any track is approved.",
           ]
           (root / "MUSIC_DISCOVERY_SUMMARY.md").write_text(chr(10).join(lines) + chr(10), encoding="utf-8")
           print(chr(10).join(lines))
