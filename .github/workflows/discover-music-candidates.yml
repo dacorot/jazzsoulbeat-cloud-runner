@@ -281,7 +281,8 @@ jobs:
         with:
           cycle_id: ${{ steps.pdca_start.outputs.cycle_id }}
           result_json: '{"workflow":"music-discovery","run_id":"${{ github.run_id }}","consolidation":"${{ steps.consolidate.outcome }}","job_status":"${{ job.status }}"}'
-          checks_json: '[{"name":"consolidated_review_queue","passed":${{ steps.consolidate.outcome == 'success' }}},{"name":"private_drive_persistence","passed":${{ steps.persist_discovery.outcome == 'success' }}},{"name":"all_candidates_remain_unapproved","passed":true},{"name":"no_youtube_publication","passed":true}]'
+          checks_json: >-
+            [{"name":"consolidated_review_queue","passed":${{ steps.consolidate.outcome == 'success' }}},{"name":"private_drive_persistence","passed":${{ steps.persist_discovery.outcome == 'success' }}},{"name":"all_candidates_remain_unapproved","passed":true},{"name":"no_youtube_publication","passed":true}]
           evidence: 'GitHub Actions run ${{ github.run_id }}; candidate CSVs and discovery summary'
           drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
       - name: Report discovery safety boundary
