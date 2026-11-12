@@ -17,12 +17,17 @@ inputs:
   drive_token_json:
     description: Private Google Drive token JSON
     required: true
+  working_directory:
+    description: Checked-out agent directory
+    required: false
+    default: agent
 runs:
   using: composite
   steps:
     - name: Record execution and verification
       id: verify
       shell: bash
+      working-directory: ${{ inputs.working_directory }}
       env:
         CYCLE_ID: ${{ inputs.cycle_id }}
         CHECKS_JSON: ${{ inputs.checks_json }}
