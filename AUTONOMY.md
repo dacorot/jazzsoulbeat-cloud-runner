@@ -109,5 +109,6 @@ The private agent contains:
 - `autonomy.py`: allow/deny policy, audit trail and SHA-256-bound human approvals.
 - `performance.py`: historical event ledger, KPI calculations and JSON/Markdown reports.
 - `pdca.py`: persistent Plan/Do/Check/Act cycle records, evidence and corrective actions.
+- `agent_memory.py`: append-only operational, creative and learning memory, seeded with the approved Jazz Soul Beat baseline at the start of each PDCA cycle.
 
 The cloud controller uses reusable PDCA actions around production, discovery, review audits and manual agent jobs. State is restored before a cycle and persisted to private Drive after ACT. The code is considered operational only after the corresponding cloud run and regression tests pass.
