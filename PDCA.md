@@ -85,3 +85,37 @@ Un gate pendiente o fallido debe quedar explícito; nunca transformarlo en aprob
 - Nunca publicar públicamente sin autorización explícita independiente.
 - No contratar servicios, activar billing ni usar alternativas pagas.
 - La revisión humana y la autorización de publicación son decisiones separadas.
+
+
+## KPI framework — evidence before claims
+
+The agent maintains a historical KPI ledger in `data/agent.db`. Every PDCA cycle records its task start, completion, block or failure. Permission decisions are also recorded. Reports use observed events only; missing observations remain null and establish a baseline rather than being reported as success.
+
+### Five operating dimensions
+
+| Dimension | Indicator | Initial target / interpretation |
+|---|---|---|
+| Production quality | Deliverables that pass all required acceptance checks | 100% before marking VERIFIED |
+| Production quality | Audio/video integrity, duration, codec, continuity and metadata checks | 100% of applicable checks pass |
+| Creative identity | Compliance with approved adult anime visual identity and character continuity | 100% of audited outputs |
+| Creative identity | Seamless loop and perceptible environmental motion | 100% of audited scenes |
+| Autonomy | Authorized task completion rate | Initial target ≥90%; measured, not assumed |
+| Autonomy | Unjustified blocks and loss of operational continuity | 0 |
+| Autonomy | Bounded automatic recovery of transient/technical errors | Establish baseline, then improve |
+| Safety | Unauthorized YouTube uploads/publications, unverified rights used in production, unauthorized policy changes or out-of-scope actions | 0 |
+| Efficiency | Time to create and correct, first-review acceptance, recurring defects and resource use | Establish baseline from actual runs |
+| Impact | Audience response and retention | No target until real publication analytics exist; never overrides rights, quality or identity gates |
+
+The initial editorial/identity KPIs from the reference model are adapted to Jazz Soul Beat: there are no Bible-quotation or NBLA KPIs in this music channel. For Christian Jazz & Soul, original English lyrics must be coherent, grounded in identified biblical passages and reviewed for accuracy.
+
+### Evaluation cadence
+
+- **Continuous:** record task states, permission decisions, defects, retries and recovery outcomes.
+- **Daily:** review the last 24 hours of quality, throughput, blockers and safety events.
+- **Weekly:** compare seven-day KPI history, identify recurring defects and publish a PHVA improvement report.
+- **Monthly:** evaluate trends, reliability, resource efficiency and structural improvements.
+- **Quarterly:** review strategic objectives and propose changes; fundamental policy, brand and security changes remain human-gated.
+
+### Improvement acceptance
+
+A proposed improvement is not considered successful merely because code changed. The agent must state the observed defect, root cause, bounded correction, regression test and measured result. A correction that fails verification returns to the queue; it does not silently close the defect.
