@@ -2,7 +2,8 @@ name: Private agent preflight (no upload)
 on:
   workflow_dispatch:
   schedule:
-    - cron: "41 12 * * 2"
+    # Every six hours, UTC: 19:00, 01:00, 07:00 and 13:00 Colombia time.
+    - cron: "0 */6 * * *"
 permissions:
   contents: read
 jobs:
