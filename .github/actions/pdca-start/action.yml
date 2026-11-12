@@ -10,6 +10,10 @@ inputs:
   drive_token_json:
     description: Private Google Drive token JSON
     required: true
+  working_directory:
+    description: Checked-out agent directory
+    required: false
+    default: agent
 outputs:
   cycle_id:
     description: Persistent PDCA cycle identifier
@@ -19,12 +23,14 @@ runs:
   steps:
     - name: Restore autonomy and PDCA state
       shell: bash
+      working-directory: ${{ inputs.working_directory }}
       env:
         DRIVE_TOKEN_JSON: ${{ inputs.drive_token_json }}
       run: python main.py drive-pull-state
     - name: Create PDCA plan
       id: start
       shell: bash
+      working-directory: ${{ inputs.working_directory }}
       env:
         PDCA_TASK: ${{ inputs.task }}
         PDCA_OBJECTIVE: ${{ inputs.objective }}
