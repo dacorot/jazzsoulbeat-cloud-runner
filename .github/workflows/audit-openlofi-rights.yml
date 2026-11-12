@@ -24,7 +24,7 @@ jobs:
         with:
           repository: dacorot/jazzsoulbeat-agent
           ref: fix/real-music-and-cinematic-motion
-          token: \${{ secrets.PRIVATE_REPO_READ_TOKEN }}
+          token: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
           path: agent
           persist-credentials: false
       - name: Set up Python
@@ -39,7 +39,7 @@ jobs:
       - name: Restore review audio from private Drive
         working-directory: agent
         env:
-          DRIVE_TOKEN_JSON: \${{ secrets.DRIVE_TOKEN_JSON }}
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
         run: python main.py drive-pull-library
       - name: Run read-only rights and provenance audit
         working-directory: agent
@@ -47,7 +47,7 @@ jobs:
       - name: Persist audit report to private Drive
         working-directory: agent
         env:
-          DRIVE_TOKEN_JSON: \${{ secrets.DRIVE_TOKEN_JSON }}
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
         run: |
           python main.py drive-push
           python main.py drive-status
