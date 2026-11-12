@@ -37,6 +37,18 @@ jobs:
         continue-on-error: true
         working-directory: agent
         run: python main.py discover-commons --limit 100
+      - name: Discover candidates from Internet Archive CC BY and CC0 audio
+        id: internet_archive
+        continue-on-error: true
+        working-directory: agent
+        run: |
+          python - <<'PY'
+          import internet_archive_catalog
+          path, rows = internet_archive_catalog.discover(limit=500)
+          print(f"Internet Archive candidates with CC BY/CC0 metadata and audio >180s: {len(rows)}")
+          print(f"CSV: {path}")
+          print("All remain pending; license metadata alone never verifies the rights chain.")
+          PY
       - name: Discover candidates from official Incompetech catalogue
         id: incompetech
         continue-on-error: true
@@ -64,7 +76,7 @@ jobs:
               "source_catalog", "title", "artist", "duration_seconds", "genre",
               "instruments", "mood", "license_name", "license_url", "source_url",
               "download_url", "screening_status", "rights_status", "review_status",
-              "human_decision",
+              "human_decision", "archive_identifier", "filename", "format", "size_bytes",
           ]
           def first(row, *keys):
               for key in keys:
@@ -95,6 +107,10 @@ jobs:
                       "rights_status": first(row, "rights_verified", "permission", "uploader_authority"),
                       "review_status": first(row, "review_status", "screening_notes", "review_notes"),
                       "human_decision": "PENDING — NOT APPROVED",
+                      "archive_identifier": first(row, "archive_identifier"),
+                      "filename": first(row, "filename"),
+                      "format": first(row, "format"),
+                      "size_bytes": first(row, "size_bytes"),
                   })
           with (root / "MUSIC_CANDIDATE_REVIEW.csv").open("w", newline="", encoding="utf-8-sig") as handle:
               writer = csv.DictWriter(handle, fieldnames=fields)
@@ -104,6 +120,7 @@ jobs:
               "# Jazz Soul Beat — music discovery",
               "",
               f"Consolidated candidates: {len(master)}",
+              f"Sources scanned: {len(counts)}",
               "",
               "Automated candidate discovery only. Every row remains pending; no audio is approved, no rights flags are changed and no track enters production automatically.",
               "",
