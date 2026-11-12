@@ -85,6 +85,7 @@ jobs:
         with:
           cycle_id: ${{ steps.pdca_start.outputs.cycle_id }}
           result_json: '{"workflow":"openlofi-rights-audit","run_id":"${{ github.run_id }}","job_status":"${{ job.status }}"}'
-          checks_json: '[{"name":"rights_and_provenance_audit","passed":${{ steps.audit.outcome == 'success' }}},{"name":"review_only_guard","passed":${{ steps.guard.outcome == 'success' }}},{"name":"private_drive_persistence","passed":${{ steps.persist.outcome == 'success' }}},{"name":"no_rights_auto_approval","passed":true}]'
+          checks_json: >-
+            [{"name":"rights_and_provenance_audit","passed":${{ steps.audit.outcome == 'success' }}},{"name":"review_only_guard","passed":${{ steps.guard.outcome == 'success' }}},{"name":"private_drive_persistence","passed":${{ steps.persist.outcome == 'success' }}},{"name":"no_rights_auto_approval","passed":true}]
           evidence: 'GitHub Actions run ${{ github.run_id }}; Open Lo-Fi audit CSV and JSON evidence'
           drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
