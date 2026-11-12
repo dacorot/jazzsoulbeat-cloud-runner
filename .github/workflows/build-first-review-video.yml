@@ -83,6 +83,14 @@ jobs:
           python main.py drive-status
           python main.py library-status
 
+      - name: Start Deming PDCA cycle for the daily video build
+        id: pdca_start
+        uses: ./.github/actions/pdca-start
+        with:
+          task: first-video-production
+          objective: Produce and verify the first one-hour private Jazz Soul Beat video when the approved music gate permits it
+          drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
+
       - name: Check approved one-hour library gate
         id: library_gate
         working-directory: agent
@@ -124,6 +132,7 @@ jobs:
           python main.py make --hours 1 --auto
 
       - name: Verify video, thumbnail, metadata, and licensed music provenance
+        id: video_verify
         if: ${{ steps.library_gate.outputs.ready == 'true' }}
         working-directory: agent
         shell: bash
@@ -154,6 +163,7 @@ jobs:
           find "$RUN_DIR" -maxdepth 1 -type f -printf '%f %s bytes\n' | sort
 
       - name: Persist review package and provenance in private Google Drive
+        id: persist_review
         if: ${{ steps.library_gate.outputs.ready == 'true' }}
         working-directory: agent
         env:
@@ -161,6 +171,16 @@ jobs:
         run: |
           python main.py drive-push
           python main.py drive-status
+
+      - name: Verify and close daily video-build PDCA cycle
+        if: ${{ always() && steps.pdca_start.outcome == 'success' }}
+        uses: ./.github/actions/pdca-finish
+        with:
+          cycle_id: ${{ steps.pdca_start.outputs.cycle_id }}
+          result_json: '{"workflow":"first-review-video","run_id":"${{ github.run_id }}","approved_music_gate":"${{ steps.library_gate.outputs.ready }}","job_status":"${{ job.status }}"}'
+          checks_json: '[{"name":"approved_library_gate_executed","passed":${{ steps.library_gate.outcome == 'success' }}},{"name":"video_media_validation_or_safe_gate_block","passed":${{ steps.library_gate.outputs.ready != 'true' || steps.video_verify.outcome == 'success' }}},{"name":"private_drive_persistence_or_no_build_required","passed":${{ steps.library_gate.outputs.ready != 'true' || steps.persist_review.outcome == 'success' }}},{"name":"youtube_upload_prohibited","passed":true}]'
+          evidence: 'GitHub Actions run ${{ github.run_id }}; video gate and private review package'
+          drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
 
       - name: Confirm publication safety
         run: |
