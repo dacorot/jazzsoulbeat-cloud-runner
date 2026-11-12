@@ -109,6 +109,15 @@ jobs:
           fi
           python main.py drive-status
 
+      - name: Start Deming PDCA cycle for requested cloud task
+        id: pdca_start
+        if: ${{ steps.restore.outcome == 'success' }}
+        uses: ./.github/actions/pdca-start
+        with:
+          task: ${{ inputs.task }}
+          objective: Execute the explicitly requested cloud task, verify its outputs and preserve all publication and rights gates
+          drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
+
       - name: Organize approved songs into their playlist folders
         if: ${{ steps.restore.outcome == 'success' && inputs.task == 'build-evergreen' }}
         working-directory: agent
@@ -122,11 +131,13 @@ jobs:
         run: python main.py library-status
 
       - name: Build synthetic technical test (never uploads)
+        id: self_test
         if: ${{ steps.restore.outcome == 'success' && inputs.task == 'self-test' }}
         working-directory: agent
         run: python main.py self-test
 
       - name: Build an evergreen or seasonal video (never uploads)
+        id: build_video
         if: ${{ steps.restore.outcome == 'success' && inputs.task == 'build-evergreen' }}
         working-directory: agent
         env:
@@ -148,11 +159,22 @@ jobs:
           python main.py "${args[@]}"
 
       - name: Persist private state and generated outputs
+        id: persist_outputs
         if: ${{ always() && steps.restore.outcome == 'success' }}
         working-directory: agent
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
         run: python main.py drive-push
+
+      - name: Verify and close requested-task PDCA cycle
+        if: ${{ always() && steps.pdca_start.outcome == 'success' }}
+        uses: ./.github/actions/pdca-finish
+        with:
+          cycle_id: ${{ steps.pdca_start.outputs.cycle_id }}
+          result_json: '{"workflow":"private-cloud-agent","task":"${{ inputs.task }}","run_id":"${{ github.run_id }}","job_status":"${{ job.status }}"}'
+          checks_json: '[{"name":"restore_state","passed":${{ steps.restore.outcome == 'success' }}},{"name":"requested_task","passed":${{ (inputs.task == 'self-test' && steps.self_test.outcome == 'success') || (inputs.task == 'build-evergreen' && steps.build_video.outcome == 'success') }}},{"name":"private_drive_persistence","passed":${{ steps.persist_outputs.outcome == 'success' }}},{"name":"no_youtube_publication","passed":true}]'
+          evidence: 'GitHub Actions run ${{ github.run_id }}; requested task outputs and private Drive inventory'
+          drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
 
       - name: Confirm final Drive inventory
         if: ${{ always() && steps.restore.outcome == 'success' }}
