@@ -161,7 +161,16 @@ jobs:
               writer.writeheader()
               writer.writerows(master)
           # Build a long-track priority queue without approving any candidate.
-          priority_fields = fields + ["triage_priority", "duplicate_title_artist_key"]
+          priority_fields = fields + ["previous_user_selection", "selection_order", "triage_priority", "duplicate_title_artist_key"]
+          selected_order = {
+              "thatsfabulous": 1,
+              "neverheard": 2,
+              "soulinstrumental2": 3,
+              "soulchoir": 4,
+              "ownedtheday": 5,
+          }
+          def title_key(value):
+              return "".join(char for char in str(value).casefold() if char.isalnum())
           source_rank = {"incompetech": 1, "ketsa": 2, "commons": 3, "ccmixter": 4, "internet_archive": 5}
           long_tracks = [
               row for row in master
@@ -171,6 +180,7 @@ jobs:
               and row["license_url"]
           ]
           long_tracks.sort(key=lambda row: (
+              selected_order.get(title_key(row["title"]), 99),
               source_rank.get(row["source_catalog"].casefold(), 9),
               row["title"].casefold(),
               row["artist"].casefold(),
@@ -180,6 +190,9 @@ jobs:
               key = (row["title"].strip().casefold(), row["artist"].strip().casefold())
               row["duplicate_title_artist_key"] = "yes" if key in seen_keys else "no"
               seen_keys.add(key)
+              order = selected_order.get(title_key(row["title"]))
+              row["previous_user_selection"] = "yes" if order is not None else "no"
+              row["selection_order"] = str(order or "")
               row["triage_priority"] = {
                   "incompetech": "P1 — official creator catalogue; inspect exact item and attribution",
                   "ketsa": "P1 — official creator catalogue; inspect exact item and attribution",
@@ -217,6 +230,7 @@ jobs:
               f"Rows missing/unparseable duration: {len(master) - len(valid_durations)}",
               f"Rows longer than 180 seconds (metadata only): {sum(value > 180 for value in valid_durations)}",
               f"Priority review rows (>180s, source and license URL present): {len(long_tracks)}",
+              f"Previously user-selected Ketsa titles found in priority queue: {sum(row['previous_user_selection'] == 'yes' for row in long_tracks)} of 5",
               f"Repeated title/artist keys within priority review: {sum(row['duplicate_title_artist_key'] == 'yes' for row in long_tracks)}",
               f"Unique title/artist keys: {len(unique_track_keys)}",
               "",
