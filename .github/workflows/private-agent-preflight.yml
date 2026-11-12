@@ -2,9 +2,6 @@ name: Private agent preflight (no upload)
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths: [".github/workflows/private-agent-preflight.yml"]
   schedule:
     - cron: "41 12 * * 2"
 
