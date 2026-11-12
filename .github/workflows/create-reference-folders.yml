@@ -72,7 +72,8 @@ jobs:
         with:
           cycle_id: ${{ steps.pdca_start.outputs.cycle_id }}
           result_json: '{"workflow":"private-reference-folder-setup","run_id":"${{ github.run_id }}","job_status":"${{ job.status }}"}'
-          checks_json: '[{"name":"drive_reference_folders_created_or_reused","passed":${{ steps.create_folders.outcome == 'success' }}},{"name":"private_only_sharing_guard","passed":${{ steps.private_guard.outcome == 'success' }}},{"name":"no_publication","passed":true}]'
+          checks_json: >-
+            [{"name":"drive_reference_folders_created_or_reused","passed":${{ steps.create_folders.outcome == 'success' }}},{"name":"private_only_sharing_guard","passed":${{ steps.private_guard.outcome == 'success' }}},{"name":"no_publication","passed":true}]
           evidence: 'GitHub Actions run ${{ github.run_id }}; private Drive folder setup report'
           drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
 
