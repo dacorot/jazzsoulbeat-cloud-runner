@@ -99,6 +99,7 @@ jobs:
         with:
           cycle_id: ${{ steps.pdca_start.outputs.cycle_id }}
           result_json: '{"workflow":"jahzzar-audition","run_id":"${{ github.run_id }}","job_status":"${{ job.status }}"}'
-          checks_json: '[{"name":"agent_unit_tests","passed":${{ steps.tests.outcome == 'success' }}},{"name":"official_audition_pack","passed":${{ steps.sampler.outcome == 'success' }}},{"name":"private_drive_artifacts","passed":${{ steps.persist.outcome == 'success' }}},{"name":"rights_remain_pending","passed":true},{"name":"no_youtube_publication","passed":true}]'
+          checks_json: >-
+            [{"name":"agent_unit_tests","passed":${{ steps.tests.outcome == 'success' }}},{"name":"official_audition_pack","passed":${{ steps.sampler.outcome == 'success' }}},{"name":"private_drive_artifacts","passed":${{ steps.persist.outcome == 'success' }}},{"name":"rights_remain_pending","passed":true},{"name":"no_youtube_publication","passed":true}]
           evidence: 'GitHub Actions run ${{ github.run_id }}; Jahzzar audition manifest, sampler and rights evidence'
           drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
