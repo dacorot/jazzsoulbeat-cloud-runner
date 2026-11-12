@@ -1,4 +1,5 @@
 name: Build private Jahzzar audition pack
+# Re-run after adding archive validation for AppleDouble resource forks.
 on:
   push:
     branches: [main]
