@@ -37,7 +37,8 @@ jobs:
           ffmpeg -version
           ffprobe -version
       - name: Run agent tests, including strict rights gate
-        run: python -m pytest -q agent/tests
+        run: python -m pytest -q tests
+        working-directory: agent
       - name: Download official Jahzzar albums and build private audition sampler
         run: python agent/jahzzar_review_pack.py
       - name: Push source audio, manifest and review artifacts to private Drive
@@ -48,7 +49,7 @@ jobs:
           import json, os
           from pathlib import Path
           from drive_storage import DriveStore
-          store = DriveStore.from_token_json(os.environ["DRIVE_TOKEN_JSON"], root=Path("agent"))
+          store = DriveStore.from_token_json(os.environ["DRIVE_TOKEN_JSON"])
           pushed = store.push()
           remote = store._index_remote(store._remote_files())
           wanted = [
