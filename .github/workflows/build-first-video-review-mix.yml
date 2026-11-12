@@ -1,5 +1,5 @@
 name: Build private first-hour Jazz review mix
-# Rebuild against latest agent branch after excluding tracks with unverified guest performers.
+# Rebuild against latest agent branch after excluding guest performers and adding creator copyright evidence.
 
 on:
   push:
