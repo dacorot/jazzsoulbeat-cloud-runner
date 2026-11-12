@@ -1,0 +1,152 @@
+name: Build private first-video visual loop preview
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/build-first-video-review-clip.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: jazz-soul-beat-first-video-visual-preview
+  cancel-in-progress: false
+jobs:
+  render-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout private agent
+        uses: actions/checkout@v4
+        with:
+          repository: dacorot/jazzsoulbeat-agent
+          ref: fix/real-music-and-cinematic-motion
+          token: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
+          path: agent
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install agent and free media dependencies
+        working-directory: agent
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt pillow
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          ffmpeg -version | head -n 2
+      - name: Restore private review mix and candidate anime image from Drive
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: |
+          python - <<'PY'
+          import os, time
+          from pathlib import Path
+          from drive_storage import DriveStore
+          store = DriveStore.from_token_json(os.environ["DRIVE_TOKEN_JSON"])
+          required = (
+              "output/first-video-review/INCOMPETECH_JAZZ_FIRST_HOUR_REVIEW_ONLY.mp3",
+              "output/first-video-review/MUSIC_SOURCE_REVIEW_ONLY.txt",
+              "output/ketsa-review/KETSA_AUDITION_BACKGROUND.jpg",
+          )
+          for attempt in range(40):
+              remote = store._index_remote(store._remote_files())
+              if all(path in remote for path in required):
+                  break
+              print(f"Waiting for first-hour review mix in private Drive ({attempt+1}/40)")
+              time.sleep(15)
+          else:
+              raise RuntimeError("Private review mix did not appear in Drive within 10 minutes.")
+          result = store.pull(paths=required)
+          for path in required:
+              local = Path(path)
+              if not local.is_file() or local.stat().st_size == 0:
+                  raise RuntimeError(f"Missing restored review input: {path}")
+          print({"restored": result, "inputs": required})
+          PY
+      - name: Render a two-minute private 60-second-loop test
+        working-directory: agent
+        run: |
+          mkdir -p output/first-video-review-preview
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          import video
+          out = Path("output/first-video-review-preview")
+          audio = Path("output/first-video-review/INCOMPETECH_JAZZ_FIRST_HOUR_REVIEW_ONLY.mp3")
+          image = Path("output/ketsa-review/KETSA_AUDITION_BACKGROUND.jpg")
+          rendered = out / "FIRST_VIDEO_VISUAL_LOOP_PREVIEW_2MIN_REVIEW_ONLY.mp4"
+          video.make_video(audio, image, rendered, duration=120, theme="evergreen")
+          (out / "REVIEW_ONLY_NOTICE.txt").write_text(
+              "PRIVATE REVIEW ONLY. This is a two-minute technical loop test, not the final video. "
+              "The background is the stored Ketsa audition candidate and is NOT an approved visual master. "
+              "The music remains pending human rights approval. No YouTube upload or publication was attempted.\n",
+              encoding="utf-8",
+          )
+          if not rendered.is_file() or rendered.stat().st_size == 0:
+              raise RuntimeError("FFmpeg did not create the review MP4.")
+          print(json.dumps({"video": str(rendered), "bytes": rendered.stat().st_size}))
+          PY
+      - name: Verify video and 60-second boundary frames
+        working-directory: agent
+        run: |
+          set -euo pipefail
+          VIDEO="output/first-video-review-preview/FIRST_VIDEO_VISUAL_LOOP_PREVIEW_2MIN_REVIEW_ONLY.mp4"
+          mkdir -p output/first-video-review-preview/frames
+          ffprobe -v error -show_entries format=duration,size -show_entries stream=codec_type,codec_name,width,height,channels -of json "$VIDEO" > output/first-video-review-preview/video-probe.json
+          ffmpeg -nostdin -y -loglevel error -ss 0 -i "$VIDEO" -frames:v 1 -q:v 2 output/first-video-review-preview/frames/frame-0000.jpg
+          ffmpeg -nostdin -y -loglevel error -ss 59.933333 -i "$VIDEO" -frames:v 1 -q:v 2 output/first-video-review-preview/frames/frame-0899.jpg
+          ffmpeg -nostdin -y -loglevel error -ss 60.000000 -i "$VIDEO" -frames:v 1 -q:v 2 output/first-video-review-preview/frames/frame-0900.jpg
+          ffmpeg -nostdin -y -loglevel error -ss 60.066667 -i "$VIDEO" -frames:v 1 -q:v 2 output/first-video-review-preview/frames/frame-0901.jpg
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from PIL import Image, ImageChops, ImageDraw
+          root = Path("output/first-video-review-preview")
+          data = json.loads((root / "video-probe.json").read_text())
+          duration = float(data["format"]["duration"])
+          video_stream = next(s for s in data["streams"] if s["codec_type"] == "video")
+          audio_stream = next(s for s in data["streams"] if s["codec_type"] == "audio")
+          assert 119 <= duration <= 121, duration
+          assert (video_stream["codec_name"], video_stream["width"], video_stream["height"]) == ("h264", 2560, 1440), video_stream
+          assert audio_stream["codec_name"] == "aac" and audio_stream["channels"] == 2, audio_stream
+          files = [
+              ("frame-0000.jpg", "Start"),
+              ("frame-0899.jpg", "59.933 s"),
+              ("frame-0900.jpg", "60.000 s"),
+              ("frame-0901.jpg", "60.067 s"),
+          ]
+          tiles = []
+          for filename, label in files:
+              im = Image.open(root / "frames" / filename).convert("RGB")
+              im.thumbnail((960, 540))
+              tile = Image.new("RGB", (980, 590), "white")
+              tile.paste(im, ((980-im.width)//2, 10))
+              ImageDraw.Draw(tile).text((20, 560), label, fill="black")
+              tiles.append(tile)
+          sheet = Image.new("RGB", (1960, 1180), "white")
+          for i, tile in enumerate(tiles):
+              sheet.paste(tile, ((i%2)*980, (i//2)*590))
+          sheet.save(root / "loop-boundary-contact-sheet.jpg", quality=92)
+          start = Image.open(root / "frames/frame-0000.jpg").convert("RGB")
+          boundary = Image.open(root / "frames/frame-0900.jpg").convert("RGB")
+          diff = ImageChops.difference(start, boundary)
+          mean_diff = sum(diff.convert("L").getdata()) / (diff.width * diff.height)
+          assert mean_diff < 5.0, mean_diff
+          print(json.dumps({"duration": duration, "resolution": [2560,1440], "codec": "H.264/AAC", "start_to_60s_mean_pixel_difference": round(mean_diff,4)}))
+          PY
+      - name: Persist review-only visual preview in private Drive
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: python main.py drive-push
+      - name: Upload private preview artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: jazz-soul-beat-first-video-visual-loop-preview
+          path: agent/output/first-video-review-preview/
+          if-no-files-found: error
+          retention-days: 7
+      - name: Confirm no approval or publication
+        run: |
+          echo "Two-minute loop test only. No rights approval, visual-master approval, YouTube upload, or public publication."
