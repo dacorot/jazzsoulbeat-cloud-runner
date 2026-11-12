@@ -81,7 +81,7 @@ jobs:
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
         run: |
-          python main.py drive-push
+          python main.py drive-push-qa
           python main.py drive-status
       - name: Confirm no public publication
         if: always()
