@@ -8,6 +8,7 @@ on:
       # Also reports file names in the private reference folders; no sharing changes.
       # Also lists files directly in the private reference-library root.
       # Also inventories the private storage root for uploaded source assets.
+      # Checks the user-shared folder IDs across shared drives.
   workflow_dispatch:
 
 permissions:
