@@ -113,7 +113,8 @@ jobs:
 
       - name: Skip safely until enough approved music exists
         if: ${{ steps.library_gate.outputs.ready != 'true' }}
-        run: echo "No build: waiting for a full hour of approved, rights-verified music. No repeats or shortened tracks."
+        run: |
+          echo "No automatic build until the approved, rights-verified library contains a full hour. No repeats or shortened tracks."
 
       - name: Generate one-hour review video from approved real tracks
         if: ${{ steps.library_gate.outputs.ready == 'true' }}
