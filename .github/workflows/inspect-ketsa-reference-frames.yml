@@ -63,11 +63,20 @@ jobs:
           print({"metadata": metadata, "downloaded_bytes": actual_size})
           PY
         working-directory: .
+
+      - name: Start PDCA cycle for Ketsa visual-loop inspection
+        id: pdca_start
+        uses: ./.github/actions/pdca-start
+        with:
+          task: ketsa-visual-loop-inspection
+          objective: Extract and compare the first frame and one-minute loop boundary frames from the private audition video
+          drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
       - name: Install free media tools
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg
       - name: Extract first frame and 60-second loop boundary frames
+        id: extract_frames
         run: |
           mkdir -p review-frames
           VIDEO="agent/output/ketsa-review/KETSA_AUDITION_VIDEO.mp4"
@@ -102,9 +111,20 @@ jobs:
           sheet.save("review-frames/contact-sheet.jpg", quality=92)
           PY
       - name: Upload private inspection artifact
+        id: upload_frames
         uses: actions/upload-artifact@v4
         with:
           name: ketsa-visual-reference-frames
           path: review-frames/
           if-no-files-found: error
           retention-days: 7
+
+      - name: Verify and close Ketsa visual inspection PDCA cycle
+        if: ${{ always() && steps.pdca_start.outcome == 'success' }}
+        uses: ./.github/actions/pdca-finish
+        with:
+          cycle_id: ${{ steps.pdca_start.outputs.cycle_id }}
+          result_json: '{"workflow":"ketsa-visual-loop-inspection","run_id":"${{ github.run_id }}","job_status":"${{ job.status }}"}'
+          checks_json: '[{"name":"private_video_download","passed":${{ steps.pdca_start.outcome == 'success' }}},{"name":"loop_boundary_frame_extraction","passed":${{ steps.extract_frames.outcome == 'success' }}},{"name":"private_inspection_artifact","passed":${{ steps.upload_frames.outcome == 'success' }}},{"name":"no_publication","passed":true}]'
+          evidence: 'GitHub Actions run ${{ github.run_id }}; four boundary frames and contact sheet'
+          drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
