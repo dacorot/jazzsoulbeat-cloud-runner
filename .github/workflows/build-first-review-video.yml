@@ -1,8 +1,9 @@
-name: Build first private Jazz Soul Beat review video
+name: Build new private Jazz Soul Beat review videos
 
 on:
   schedule:
-    - cron: "55 12 * * 3"
+    # 07:00 Colombia (UTC-5): Sunday, Tuesday, Thursday. Review sessions follow Monday/Wednesday/Friday mornings.
+    - cron: "0 12 * * 0,2,4"
   workflow_dispatch:
 
 permissions:
@@ -10,12 +11,12 @@ permissions:
   statuses: write
 
 concurrency:
-  group: jazz-soul-beat-first-private-review-build-ffmpeg-portable-v9
+  group: jazz-soul-beat-private-review-build-ffmpeg-portable-v10
   cancel-in-progress: false
 
 jobs:
   build-and-store:
-    name: Build one-hour licensed jazz/soul review mix
+    name: Build a new one-hour licensed jazz/soul review mix
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
@@ -189,7 +190,7 @@ jobs:
             description="Waiting for one complete hour of approved, rights-verified music; no video generated."
           else
             state=success
-            description="Private review video generated; any YouTube upload is hard-coded PRIVATE."
+            description="New private review video generated; any YouTube upload is hard-coded PRIVATE."
           fi
           gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
             -f state="$state" \
