@@ -80,3 +80,17 @@ jobs:
           print(f"Preflight sintético correcto: {latest}")
           print("No se descargó música, no se usó OAuth y no se subió ningún video.")
           PY
+
+      - name: Persist synthetic QA package to private Drive
+        if: success()
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: |
+          python main.py drive-push
+          python main.py drive-status
+
+      - name: Confirm no public publishing
+        if: always()
+        run: |
+          echo "Synthetic QA only. No YouTube credentials, upload, schedule or public publishing."
