@@ -74,8 +74,8 @@ jobs:
               "",
               "Every candidate remains pending manual confirmation of uploader authority, composition, performance, master recording, samples, commercial use, synchronization and channel suitability.",
           ]
-          (root / "MUSIC_DISCOVERY_SUMMARY.md").write_text("\\n".join(lines) + "\\n", encoding="utf-8")
-          print("\\n".join(lines))
+          (root / "MUSIC_DISCOVERY_SUMMARY.md").write_text(chr(10).join(lines) + chr(10), encoding="utf-8")
+          print(chr(10).join(lines))
           PY
       - name: Persist candidate catalogues and summary to private Drive
         if: always()
