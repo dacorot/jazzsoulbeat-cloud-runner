@@ -107,7 +107,7 @@ jobs:
           usable = sum(durations) - DEFAULT_CROSSFADE_SECONDS * max(0, len(durations)-1)
           ready = bool(durations) and usable >= 3600
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
-              f.write("ready=" + ("true" if ready else "false") + "\\n")
+              f.write("ready=" + ("true" if ready else "false") + chr(10))
           print(f"Eligible approved tracks: {len(durations)}; usable seconds: {usable:.1f}; ready: {ready}")
           PY
 
@@ -116,6 +116,7 @@ jobs:
         run: echo "No build: waiting for a full hour of approved, rights-verified music. No repeats or shortened tracks."
 
       - name: Generate one-hour review video from approved real tracks
+        if: ${{ steps.library_gate.outputs.ready == 'true' }}
         working-directory: agent
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -124,6 +125,7 @@ jobs:
           python main.py make --hours 1 --auto
 
       - name: Verify video, thumbnail, metadata, and licensed music provenance
+        if: ${{ steps.library_gate.outputs.ready == 'true' }}
         working-directory: agent
         shell: bash
         run: |
@@ -153,6 +155,7 @@ jobs:
           find "$RUN_DIR" -maxdepth 1 -type f -printf '%f %s bytes\n' | sort
 
       - name: Persist review package and provenance in private Google Drive
+        if: ${{ steps.library_gate.outputs.ready == 'true' }}
         working-directory: agent
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
