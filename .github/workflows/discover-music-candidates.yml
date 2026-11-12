@@ -1,6 +1,9 @@
 name: Discover new Jazz Soul Beat music candidates
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - "music-discovery-now.trigger"
   schedule:
     - cron: "30 12 * * 4"
 permissions:
@@ -104,7 +107,7 @@ jobs:
                       "source_url": first(row, "source_url"),
                       "download_url": first(row, "download_url"),
                       "screening_status": first(row, "screening_status"),
-                      "rights_status": first(row, "rights_verified", "permission", "uploader_authority"),
+                      "rights_status": first(row, "rights_verified", "permission", "uploader_authority", "rights_status"),
                       "review_status": first(row, "review_status", "screening_notes", "review_notes"),
                       "human_decision": "PENDING — NOT APPROVED",
                       "archive_identifier": first(row, "archive_identifier"),
