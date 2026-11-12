@@ -150,11 +150,8 @@ jobs:
           assert mean_diff < 5.0, mean_diff
           print(json.dumps({"duration": duration, "resolution": [2560,1440], "codec": "H.264/AAC", "start_to_60s_mean_pixel_difference": round(mean_diff,4)}))
           PY
-      - name: Persist review-only visual preview in private Drive
-        working-directory: agent
-        env:
-          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
-        run: python main.py drive-push
+      - name: Keep this technical preview as a temporary private artifact only
+        run: echo "Preview is not persisted to Drive; the one-hour music review package remains in private Drive."
       - name: Upload private preview artifact
         uses: actions/upload-artifact@v4
         with:
