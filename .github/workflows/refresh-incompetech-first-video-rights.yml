@@ -1,0 +1,127 @@
+name: Refresh Incompetech rights evidence for first video
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/refresh-incompetech-first-video-rights.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: jazz-soul-beat-first-video-visual-preview
+  cancel-in-progress: false
+jobs:
+  refresh-rights:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout private agent
+        uses: actions/checkout@v4
+        with:
+          repository: dacorot/jazzsoulbeat-agent
+          ref: fix/real-music-and-cinematic-motion
+          token: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
+          path: agent
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install agent dependencies
+        working-directory: agent
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt pytest
+      - name: Run private-agent tests
+        working-directory: agent
+        run: |
+          python -m compileall -q .
+          python -m pytest -q tests
+      - name: Restore current source evidence and review package from private Drive
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          from drive_storage import DriveStore
+          paths = (
+              "tracks/review/incompetech/source_audit.csv",
+              "tracks/review/incompetech/inspection_report.csv",
+              "output/incompetech_candidates.csv",
+              "output/first-video-review/INCOMPETECH_JAZZ_FIRST_HOUR_REVIEW_ONLY.mp3",
+              "output/first-video-review/MUSIC_SOURCE_REVIEW_ONLY.txt",
+              "output/first-video-review/REVIEW_MIX_PROVENANCE.json",
+          )
+          store = DriveStore.from_token_json(os.environ["DRIVE_TOKEN_JSON"])
+          result = store.pull(paths=paths)
+          for path in paths:
+              p = Path(path)
+              if not p.is_file() or p.stat().st_size == 0:
+                  raise RuntimeError(f"Required private review input missing: {path}")
+          print({"restored": result, "paths": paths})
+          PY
+      - name: Refresh creator ownership, media permission and license-version evidence
+        working-directory: agent
+        run: |
+          python rights_audit.py incompetech
+          python - <<'PY'
+          import csv, hashlib, json
+          from pathlib import Path
+          out = Path("output")
+          rights_csv = out / "incompetech-rights" / "INCOMPETECH_RIGHTS_AUDIT.csv"
+          rights_json = out / "incompetech-rights" / "INCOMPETECH_RIGHTS_EVIDENCE.json"
+          provenance_path = out / "first-video-review" / "REVIEW_MIX_PROVENANCE.json"
+          rows = list(csv.DictReader(rights_csv.open(encoding="utf-8-sig")))
+          evidence = json.loads(rights_json.read_text(encoding="utf-8"))
+          provenance = json.loads(provenance_path.read_text(encoding="utf-8"))
+          by_isrc = {row["isrc"]: row for row in rows}
+          for track in provenance["tracks"]:
+              row = by_isrc[track["isrc"]]
+              track["rights_chain_status"] = row["rights_chain_status"]
+              track["rights_review_status"] = row["review_status"]
+              track["rights_verified"] = row["rights_verified"]
+          provenance["rights_evidence_summary"] = evidence["rights_chain_status"]
+          provenance["rights_evidence_sha256"] = hashlib.sha256(rights_json.read_bytes()).hexdigest()
+          provenance["rights_verified_count"] = 0
+          provenance["youtube_upload"] = "not attempted"
+          provenance["drive_visibility"] = "private"
+          provenance_path.write_text(json.dumps(provenance, ensure_ascii=False, indent=2), encoding="utf-8")
+          assert len(provenance["tracks"]) == 16
+          assert provenance["rights_verified_count"] == 0
+          assert all(track["rights_verified"] == "no" for track in provenance["tracks"])
+          assert provenance["excluded_tracks"].get("USUAN2300005")
+          assert evidence["official_copyright_page"]["exclusive_recording_rights_claim"]
+          assert evidence["official_copyright_page"]["movies_and_other_media_permission"]
+          print(json.dumps({
+              "candidate_tracks": len(provenance["tracks"]),
+              "rights_verified_count": provenance["rights_verified_count"],
+              "creator_recording_rights_claim": evidence["official_copyright_page"]["exclusive_recording_rights_claim"],
+              "media_permission": evidence["official_copyright_page"]["movies_and_other_media_permission"],
+              "legacy_license_version_discrepancy": evidence["official_copyright_page"].get("license_version_discrepancy"),
+              "third_party_performer_excluded": list(provenance["excluded_tracks"]),
+              "rights_chain_status": evidence["rights_chain_status"],
+          }, ensure_ascii=False))
+          PY
+      - name: Persist updated rights evidence and provenance to private Drive
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: |
+          python main.py drive-push
+          python main.py drive-status
+      - name: Upload updated private rights evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: jazz-soul-beat-first-video-rights-evidence
+          path: |
+            agent/output/incompetech-rights/INCOMPETECH_RIGHTS_AUDIT.csv
+            agent/output/incompetech-rights/INCOMPETECH_RIGHTS_EVIDENCE.json
+            agent/output/first-video-review/REVIEW_MIX_PROVENANCE.json
+            agent/output/first-video-review/MUSIC_SOURCE_REVIEW_ONLY.txt
+            agent/output/first-video-review/INCOMPETECH_JAZZ_FIRST_HOUR_REVIEW_ONLY.mp3
+          if-no-files-found: error
+          retention-days: 7
+      - name: Confirm no approval or publication
+        run: |
+          echo "Rights evidence refresh only. All 16 tracks remain unapproved; no YouTube upload or publication."
