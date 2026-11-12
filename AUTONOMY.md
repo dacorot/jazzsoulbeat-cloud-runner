@@ -1,54 +1,52 @@
-# Jazz Soul Beat Agent — autonomous cloud operation
+# Jazz Soul Beat Agent — continuous cloud operation
 
-The controller runs on GitHub Actions. It does not depend on the Windows PC remaining on.
+## Operating model
+
+The agent operates seven days a week through scheduled, bounded cloud executions. The Windows PC does not need to remain on. This is continuous orchestration, not one permanently running process: GitHub Actions starts jobs throughout the day and night, restores durable state from private Google Drive, performs bounded work, verifies it and persists evidence.
+
+All human-facing times use Colombia (America/Bogota, UTC-5). GitHub Actions cron expressions use UTC and starts may be delayed by platform load.
 
 ## Scheduled jobs
 
-All times below are Colombia time (UTC-5). GitHub Actions schedules are approximate and may start later during platform load.
-
-| Schedule | Job | Purpose |
+| Cadence (Colombia) | Workflow | Purpose |
 |---|---|---|
-| Monday, 7:17 a. m. | audit-openlofi-rights.yml | Recheck the Open Lo-Fi release, source statements, audio hashes and rights evidence. Review-only; never approves tracks. |
-| Tuesday, 7:41 a. m. | private-agent-preflight.yml | Calls the reusable QA runner: compile, unit tests, synthetic video, artifact verification and private Drive persistence. |
-| Sunday, Tuesday and Thursday, 7:00 a. m. | build-first-review-video.yml | Attempts a new one-hour private review video. Builds only when one complete hour of approved, rights-verified music exists; otherwise stops safely. |
-| Monday, Wednesday and Friday, 8:00 a. m. | ChatGPT review reminder | Human PDCA review session: inspect the latest completed package, decide APPROVE/CORRECT/REJECT and record corrective actions. |
-| Thursday, 7:30 a. m. | discover-music-candidates.yml | Refreshes candidate catalogues from Wikimedia Commons, Incompetech, ccMixter and Ketsa; saves a consolidated review CSV. |
-| First day of each month, 7:30 a. m. | refresh-ketsa-review-library.yml | Refreshes official Ketsa candidate audio and its rights/provenance reports. |
-| First day of each month, 8:30 a. m. | refresh-incompetech-review-library.yml | Refreshes official Incompetech candidate audio and its rights/provenance reports. |
+| Every 6 hours, 24/7 | private-agent-preflight.yml | Agent health pulse: compile, unit tests, self-test, artifact QA and safe QA-only Drive persistence. |
+| Daily, 07:00 | build-first-review-video.yml | Attempt a private one-hour review video only when the complete approved and rights-verified music gate passes. |
+| Daily, 07:30 | discover-music-candidates.yml | Refresh candidate catalogues and consolidated review queues. Candidate discovery never approves tracks. |
+| Monday, 07:17 | audit-openlofi-rights.yml | Recheck Open Lo-Fi source statements, audio hashes and rights evidence; read-only. |
+| First day monthly, 07:30 | refresh-ketsa-review-library.yml | Refresh official Ketsa candidate audio, audition sampler and rights/provenance reports; review-only. |
+| First day monthly, 08:30 | refresh-incompetech-review-library.yml | Refresh official Incompetech candidates, sampler and rights/provenance reports; review-only. |
+| On demand | private-cloud-agent.yml | Manually requested self-test or approved-library build. |
 
-## Continuous improvement — Deming PDCA
+## Deming PDCA — mandatory for every task
 
-The review cadence, acceptance checklist and correction log are defined in [PDCA.md](PDCA.md). Every review checks the newest completed package, records defects and root causes, and turns reproducible defects into agent changes plus regression tests. Review approval and public-publication authorization are separate decisions.
+Every scheduled or manually dispatched task follows the same control loop:
+1. **Plan:** restore the latest Drive state; read prior defects, pending actions and checkpoints; choose a bounded priority; define acceptance checks and safety gates.
+2. **Do:** execute the task with an exact agent revision and unique run record.
+3. **Check:** validate outputs, provenance, media properties, tests and private persistence. A command exit code alone is not acceptance.
+4. **Act:** apply only safe, authorized and reproducible corrections; add regression coverage; retry bounded/idempotent work; record root cause and evidence. Escalate decisions requiring human judgment or rights approval without stopping unrelated safe tasks.
 
-## Production and publishing gates
+The six-hour preflight is the recurring technical health check. Daily discovery and production attempts advance the work queue. Weekly and monthly audits deepen the rights/provenance checks. The PDCA log and acceptance checklist are defined in [PDCA.md](PDCA.md).
 
-- The active music library accepts only audio referenced by production manifests and passing the rights, source, duration and music-metadata checks.
+## Production and publication gates
+
+- Only audio referenced by production manifests and passing source, rights, duration and metadata checks may enter production.
 - Candidate discovery, download and rights audits never approve tracks automatically.
-- A production video is not built from an incomplete hour, shortened tracks or repeated tracks.
-- The scheduled build reports PENDING while the approved music library is insufficient; it does not misreport a skipped build as a completed video.
-- If a valid YouTube OAuth secret is configured, the upload code is hard-coded to PRIVATE and checks the expected channel. Without OAuth, the MP4 stays in private Drive.
-- Public publishing is not part of these workflows.
-- Cloudflare FLUX Schnell is the only configured image-generation route. Missing credentials or free quota fail closed; no paid fallback or billing is enabled.
+- The first video is 60 minutes; later videos alternate 2- and 3-hour targets as the approved library permits.
+- No video is built from an incomplete library, shortened tracks or repeated tracks.
+- Finished review packages remain in private Google Drive.
+- **No YouTube upload is allowed, including private upload, until the user explicitly authorizes it.** Public publishing always requires separate explicit authorization.
+- No paid services, paid fallbacks, subscriptions or billing activation.
+- A blocked rights gate is a valid, clearly reported outcome; it is never silently bypassed.
+
+## Execution limits and truthful status
+
+GitHub Actions is a job scheduler, not a permanently running server. Each execution is bounded, may be delayed, and must persist checkpoints before it ends. “Continuous” means repeated, scheduled PDCA cycles across the full 24-hour day, not an uninterrupted process. The agent must never claim a cycle completed until its outputs and evidence have been verified.
 
 ## Current discovery baseline
 
-The first complete four-source pass produced 398 candidate rows:
+The consolidated music review queues are stored in private Drive. Every candidate remains pending until the complete rights chain is reviewed. Duration and catalogue metadata are triage evidence only, not proof that a recording is safe for commercial synchronization.
 
-- Wikimedia Commons: 171
-- Incompetech: 43
-- ccMixter: 84
-- Ketsa: 100
+## Reusing the runner for other agents
 
-The consolidated review queue is saved in Drive as output/MUSIC_CANDIDATE_REVIEW.csv. These are candidates, not approvals. Open Lo-Fi's separate 40-track review set and its rights audit remain under tracks/review/openlofi/ and output/openlofi-review/.
-
-## Reusing the runner for three more agents
-
-Use .github/workflows/reusable-private-agent.yml from each new controller. The private agent must expose the standard QA contract:
-
-- requirements.txt
-- main.py self-test
-- main.py drive-push
-- main.py drive-status
-- tests/
-
-Each agent must have its own private Drive folder/namespace and its own secrets. Do not share Jazz Soul Beat's production library, credentials, or publication channel with another agent. The reusable workflow performs QA and private persistence only; each agent keeps its own task-specific automation and approval gates.
+Use .github/workflows/reusable-private-agent.yml only for independent agents with separate private Drive namespaces, secrets and publication gates. Never share Jazz Soul Beat's production library, credentials or publication channel.
