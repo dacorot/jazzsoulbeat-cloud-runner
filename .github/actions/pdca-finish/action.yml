@@ -1,0 +1,45 @@
+name: Finish PDCA cycle
+description: Record execution, verify acceptance checks, act on deviations and persist governance state
+inputs:
+  cycle_id:
+    description: PDCA cycle identifier
+    required: true
+  checks_json:
+    description: JSON array of named checks with passed booleans
+    required: true
+  result_json:
+    description: JSON object describing execution result
+    required: true
+  evidence:
+    description: Evidence reference
+    required: false
+    default: ""
+  drive_token_json:
+    description: Private Google Drive token JSON
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Record execution and verification
+      id: verify
+      shell: bash
+      env:
+        CYCLE_ID: ${{ inputs.cycle_id }}
+        CHECKS_JSON: ${{ inputs.checks_json }}
+        RESULT_JSON: ${{ inputs.result_json }}
+        EVIDENCE: ${{ inputs.evidence }}
+        DRIVE_TOKEN_JSON: ${{ inputs.drive_token_json }}
+      run: |
+        set -euo pipefail
+        python main.py pdca-do --cycle-id "$CYCLE_ID" --result-json "$RESULT_JSON" --evidence "$EVIDENCE"
+        set +e
+        python main.py pdca-check --cycle-id "$CYCLE_ID" --checks-json "$CHECKS_JSON"
+        result=$?
+        set -e
+        if [ "$result" -eq 0 ]; then
+          python main.py pdca-act --cycle-id "$CYCLE_ID" --root-cause "Acceptance checks passed; no active defect detected" --corrective-action "Retain the validated configuration and compare future runs against this baseline" --regression-test "Repeat the task acceptance checks in the next cycle" --result "All acceptance checks passed"
+        else
+          python main.py pdca-act --cycle-id "$CYCLE_ID" --root-cause "One or more acceptance checks failed; inspect this run's logs" --corrective-action "Keep production gates closed, diagnose the first failing check and apply a bounded correction" --regression-test "Repeat all failed checks plus the relevant unit/regression tests" --result "Correction or human decision required; verify in the next cycle"
+        fi
+        python main.py drive-push-state
+        exit "$result"
