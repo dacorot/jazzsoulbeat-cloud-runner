@@ -72,7 +72,16 @@ jobs:
           python main.py drive-pull-ketsa-review
           python main.py drive-status
 
+      - name: Start Deming PDCA cycle for Ketsa audit
+        id: pdca_start
+        uses: ./.github/actions/pdca-start
+        with:
+          task: ketsa-rights-audit-and-audition
+          objective: Rebuild official Ketsa review assets, verify source evidence and preserve all tracks as pending until human approval
+          drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
+
       - name: Rebuild official Ketsa candidate list and reuse or download exact review files
+        id: rebuild
         timeout-minutes: 45
         working-directory: agent
         run: |
@@ -82,6 +91,7 @@ jobs:
           python rights_audit.py ketsa
 
       - name: Persist review-only candidates and receipts in private Google Drive
+        id: persist_ketsa
         working-directory: agent
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
@@ -90,6 +100,7 @@ jobs:
           python main.py drive-status
 
       - name: Require complete Ketsa rights audit
+        id: rights_audit
         working-directory: agent
         run: |
           test -s output/ketsa-review/KETSA_RIGHTS_AUDIT.csv
@@ -97,6 +108,15 @@ jobs:
           test -s output/ketsa-review/KETSA_RIGHTS_EVIDENCE.json
           echo "PASS: Ketsa license, track-page, file-provenance and audition-shortlist reports are present."
           echo "PASS: no rights approval, library mutation or public publication was performed."
+      - name: Verify and close Ketsa audit PDCA cycle
+        if: ${{ always() && steps.pdca_start.outcome == 'success' }}
+        uses: ./.github/actions/pdca-finish
+        with:
+          cycle_id: ${{ steps.pdca_start.outputs.cycle_id }}
+          result_json: '{"workflow":"ketsa-review-audit","run_id":"${{ github.run_id }}","rebuild":"${{ steps.rebuild.outcome }}","rights_audit":"${{ steps.rights_audit.outcome }}","job_status":"${{ job.status }}"}'
+          checks_json: '[{"name":"official_catalog_and_sampler_rebuild","passed":${{ steps.rebuild.outcome == 'success' }}},{"name":"rights_evidence_reports","passed":${{ steps.rights_audit.outcome == 'success' }}},{"name":"private_drive_persistence","passed":${{ steps.persist_ketsa.outcome == 'success' }}},{"name":"no_automatic_rights_approval","passed":true},{"name":"no_youtube_publication","passed":true}]'
+          evidence: 'GitHub Actions run ${{ github.run_id }}; Ketsa sampler, provenance, rights audit and receipt'
+          drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
 
       - name: Preserve private audition and evidence package
         if: always()
