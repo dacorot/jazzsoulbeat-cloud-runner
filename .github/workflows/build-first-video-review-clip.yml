@@ -1,4 +1,5 @@
 name: Build private first-video visual loop preview
+# Revalidate the optimized 60-second loop-render-and-mux path for the Saturday first release.
 on:
   push:
     branches: [main]
@@ -34,6 +35,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ffmpeg
           ffmpeg -version | head -n 2
+      - name: Run complete private-agent regression suite
+        working-directory: agent
+        run: |
+          python -m compileall -q .
+          python -m pytest -q tests
       - name: Restore private review mix and candidate anime image from Drive
         working-directory: agent
         env:
