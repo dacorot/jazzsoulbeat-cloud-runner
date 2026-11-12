@@ -34,7 +34,7 @@ on:
       agent_ref:
         description: "Rama o SHA del agente privado que se validará"
         required: true
-        default: master
+        default: fix/real-music-and-cinematic-motion
         type: string
 
 permissions:
