@@ -1,9 +1,6 @@
 name: Discover new Jazz Soul Beat music candidates
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - "music-discovery-now.trigger"
   schedule:
     - cron: "30 12 * * 4"
 permissions:
