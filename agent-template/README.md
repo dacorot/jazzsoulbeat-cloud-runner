@@ -32,7 +32,9 @@ jobs:
       agent_repository: YOUR_ORG/YOUR_PRIVATE_AGENT
       agent_ref: main
       python_version: "3.11"
-    secrets: inherit
+    secrets:
+      PRIVATE_REPO_READ_TOKEN: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
+      DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
 ```
 
 The caller must have `PRIVATE_REPO_READ_TOKEN` and `DRIVE_TOKEN_JSON` configured. Keep each agent's Drive namespace/folder isolated; do not reuse Jazz Soul Beat production data.
