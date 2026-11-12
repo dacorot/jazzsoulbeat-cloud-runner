@@ -61,6 +61,21 @@ jobs:
       - name: Build synthetic QA output
         working-directory: agent
         run: python main.py self-test
+      - name: Verify synthetic QA artifacts
+        working-directory: agent
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          folders = sorted(Path("output").glob("self-test-*"))
+          if not folders:
+              raise SystemExit("No synthetic QA folder was produced.")
+          latest = folders[-1]
+          required = ["test-video.mp4", "test-mix.mp3", "test-thumbnail.jpg", "SELF_TEST.txt"]
+          missing = [name for name in required if not (latest / name).is_file() or (latest / name).stat().st_size <= 0]
+          if missing:
+              raise SystemExit("Missing or empty QA artifacts: " + ", ".join(missing))
+          print(f"Verified synthetic QA package: {latest}")
+          PY
       - name: Persist QA output to private Drive
         working-directory: agent
         env:
