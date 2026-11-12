@@ -47,22 +47,31 @@ jobs:
           required = (
               "output/first-video-review/INCOMPETECH_JAZZ_FIRST_HOUR_REVIEW_ONLY.mp3",
               "output/first-video-review/MUSIC_SOURCE_REVIEW_ONLY.txt",
+              "output/first-video-review/REVIEW_MIX_PROVENANCE.json",
               "output/ketsa-review/KETSA_AUDITION_BACKGROUND.jpg",
           )
+          accepted = False
           for attempt in range(40):
               remote = store._index_remote(store._remote_files())
               if all(path in remote for path in required):
-                  break
-              print(f"Waiting for first-hour review mix in private Drive ({attempt+1}/40)")
+                  result = store.pull(paths=required)
+                  provenance_path = Path(required[2])
+                  if provenance_path.is_file():
+                      import json
+                      provenance = json.loads(provenance_path.read_text(encoding="utf-8"))
+                      exclusions = provenance.get("excluded_tracks", {})
+                      if "USUAN2300005" in exclusions:
+                          accepted = True
+                          break
+              print(f"Waiting for performer-filtered first-hour review mix in private Drive ({attempt+1}/40)")
               time.sleep(15)
-          else:
-              raise RuntimeError("Private review mix did not appear in Drive within 10 minutes.")
-          result = store.pull(paths=required)
+          if not accepted:
+              raise RuntimeError("A fresh mix excluding the named guest performer did not appear in private Drive within 10 minutes.")
           for path in required:
               local = Path(path)
               if not local.is_file() or local.stat().st_size == 0:
                   raise RuntimeError(f"Missing restored review input: {path}")
-          print({"restored": result, "inputs": required})
+          print({"restored": result, "inputs": required, "excluded_guest_performer": "USUAN2300005"})
           PY
       - name: Render a two-minute private 60-second-loop test
         working-directory: agent
