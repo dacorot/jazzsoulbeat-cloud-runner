@@ -1,4 +1,5 @@
 name: Refresh Incompetech rights evidence for first video
+# Finalize the source-by-source distinction between FAQ license version and legacy copyright page.
 on:
   push:
     branches: [main]
