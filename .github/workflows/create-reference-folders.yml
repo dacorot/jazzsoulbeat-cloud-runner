@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/create-reference-folders.yml"
+      # Also reports file names in the private reference folders; no sharing changes.
   workflow_dispatch:
 
 permissions:
