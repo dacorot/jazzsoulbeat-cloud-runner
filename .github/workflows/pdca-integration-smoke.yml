@@ -60,7 +60,8 @@ jobs:
         with:
           cycle_id: ${{ steps.pdca_start.outputs.cycle_id }}
           result_json: '{"workflow":"pdca-composite-smoke","run_id":"${{ github.run_id }}","checks":"${{ steps.checks.outcome }}"}'
-          checks_json: '[{"name":"governance_policy","passed":${{ steps.checks.outcome == 'success' }}},{"name":"three_layer_memory","passed":${{ steps.checks.outcome == 'success' }}},{"name":"kpi_report_export","passed":${{ steps.checks.outcome == 'success' }}},{"name":"publication_remains_disabled","passed":true}]'
+          checks_json: >-
+            [{"name":"governance_policy","passed":${{ steps.checks.outcome == 'success' }}},{"name":"three_layer_memory","passed":${{ steps.checks.outcome == 'success' }}},{"name":"kpi_report_export","passed":${{ steps.checks.outcome == 'success' }}},{"name":"publication_remains_disabled","passed":true}]
           evidence: 'GitHub Actions run ${{ github.run_id }}; autonomy policy, seeded memory and KPI report'
           drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
       - name: Persist smoke-test KPI report to private Drive
