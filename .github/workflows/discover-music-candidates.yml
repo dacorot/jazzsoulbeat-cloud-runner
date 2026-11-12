@@ -78,10 +78,11 @@ jobs:
           root = Path("output")
           source_files = sorted(p for p in root.glob("*_candidates.csv"))
           fields = [
-              "source_catalog", "title", "artist", "duration_seconds", "genre",
+              "source_catalog", "title", "artist", "duration_seconds", "duration_raw", "genre",
               "instruments", "mood", "license_name", "license_url", "source_url",
               "download_url", "screening_status", "rights_status", "review_status",
               "human_decision", "archive_identifier", "filename", "format", "size_bytes",
+              "provider", "source", "filetype", "openverse_id", "attribution",
           ]
           def first(row, *keys):
               for key in keys:
@@ -89,6 +90,19 @@ jobs:
                   if value not in (None, ""):
                       return str(value).strip()
               return ""
+          def duration_seconds(value):
+              text = str(value or "").strip()
+              if not text:
+                  return None
+              try:
+                  if ":" in text:
+                      total = 0.0
+                      for part in text.split(":"):
+                          total = total * 60 + float(part)
+                      return total
+                  return float(text)
+              except (TypeError, ValueError):
+                  return None
           master = []
           counts = []
           for path in source_files:
@@ -96,11 +110,14 @@ jobs:
                   rows = list(csv.DictReader(handle))
               counts.append((path.name, len(rows)))
               for row in rows:
+                  raw_duration = first(row, "duration_seconds", "duration")
+                  parsed_duration = duration_seconds(raw_duration)
                   master.append({
                       "source_catalog": path.stem.replace("_candidates", ""),
                       "title": first(row, "title", "title_hint", "file_title"),
                       "artist": first(row, "artist", "artist_hint"),
-                      "duration_seconds": first(row, "duration_seconds", "duration"),
+                      "duration_seconds": f"{parsed_duration:.2f}" if parsed_duration is not None else "",
+                      "duration_raw": raw_duration,
                       "genre": first(row, "genre", "genres", "discovery_category", "page_tags"),
                       "instruments": first(row, "instruments"),
                       "mood": first(row, "mood", "feel"),
@@ -116,6 +133,11 @@ jobs:
                       "filename": first(row, "filename"),
                       "format": first(row, "format"),
                       "size_bytes": first(row, "size_bytes"),
+                      "provider": first(row, "provider"),
+                      "source": first(row, "source"),
+                      "filetype": first(row, "filetype"),
+                      "openverse_id": first(row, "openverse_id"),
+                      "attribution": first(row, "attribution"),
                   })
           with (root / "MUSIC_CANDIDATE_REVIEW.csv").open("w", newline="", encoding="utf-8-sig") as handle:
               writer = csv.DictWriter(handle, fieldnames=fields)
@@ -131,8 +153,24 @@ jobs:
               "",
           ]
           lines.extend(f"- {name}: {count} rows" for name, count in counts)
+          valid_durations = [float(row["duration_seconds"]) for row in master if row["duration_seconds"]]
+          source_urls = [row["source_url"].strip().casefold() for row in master if row["source_url"]]
+          unique_urls = set(source_urls)
+          duplicate_urls = len(source_urls) - len(unique_urls)
+          unique_track_keys = {
+              (row["title"].strip().casefold(), row["artist"].strip().casefold())
+              for row in master if row["title"].strip()
+          }
           lines += [
               "",
+              f"Unique source URLs: {len(unique_urls)}",
+              f"Duplicate source URL rows: {duplicate_urls}",
+              f"Rows with parseable duration: {len(valid_durations)}",
+              f"Rows missing/unparseable duration: {len(master) - len(valid_durations)}",
+              f"Rows longer than 180 seconds (metadata only): {sum(value > 180 for value in valid_durations)}",
+              f"Unique title/artist keys: {len(unique_track_keys)}",
+              "",
+              "Duration and duplicate counts are metadata triage only. They do not verify that a file is a complete music track or that its rights chain is valid.",
               "The master CSV is a review queue, not an approval manifest. Confirm uploader authority, composition, performance, master recording, samples, commercial use, synchronization and channel suitability before any track is approved.",
           ]
           (root / "MUSIC_DISCOVERY_SUMMARY.md").write_text(chr(10).join(lines) + chr(10), encoding="utf-8")
