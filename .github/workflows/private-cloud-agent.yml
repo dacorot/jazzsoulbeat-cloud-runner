@@ -172,7 +172,8 @@ jobs:
         with:
           cycle_id: ${{ steps.pdca_start.outputs.cycle_id }}
           result_json: '{"workflow":"private-cloud-agent","task":"${{ inputs.task }}","run_id":"${{ github.run_id }}","job_status":"${{ job.status }}"}'
-          checks_json: '[{"name":"restore_state","passed":${{ steps.restore.outcome == 'success' }}},{"name":"requested_task","passed":${{ (inputs.task == 'self-test' && steps.self_test.outcome == 'success') || (inputs.task == 'build-evergreen' && steps.build_video.outcome == 'success') }}},{"name":"private_drive_persistence","passed":${{ steps.persist_outputs.outcome == 'success' }}},{"name":"no_youtube_publication","passed":true}]'
+          checks_json: >-
+            [{"name":"restore_state","passed":${{ steps.restore.outcome == 'success' }}},{"name":"requested_task","passed":${{ (inputs.task == 'self-test' && steps.self_test.outcome == 'success') || (inputs.task == 'build-evergreen' && steps.build_video.outcome == 'success') }}},{"name":"private_drive_persistence","passed":${{ steps.persist_outputs.outcome == 'success' }}},{"name":"no_youtube_publication","passed":true}]
           evidence: 'GitHub Actions run ${{ github.run_id }}; requested task outputs and private Drive inventory'
           drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
 
