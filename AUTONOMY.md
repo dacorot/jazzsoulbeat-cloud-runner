@@ -10,10 +10,15 @@ All times below are Colombia time (UTC-5). GitHub Actions schedules are approxim
 |---|---|---|
 | Monday, 7:17 a. m. | audit-openlofi-rights.yml | Recheck the Open Lo-Fi release, source statements, audio hashes and rights evidence. Review-only; never approves tracks. |
 | Tuesday, 7:41 a. m. | private-agent-preflight.yml | Calls the reusable QA runner: compile, unit tests, synthetic video, artifact verification and private Drive persistence. |
-| Wednesday, 7:55 a. m. | build-first-review-video.yml | Restores only production-manifest audio. Builds only when one complete hour of approved, rights-verified music exists. |
+| Sunday, Tuesday and Thursday, 7:00 a. m. | build-first-review-video.yml | Attempts a new one-hour private review video. Builds only when one complete hour of approved, rights-verified music exists; otherwise stops safely. |
+| Monday, Wednesday and Friday, 8:00 a. m. | ChatGPT review reminder | Human PDCA review session: inspect the latest completed package, decide APPROVE/CORRECT/REJECT and record corrective actions. |
 | Thursday, 7:30 a. m. | discover-music-candidates.yml | Refreshes candidate catalogues from Wikimedia Commons, Incompetech, ccMixter and Ketsa; saves a consolidated review CSV. |
 | First day of each month, 7:30 a. m. | refresh-ketsa-review-library.yml | Refreshes official Ketsa candidate audio and its rights/provenance reports. |
 | First day of each month, 8:30 a. m. | refresh-incompetech-review-library.yml | Refreshes official Incompetech candidate audio and its rights/provenance reports. |
+
+## Continuous improvement — Deming PDCA
+
+The review cadence, acceptance checklist and correction log are defined in [PDCA.md](PDCA.md). Every review checks the newest completed package, records defects and root causes, and turns reproducible defects into agent changes plus regression tests. Review approval and public-publication authorization are separate decisions.
 
 ## Production and publishing gates
 
