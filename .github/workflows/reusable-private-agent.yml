@@ -117,7 +117,9 @@ jobs:
       - name: Generate daily KPI report from observed events
         if: ${{ always() && steps.restore_state.outcome == 'success' }}
         working-directory: agent
-        run: python main.py performance-report --days 1 --save
+        run: |
+          python main.py performance-report --days 1 --save
+          python main.py performance-report --days 7 --save
       - name: Persist QA output and PDCA state to private Drive
         if: ${{ always() && steps.restore_state.outcome == 'success' }}
         working-directory: agent
