@@ -13,7 +13,7 @@ permissions:
 
 # Serialize with the Incompetech refresh so both jobs never write the same Drive tree concurrently.
 concurrency:
-  group: jazz-soul-beat-first-video-visual-preview
+  group: jazz-soul-beat-incompetech-review-refresh
   cancel-in-progress: false
 
 jobs:
