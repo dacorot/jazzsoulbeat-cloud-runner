@@ -36,11 +36,19 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
-      - name: Restore review audio from private Drive
+      - name: Restore only Open Lo-Fi review files from private Drive
         working-directory: agent
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
-        run: python main.py drive-pull-library
+        run: |
+          python - <<'PY'
+          import json, os
+          from drive_storage import DriveStore
+          store = DriveStore.from_token_json(os.environ["DRIVE_TOKEN_JSON"])
+          result = store.pull(paths=("tracks/review/openlofi/",))
+          print(json.dumps(result, ensure_ascii=False))
+          PY
+          test "$(find tracks/review/openlofi -maxdepth 1 -name '*.mp3' | wc -l)" -eq 40
       - name: Run read-only rights and provenance audit
         working-directory: agent
         run: python scripts/audit_openlofi_rights.py
