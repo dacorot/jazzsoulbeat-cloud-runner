@@ -40,6 +40,8 @@ jobs:
         run: |
           ffmpeg -version
           ffprobe -version
+      - name: Install test runner
+        run: python -m pip install pytest
       - name: Run agent tests, including strict rights gate
         run: python -m pytest -q tests
         working-directory: agent
