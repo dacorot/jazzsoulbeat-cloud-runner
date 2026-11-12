@@ -92,6 +92,7 @@ jobs:
           assert provenance["rights_verified_count"] == 0
           assert all(track["rights_verified"] == "no" for track in provenance["tracks"])
           assert provenance["excluded_tracks"].get("USUAN2300005")
+          assert provenance["excluded_tracks"].get("USUAN1900030")
           assert evidence["official_copyright_page"]["exclusive_recording_rights_claim"]
           assert evidence["official_copyright_page"]["movies_and_other_media_permission"]
           print(json.dumps({
