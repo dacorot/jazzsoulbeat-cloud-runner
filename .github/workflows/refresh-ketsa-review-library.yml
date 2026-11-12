@@ -114,7 +114,8 @@ jobs:
         with:
           cycle_id: ${{ steps.pdca_start.outputs.cycle_id }}
           result_json: '{"workflow":"ketsa-review-audit","run_id":"${{ github.run_id }}","rebuild":"${{ steps.rebuild.outcome }}","rights_audit":"${{ steps.rights_audit.outcome }}","job_status":"${{ job.status }}"}'
-          checks_json: '[{"name":"official_catalog_and_sampler_rebuild","passed":${{ steps.rebuild.outcome == 'success' }}},{"name":"rights_evidence_reports","passed":${{ steps.rights_audit.outcome == 'success' }}},{"name":"private_drive_persistence","passed":${{ steps.persist_ketsa.outcome == 'success' }}},{"name":"no_automatic_rights_approval","passed":true},{"name":"no_youtube_publication","passed":true}]'
+          checks_json: >-
+            [{"name":"official_catalog_and_sampler_rebuild","passed":${{ steps.rebuild.outcome == 'success' }}},{"name":"rights_evidence_reports","passed":${{ steps.rights_audit.outcome == 'success' }}},{"name":"private_drive_persistence","passed":${{ steps.persist_ketsa.outcome == 'success' }}},{"name":"no_automatic_rights_approval","passed":true},{"name":"no_youtube_publication","passed":true}]
           evidence: 'GitHub Actions run ${{ github.run_id }}; Ketsa sampler, provenance, rights audit and receipt'
           drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
 
