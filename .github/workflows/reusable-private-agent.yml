@@ -114,6 +114,10 @@ jobs:
         working-directory: agent
         run: |
           python main.py pdca-act --cycle-id "${{ steps.pdca_start.outputs.cycle_id }}" --root-cause "One or more cloud preflight acceptance checks failed; inspect the failed step logs" --corrective-action "Keep the production gates closed, diagnose the first failing check and apply a bounded correction" --regression-test "Repeat compile, full unit suite, synthetic render and artifact inspection" --result "Correction required; next preflight must verify the fix"
+      - name: Generate daily KPI report from observed events
+        if: ${{ always() && steps.restore_state.outcome == 'success' }}
+        working-directory: agent
+        run: python main.py performance-report --days 1 --save
       - name: Persist QA output and PDCA state to private Drive
         if: ${{ always() && steps.restore_state.outcome == 'success' }}
         working-directory: agent
