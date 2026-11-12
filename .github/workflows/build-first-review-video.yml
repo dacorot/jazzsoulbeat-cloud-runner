@@ -178,7 +178,8 @@ jobs:
         with:
           cycle_id: ${{ steps.pdca_start.outputs.cycle_id }}
           result_json: '{"workflow":"first-review-video","run_id":"${{ github.run_id }}","approved_music_gate":"${{ steps.library_gate.outputs.ready }}","job_status":"${{ job.status }}"}'
-          checks_json: '[{"name":"approved_library_gate_executed","passed":${{ steps.library_gate.outcome == 'success' }}},{"name":"video_media_validation_or_safe_gate_block","passed":${{ steps.library_gate.outputs.ready != 'true' || steps.video_verify.outcome == 'success' }}},{"name":"private_drive_persistence_or_no_build_required","passed":${{ steps.library_gate.outputs.ready != 'true' || steps.persist_review.outcome == 'success' }}},{"name":"youtube_upload_prohibited","passed":true}]'
+          checks_json: >-
+            [{"name":"approved_library_gate_executed","passed":${{ steps.library_gate.outcome == 'success' }}},{"name":"video_media_validation_or_safe_gate_block","passed":${{ steps.library_gate.outputs.ready != 'true' || steps.video_verify.outcome == 'success' }}},{"name":"private_drive_persistence_or_no_build_required","passed":${{ steps.library_gate.outputs.ready != 'true' || steps.persist_review.outcome == 'success' }}},{"name":"youtube_upload_prohibited","passed":true}]
           evidence: 'GitHub Actions run ${{ github.run_id }}; video gate and private review package'
           drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
 
