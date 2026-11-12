@@ -1,4 +1,4 @@
-name: Reusable private cloud agent QA runner — full autonomy, KPI and PDCA validation
+name: Reusable private cloud agent QA runner — full autonomy, KPI, memory and PDCA validation
 on:
   workflow_call:
     inputs:
