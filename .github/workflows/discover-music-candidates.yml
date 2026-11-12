@@ -36,7 +36,7 @@ jobs:
         id: commons
         continue-on-error: true
         working-directory: agent
-        run: python main.py discover-commons --limit 100
+        run: python main.py discover-commons --limit 200
       - name: Discover candidates from Internet Archive CC BY and CC0 audio
         id: internet_archive
         continue-on-error: true
@@ -58,7 +58,7 @@ jobs:
         id: ccmixter
         continue-on-error: true
         working-directory: agent
-        run: python main.py discover-ccmixter --limit 100
+        run: python main.py discover-ccmixter --limit 200
       - name: Discover candidates from Ketsa official catalogue
         id: ketsa
         continue-on-error: true
