@@ -10,7 +10,7 @@ permissions:
 jobs:
   inspect:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - name: Checkout controller
         uses: actions/checkout@v4
@@ -38,7 +38,7 @@ jobs:
           sys.path.insert(0, "agent")
           from drive_storage import DriveStore
           store = DriveStore.from_token_json(os.environ["DRIVE_TOKEN_JSON"], root=Path("agent"))
-          file_id = "16N3Aes3bcsCFFZcoMTni-89EC5DdfH8C"
+          file_id = "1BqYqPn1y8nO6yXigow3vcnB9kDgKqDyz"
           metadata = store.service.files().get(
               fileId=file_id,
               fields="id,name,mimeType,size,modifiedTime,webViewLink",
