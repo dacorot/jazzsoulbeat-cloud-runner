@@ -2,6 +2,8 @@ name: Private agent preflight (no upload)
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "41 12 * * 2"
 
 permissions:
   contents: read
