@@ -2,10 +2,8 @@ name: Refresh private Incompetech review library
 # Refresh trigger: persist all 43 official jazz and holiday candidates using the corrected Drive HTTP 308 resumable-upload transport.
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/refresh-incompetech-review-library.yml"
+  schedule:
+    - cron: "30 13 1 * *"
   workflow_dispatch:
 
 permissions:
