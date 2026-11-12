@@ -3,6 +3,9 @@ name: Build first private Jazz Soul Beat review video
 on:
   schedule:
     - cron: "55 12 * * 3"
+  push:
+    branches: [main]
+    paths: [".github/workflows/build-first-review-video.yml"]
   workflow_dispatch:
 
 permissions:
