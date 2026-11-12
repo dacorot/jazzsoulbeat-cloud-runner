@@ -51,7 +51,7 @@ jobs:
               "output/ketsa-review/KETSA_AUDITION_BACKGROUND.jpg",
           )
           accepted = False
-          for attempt in range(40):
+          for attempt in range(80):
               remote = store._index_remote(store._remote_files())
               if all(path in remote for path in required):
                   result = store.pull(paths=required)
@@ -66,7 +66,7 @@ jobs:
               print(f"Waiting for performer-filtered first-hour review mix in private Drive ({attempt+1}/40)")
               time.sleep(15)
           if not accepted:
-              raise RuntimeError("A fresh mix excluding the named guest performer did not appear in private Drive within 10 minutes.")
+              raise RuntimeError("A fresh mix excluding the named guest performer did not appear in private Drive within 20 minutes.")
           for path in required:
               local = Path(path)
               if not local.is_file() or local.stat().st_size == 0:
