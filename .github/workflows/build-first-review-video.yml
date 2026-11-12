@@ -2,8 +2,8 @@ name: Build new private Jazz Soul Beat review videos
 
 on:
   schedule:
-    # 07:00 Colombia (UTC-5): Sunday, Tuesday, Thursday. Review sessions follow Monday/Wednesday/Friday mornings.
-    - cron: "0 12 * * 0,2,4"
+    # Daily at 07:00 Colombia (UTC-5).
+    - cron: "0 12 * * *"
   workflow_dispatch:
 
 permissions:
