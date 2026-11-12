@@ -1,68 +1,87 @@
-# Jazz Soul Beat — ciclo Deming (PDCA)
+# Jazz Soul Beat — ciclo Deming continuo (PDCA)
 
-## Cadencia operativa
+## Política de operación
 
-Zona horaria de referencia: Colombia (America/Bogota).
+La operación es continua, los siete días de la semana, sin depender del PC de Windows. No se mantiene un proceso de cómputo encendido permanentemente: GitHub Actions despierta ejecuciones programadas y acotadas durante las 24 horas. Cada ejecución restaura el estado persistente desde Google Drive, trabaja sobre una tarea delimitada, verifica sus resultados y guarda evidencias y estado.
 
-- **Domingo, martes y jueves — 07:00:** GitHub Actions intenta construir un video nuevo de una hora y guarda el paquete en Google Drive privado. Si la biblioteca no tiene una hora completa de música aprobada y con derechos verificados, el proceso se detiene sin crear un video.
-- **Lunes, miércoles y viernes — 08:00:** sesión de revisión humana. Se revisa el paquete más reciente generado desde la sesión anterior.
-- Los horarios de Actions son objetivos de inicio; la cola de GitHub puede retrasar la ejecución. La revisión debe basarse en un paquete terminado y verificado, no solo en que el workflow haya comenzado.
+Zona horaria humana: Colombia (America/Bogota, UTC-5). Los cron de GitHub se expresan en UTC y pueden iniciar con retraso. La cadencia programada es una garantía de intento, no de inicio exacto.
+
+## Cadencia automatizada
+
+- **Cada 6 horas, todos los días:** preflight del agente privado: restaurar el estado necesario, compilar, ejecutar pruebas, self-test técnico, comprobar artefactos y persistir únicamente los resultados QA permitidos. Esta ejecución es el pulso de control de salud.
+- **Todos los días, 07:00 Colombia:** intentar construir un nuevo video de revisión de una hora. Solo continúa si existe una hora completa de música aprobada y con derechos verificados; de lo contrario registra el bloqueo y no genera un video incompleto.
+- **Todos los días, 07:30 Colombia:** actualizar la cola de descubrimiento musical y sus métricas. Los candidatos permanecen pendientes; descubrir no equivale a aprobar.
+- **Semanalmente:** auditorías de procedencia y derechos de catálogos en revisión.
+- **Mensualmente:** refresco de catálogos oficiales Ketsa e Incompetech.
+- **A demanda:** ejecuciones manuales para tareas correctivas o trabajos específicos.
 
 ## P — Planear
 
-Antes de cada ciclo, mantener claros los criterios de aceptación:
-- Una hora completa, sin repetir pistas dentro del mismo video ni acelerar, recortar o alargar canciones para rellenar.
-- Solo música aprobada y con evidencia de derechos registrada.
-- Audio continuo, transiciones limpias y niveles consistentes.
-- Video H.264 QHD 2560×1440, audio AAC estéreo.
-- Arte original anime adulto, sofisticado y cinematográfico; continuidad de personajes y dirección visual.
-- Movimiento ambiental perceptible y bucles visuales sin saltos.
-- Metadatos, thumbnail y manifiesto de procedencia completos.
-- El paquete queda privado. La publicación pública requiere aprobación explícita de la usuaria.
+Antes de cada tarea, el agente debe:
+- Restaurar el último estado válido desde Drive.
+- Leer pendientes, bloqueos, defectos y acciones correctivas previas.
+- Priorizar primero el entregable de producción más cercano y los bloqueos que lo impiden.
+- Definir objetivo, entradas, criterios de aceptación, límites de seguridad y evidencia esperada.
+- Evitar duplicar trabajos en curso mediante grupos de concurrencia y checkpoints.
 
 ## D — Hacer
 
-El agente construye un paquete nuevo en cada ejecución programada. Cada ejecución debe tener su propia carpeta, mezcla, video, thumbnail, descripción, manifiesto musical y prueba técnica. La selección favorece pistas menos utilizadas, pero el historial de uso por sí solo no demuestra que una combinación musical sea inédita; comprobar la lista de pistas en la revisión.
+Ejecutar una tarea delimitada y reanudable. Cada ejecución debe registrar su identificador, revisión exacta del agente, entradas, salidas y estado. Los archivos de trabajo y los entregables permanecen en Drive privado. Las ejecuciones deben poder reintentarse sin corromper catálogos ni sobrescribir resultados ajenos.
 
 ## C — Verificar
 
-En cada sesión de lunes, miércoles o viernes, revisar el paquete más reciente que haya terminado correctamente:
-1. **Integridad:** duración real, resolución, códecs, reproducción completa y archivos auxiliares.
-2. **Música:** identidad de cada pista frente al manifiesto, calidad de mezcla, transiciones, volumen, ausencia de cortes molestos y coherencia de estilo.
-3. **Derechos:** cada pista debe figurar como aprobada y con derechos verificados; revisar atribuciones y enlaces.
-4. **Imagen:** calidad cinematográfica, estética adulta, composición, consistencia de personajes, ausencia de fotografías/personas reales, artefactos y texto accidental.
-5. **Movimiento:** movimiento ambiental visible, continuidad del bucle y ausencia de saltos o parpadeos.
-6. **Presentación:** título, descripción, thumbnail y coherencia del paquete.
-7. **Decisión:** APPROVE, CORRECT o REJECT. Aprobar la revisión no equivale a autorizar publicación pública; esa autorización se da explícitamente por separado.
+No declarar una tarea terminada por haber ejecutado un comando. Verificar:
+1. Integridad y presencia de los archivos esperados.
+2. Duración, resolución, códecs y reproducción completa cuando aplique.
+3. Identidad musical frente al manifiesto y calidad de mezcla.
+4. Evidencia de derechos, autoridad del uploader, composición, interpretación y grabación.
+5. Calidad visual, estilo anime adulto, continuidad de personajes y ausencia de personas reales.
+6. Movimiento ambiental y continuidad del bucle, sin saltos ni parpadeos.
+7. Metadatos, thumbnail, procedencia y persistencia privada.
+8. Pruebas automatizadas y regresión de las correcciones.
+
+Un gate pendiente o fallido debe quedar explícito; nunca transformarlo en aprobación implícita.
 
 ## A — Actuar
 
-Convertir cada observación en una acción verificable:
-- Registrar fecha, identificador/carpeta del video, criterio, hallazgo, severidad, acción correctiva y resultado de la nueva prueba.
-- Corregir la causa raíz en el agente o en sus recursos, no solo maquillar el video individual.
-- Añadir o actualizar una prueba automatizada cuando el defecto sea reproducible.
-- Ejecutar QA antes de aceptar el cambio.
-- Aplicar la mejora a los siguientes ciclos y comprobar en la siguiente revisión que no reaparezca.
+- Corregir automáticamente solo fallos técnicos reproducibles y dentro de los permisos ya concedidos.
+- Para defectos de código, añadir o actualizar una prueba de regresión y volver a ejecutar QA antes de aceptar el cambio.
+- Reintentar tareas idempotentes cuando la causa sea transitoria; limitar reintentos para evitar bucles.
+- Si una corrección requiere criterio humano, autorización, derechos dudosos o cambio de alcance, detener únicamente esa decisión y dejar el resto de la cola operativa.
+- Registrar causa raíz, corrección, prueba y resultado. Incorporar la mejora al siguiente ciclo.
 
-## Registro de revisión (copiar por cada video)
+## Criterios de producción
 
-- Fecha de revisión:
-- Carpeta/identificador del video:
-- Resultado: APPROVE / CORRECT / REJECT
-- Música y derechos:
-- Mezcla y transiciones:
-- Imagen y continuidad:
-- Movimiento y loop:
-- Metadatos y thumbnail:
-- Defectos observados:
+- Primer video: 60 minutos. Los posteriores alternan duraciones de 2 y 3 horas según la biblioteca aprobada.
+- No repetir pistas dentro de un video ni acelerar, recortar o alargar canciones para rellenar.
+- Solo música aprobada y con derechos verificados.
+- Audio continuo, transiciones limpias y niveles consistentes.
+- Video H.264 QHD 2560×1440, audio AAC estéreo.
+- Arte original anime adulto, sofisticado y cinematográfico; continuidad de personajes.
+- Movimiento ambiental perceptible y bucles visuales sin saltos.
+- Metadatos, thumbnail y manifiesto de procedencia completos.
+
+## Registro de cada ciclo
+
+- Fecha/hora UTC y Colombia:
+- Workflow / run ID:
+- Revisión exacta del agente:
+- Objetivo y tarea:
+- Estado: PLANNED / RUNNING / VERIFIED / BLOCKED / FAILED
+- Criterios comprobados y evidencias:
+- Defectos y severidad:
 - Causa raíz:
 - Acción correctiva:
-- Prueba que demuestra la corrección:
-- ¿Se autoriza publicación pública?: NO, salvo autorización explícita independiente.
+- Prueba de regresión:
+- Resultado del nuevo intento:
+- Decisiones pendientes de revisión humana:
 
 ## Reglas de seguridad
 
 - Nunca convertir una cola de candidatos en biblioteca aprobada automáticamente.
+- Nunca aprobar derechos por inferencia, metadatos aislados o mera disponibilidad de descarga.
 - Nunca generar con música insuficiente ni repetir pistas para completar duración.
-- Nunca publicar públicamente sin autorización explícita.
-- Si una ejecución falla o la compuerta musical no está lista, comunicarlo con claridad; no presentar un video parcial como terminado.
+- Nunca subir a YouTube, ni siquiera como privado, sin autorización explícita de la usuaria.
+- Nunca publicar públicamente sin autorización explícita independiente.
+- No contratar servicios, activar billing ni usar alternativas pagas.
+- La revisión humana y la autorización de publicación son decisiones separadas.
