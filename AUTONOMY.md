@@ -50,3 +50,63 @@ The consolidated music review queues are stored in private Drive. Every candidat
 ## Reusing the runner for other agents
 
 Use .github/workflows/reusable-private-agent.yml only for independent agents with separate private Drive namespaces, secrets and publication gates. Never share Jazz Soul Beat's production library, credentials or publication channel.
+
+
+## Three autonomy levels
+
+### Level A — full autonomy inside approved boundaries
+
+The agent may independently research music and visual references, plan work, discover candidates, collect rights evidence, create original artwork and video, perform editorial/media/technical audits, correct reproducible defects, retry transient failures with bounded attempts, maintain operational memory, report KPIs and optimize internal workflows that do not change fundamental policy.
+
+### Level B — conditional autonomy
+
+The agent may reorder priorities, propose formats, test alternative compositions, adjust internal processes, run isolated experiments and recommend calendar or architecture improvements. It must record the reason, scope, evidence and rollback path. Changes affecting policy, identity, security or publication permissions require human approval.
+
+### Level C — reserved human decisions
+
+The following actions are denied by default and require explicit human approval:
+- Approve music rights or change any rights status from PENDING to APPROVED.
+- Upload to YouTube, including private upload, or publish publicly.
+- Schedule a public/social publication.
+- Change the approved visual identity or replace the approved character reference.
+- Change fundamental security policy, permissions or approval rules.
+- Activate paid services, subscriptions, billing or expenditure.
+- Delete important data or perform irreversible external actions.
+- Contact rights holders or providers on the user's behalf.
+
+Internal GitHub Actions schedules are operational infrastructure and may run autonomously; this is distinct from scheduling a public post.
+
+## Version-bound approval
+
+Any human approval must identify the action and exact SHA-256 of the artifact reviewed. If the video, audio, thumbnail, metadata or other material element changes after approval, the approval no longer applies and a new review is required. Unknown actions are denied by default. Every allow/deny decision is stored in the autonomy audit ledger.
+
+The `autonomy-approve` command records an explicit approval; `autonomy-check` evaluates it. An approval for one file version must never authorize a modified version.
+
+## Stop, recover and continue
+
+| Situation | Required behavior |
+|---|---|
+| Temporary network/API failure | Bounded retry with backoff; record outcome |
+| Technical/rendering failure | Try a different safe strategy; run regression checks |
+| Rights evidence incomplete or contradictory | Keep the track pending; continue unrelated work |
+| Human approval required | Block only that action; continue other safe tasks |
+| Missing approved visual reference | Do not invent or replace it; flag the dependency |
+| Free resource unavailable/quota exhausted | Pause that task or use an already approved free alternative; never enable billing |
+| Important state cannot be restored | Stop state-mutating work and preserve evidence |
+
+## Three operational memory layers
+
+- **Operational memory:** task queue, checkpoints, decisions, blockers, retries and artifacts.
+- **Creative memory:** approved character/visual references, scene continuity, music direction and production preferences.
+- **Learning memory:** measured results, root causes, corrective actions, regression outcomes and recurring defects.
+
+These records are persisted in the private SQLite database in Google Drive. The agent may maintain operational and learning records but may not rewrite its own permission boundaries or fundamental brand rules.
+
+## Governance implementation
+
+The private agent contains:
+- `autonomy.py`: allow/deny policy, audit trail and SHA-256-bound human approvals.
+- `performance.py`: historical event ledger, KPI calculations and JSON/Markdown reports.
+- `pdca.py`: persistent Plan/Do/Check/Act cycle records, evidence and corrective actions.
+
+The cloud controller uses reusable PDCA actions around production, discovery, review audits and manual agent jobs. State is restored before a cycle and persisted to private Drive after ACT. The code is considered operational only after the corresponding cloud run and regression tests pass.
