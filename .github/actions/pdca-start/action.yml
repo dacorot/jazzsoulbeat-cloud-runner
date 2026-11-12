@@ -1,0 +1,34 @@
+name: Start PDCA cycle
+description: Restore persistent governance state and plan a bounded task
+inputs:
+  task:
+    description: Task identifier
+    required: true
+  objective:
+    description: Measurable task objective
+    required: true
+  drive_token_json:
+    description: Private Google Drive token JSON
+    required: true
+outputs:
+  cycle_id:
+    description: Persistent PDCA cycle identifier
+    value: ${{ steps.start.outputs.cycle_id }}
+runs:
+  using: composite
+  steps:
+    - name: Restore autonomy and PDCA state
+      shell: bash
+      env:
+        DRIVE_TOKEN_JSON: ${{ inputs.drive_token_json }}
+      run: python main.py drive-pull-state
+    - name: Create PDCA plan
+      id: start
+      shell: bash
+      env:
+        PDCA_TASK: ${{ inputs.task }}
+        PDCA_OBJECTIVE: ${{ inputs.objective }}
+      run: |
+        cycle_json="$(python main.py pdca-start --task "$PDCA_TASK" --objective "$PDCA_OBJECTIVE")"
+        cycle_id="$(python -c 'import json,sys; print(json.load(sys.stdin)["cycle_id"])' <<< "$cycle_json")"
+        echo "cycle_id=$cycle_id" >> "$GITHUB_OUTPUT"
