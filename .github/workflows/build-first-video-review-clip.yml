@@ -46,8 +46,9 @@ jobs:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
         run: |
           python - <<'PY'
-          import os, time
+          import os, time, hashlib
           from pathlib import Path
+          from PIL import Image
           from drive_storage import DriveStore
           store = DriveStore.from_token_json(os.environ["DRIVE_TOKEN_JSON"])
           required = (
@@ -77,7 +78,15 @@ jobs:
               local = Path(path)
               if not local.is_file() or local.stat().st_size == 0:
                   raise RuntimeError(f"Missing restored review input: {path}")
-          print({"restored": result, "inputs": required, "excluded_guest_performer": "USUAN2300005"})
+          image_path = Path(required[3])
+          image_sha256 = hashlib.sha256(image_path.read_bytes()).hexdigest()
+          if image_sha256 != "caaf59a4eda49938878424a0bf209c65804a52dcb368a5fcac0f32ad3d772f90":
+              raise RuntimeError("The restored visual is not the approved male anime reference.")
+          with Image.open(image_path) as im:
+              if im.format != "JPEG" or im.size != (2560, 1440):
+                  raise RuntimeError(f"Unexpected approved-reference format or dimensions: {im.format} {im.size}")
+          print({"restored": result, "inputs": required, "excluded_guest_performer": "USUAN2300005",
+                 "approved_male_reference_sha256": image_sha256, "resolution": [2560, 1440]})
           PY
       - name: Render a two-minute private 60-second-loop test
         working-directory: agent
@@ -85,22 +94,35 @@ jobs:
           mkdir -p output/first-video-review-preview
           python - <<'PY'
           from pathlib import Path
-          import json
+          import hashlib, json, shutil
           import video
           out = Path("output/first-video-review-preview")
+          out.mkdir(parents=True, exist_ok=True)
           audio = Path("output/first-video-review/INCOMPETECH_JAZZ_FIRST_HOUR_REVIEW_ONLY.mp3")
-          image = Path("output/ketsa-review/KETSA_AUDITION_BACKGROUND.jpg")
+          source_image = Path("output/ketsa-review/KETSA_AUDITION_BACKGROUND.jpg")
+          image = out / "APPROVED_MALE_CHARACTER_REFERENCE.jpg"
+          shutil.copy2(source_image, image)
           rendered = out / "FIRST_VIDEO_VISUAL_LOOP_PREVIEW_2MIN_REVIEW_ONLY.mp4"
-          video.make_video(audio, image, rendered, duration=120, theme="evergreen")
+          video.make_video(
+              audio, image, rendered, duration=120, theme="evergreen",
+              scene_profile="male_lounge_reading",
+          )
           (out / "REVIEW_ONLY_NOTICE.txt").write_text(
-              "PRIVATE REVIEW ONLY. This is a two-minute technical loop test, not the final video. "
-              "The background is the stored Ketsa audition candidate and is NOT an approved visual master. "
-              "The music remains pending human rights approval. No YouTube upload or publication was attempted.\n",
+              "PRIVATE REVIEW ONLY. This is a two-minute technical loop test, not a final video. "
+              "It uses the approved original male anime character reference, hash-verified from private Drive. "
+              "The visual cycle animates only existing city lights and steam above the pictured cup, plus subtle dust. "
+              "The music remains pending track-level rights and human listening approval. "
+              "No YouTube upload, public sharing, or publication was attempted.\n",
               encoding="utf-8",
           )
           if not rendered.is_file() or rendered.stat().st_size == 0:
               raise RuntimeError("FFmpeg did not create the review MP4.")
-          print(json.dumps({"video": str(rendered), "bytes": rendered.stat().st_size}))
+          print(json.dumps({
+              "video": str(rendered), "bytes": rendered.stat().st_size,
+              "image_sha256": hashlib.sha256(image.read_bytes()).hexdigest(),
+              "audio_sha256": hashlib.sha256(audio.read_bytes()).hexdigest(),
+              "scene_profile": "male_lounge_reading",
+          }))
           PY
       - name: Verify video and 60-second boundary frames
         working-directory: agent
@@ -110,6 +132,9 @@ jobs:
           mkdir -p output/first-video-review-preview/frames
           ffprobe -v error -show_entries format=duration,size -show_entries stream=codec_type,codec_name,width,height,channels -of json "$VIDEO" > output/first-video-review-preview/video-probe.json
           ffmpeg -nostdin -y -loglevel error -ss 0 -i "$VIDEO" -frames:v 1 -q:v 2 output/first-video-review-preview/frames/frame-0000.jpg
+          ffmpeg -nostdin -y -loglevel error -ss 15 -i "$VIDEO" -frames:v 1 -q:v 2 output/first-video-review-preview/frames/frame-0225.jpg
+          ffmpeg -nostdin -y -loglevel error -ss 30 -i "$VIDEO" -frames:v 1 -q:v 2 output/first-video-review-preview/frames/frame-0450.jpg
+          ffmpeg -nostdin -y -loglevel error -ss 45 -i "$VIDEO" -frames:v 1 -q:v 2 output/first-video-review-preview/frames/frame-0675.jpg
           ffmpeg -nostdin -y -loglevel error -ss 59.933333 -i "$VIDEO" -frames:v 1 -q:v 2 output/first-video-review-preview/frames/frame-0899.jpg
           ffmpeg -nostdin -y -loglevel error -ss 60.000000 -i "$VIDEO" -frames:v 1 -q:v 2 output/first-video-review-preview/frames/frame-0900.jpg
           ffmpeg -nostdin -y -loglevel error -ss 60.066667 -i "$VIDEO" -frames:v 1 -q:v 2 output/first-video-review-preview/frames/frame-0901.jpg
@@ -127,6 +152,9 @@ jobs:
           assert audio_stream["codec_name"] == "aac" and audio_stream["channels"] == 2, audio_stream
           files = [
               ("frame-0000.jpg", "Start"),
+              ("frame-0225.jpg", "15 s"),
+              ("frame-0450.jpg", "30 s"),
+              ("frame-0675.jpg", "45 s"),
               ("frame-0899.jpg", "59.933 s"),
               ("frame-0900.jpg", "60.000 s"),
               ("frame-0901.jpg", "60.067 s"),
@@ -139,26 +167,80 @@ jobs:
               tile.paste(im, ((980-im.width)//2, 10))
               ImageDraw.Draw(tile).text((20, 560), label, fill="black")
               tiles.append(tile)
-          sheet = Image.new("RGB", (1960, 1180), "white")
+          sheet = Image.new("RGB", (1960, 2360), "white")
           for i, tile in enumerate(tiles):
               sheet.paste(tile, ((i%2)*980, (i//2)*590))
           sheet.save(root / "loop-boundary-contact-sheet.jpg", quality=92)
           start = Image.open(root / "frames/frame-0000.jpg").convert("RGB")
+          mid = Image.open(root / "frames/frame-0450.jpg").convert("RGB")
           boundary = Image.open(root / "frames/frame-0900.jpg").convert("RGB")
+          motion_diff = ImageChops.difference(start, mid).convert("L")
+          motion_mean = sum(motion_diff.getdata()) / (motion_diff.width * motion_diff.height)
           diff = ImageChops.difference(start, boundary)
           mean_diff = sum(diff.convert("L").getdata()) / (diff.width * diff.height)
+          assert motion_mean > 0.5, motion_mean
           assert mean_diff < 5.0, mean_diff
-          print(json.dumps({"duration": duration, "resolution": [2560,1440], "codec": "H.264/AAC", "start_to_60s_mean_pixel_difference": round(mean_diff,4)}))
+          print(json.dumps({"duration": duration, "resolution": [2560,1440], "codec": "H.264/AAC",
+                            "midcycle_mean_pixel_difference": round(motion_mean,4),
+                            "start_to_60s_mean_pixel_difference": round(mean_diff,4)}))
+          import hashlib
+          import datetime
+          audio_path = Path("output/first-video-review/INCOMPETECH_JAZZ_FIRST_HOUR_REVIEW_ONLY.mp3")
+          image_path = root / "APPROVED_MALE_CHARACTER_REFERENCE.jpg"
+          video_path = root / "FIRST_VIDEO_VISUAL_LOOP_PREVIEW_2MIN_REVIEW_ONLY.mp4"
+          provenance = {
+              "status": "PRIVATE_REVIEW_ONLY_NOT_FINAL",
+              "created_at_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+              "source_image_drive_file_id": "1jTVLkq8iT54Fm4208NpdPptYGOrf7UnJ",
+              "source_image_sha256": hashlib.sha256(image_path.read_bytes()).hexdigest(),
+              "source_audio_path": str(audio_path),
+              "source_audio_sha256": hashlib.sha256(audio_path.read_bytes()).hexdigest(),
+              "video_path": str(video_path),
+              "video_sha256": hashlib.sha256(video_path.read_bytes()).hexdigest(),
+              "duration_seconds": duration,
+              "resolution": [2560, 1440],
+              "loop_seconds": 60,
+              "scene_profile": "male_lounge_reading",
+              "ambient_motion": ["coffee steam", "city-window light shimmer", "dust motes", "slow camera drift"],
+              "music_rights_status": "PENDING_TRACK_LEVEL_RIGHTS_AND_HUMAN_REVIEW",
+              "youtube_upload": False,
+              "public_sharing": False,
+          }
+          (root / "PREVIEW_PROVENANCE.json").write_text(json.dumps(provenance, indent=2), encoding="utf-8")
           PY
-      - name: Keep this technical preview as a temporary private artifact only
-        run: echo "Preview is not persisted to Drive; the one-hour music review package remains in private Drive."
-      - name: Upload private preview artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: jazz-soul-beat-first-video-visual-loop-preview
-          path: agent/output/first-video-review-preview/
-          if-no-files-found: error
-          retention-days: 7
+      - name: Persist visual-loop preview and provenance in private Google Drive
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from drive_storage import DriveStore
+          store = DriveStore.from_token_json(os.environ["DRIVE_TOKEN_JSON"])
+          push_result = store.push()
+          remote = store._index_remote(store._remote_files())
+          paths = (
+              "output/first-video-review-preview/FIRST_VIDEO_VISUAL_LOOP_PREVIEW_2MIN_REVIEW_ONLY.mp4",
+              "output/first-video-review-preview/PREVIEW_PROVENANCE.json",
+              "output/first-video-review-preview/loop-boundary-contact-sheet.jpg",
+              "output/first-video-review/INCOMPETECH_JAZZ_FIRST_HOUR_REVIEW_ONLY.mp3",
+          )
+          links = {}
+          for path in paths:
+              item = remote.get(path)
+              if not item:
+                  raise RuntimeError(f"Private Drive did not persist required review artifact: {path}")
+              meta = store.service.files().get(
+                  fileId=item["id"], fields="id,name,webViewLink,mimeType,size"
+              ).execute()
+              if not meta.get("webViewLink"):
+                  raise RuntimeError(f"Drive did not return a view link for {path}")
+              links[path] = {
+                  "id": meta["id"], "url": meta["webViewLink"],
+                  "mimeType": meta.get("mimeType"), "size": meta.get("size"),
+              }
+          print(json.dumps({"private_drive_links": links, "push": push_result}, ensure_ascii=False))
+          PY
       - name: Confirm no approval or publication
         run: |
           echo "Two-minute loop test only. No rights approval, visual-master approval, YouTube upload, or public publication."
