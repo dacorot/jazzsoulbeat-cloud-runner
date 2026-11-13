@@ -1,0 +1,52 @@
+name: Jazz Soul Beat - Original Music Producer
+on:
+  push:
+    paths:
+      - "MUSIC_PRODUCER_START.md"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: jazz-soul-beat-music-producer
+  cancel-in-progress: false
+jobs:
+  produce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install audio tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install free Gradio client
+        run: python -m pip install --upgrade gradio_client
+      - name: Generate original instrumental through ACE-Step public Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          MUSIC_DURATION_SECONDS: "180"
+          MUSIC_MAX_WAIT_SECONDS: "2400"
+        run: python scripts/music_producer_agent.py
+      - name: Validate audio and attach report
+        if: always()
+        run: |
+          mkdir -p music-production
+          if compgen -G "music-production/generated/*" > /dev/null; then
+            for f in music-production/generated/*; do
+              ffprobe -v error -show_entries format=duration,size -of json "$f" > "${f}.ffprobe.json" || true
+            done
+          fi
+      - name: Upload production result and diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jazz-soul-beat-original-music
+          path: music-production/
+          if-no-files-found: warn
+          retention-days: 30
