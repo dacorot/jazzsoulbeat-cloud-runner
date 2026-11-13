@@ -33,23 +33,54 @@ def clean(s):
 
 def hunter():
     found = {}
-    # Search by license first, then genre. This avoids broad radio/archive
-    # recordings that do not carry a reusable music license.
-    for license_query in LICENSE_QUERIES:
-        for genre in GENRES:
-            q = f'mediatype:audio AND {license_query} AND (title:{genre} OR subject:{genre})'
-            url = ("https://archive.org/advancedsearch.php?q=" + quote(q) +
-                   "&fl[]=identifier,title,creator,year,licenseurl&rows=100&page=1&output=json")
-            try:
-                docs = get_json(url).get("response", {}).get("docs", [])
-                for d in docs:
-                    if d.get("identifier"):
-                        found[d["identifier"]] = d
-            except Exception as e:
-                print("HUNTER_SEARCH_ERROR", genre, str(e)[:180])
-            time.sleep(0.2)
-    print("HUNTER_FOUND", len(found))
-    return list(found.values())
+    # Search the IA license index with several documented wildcard forms.
+    # Genre-qualified searches run first; broader license-only searches are
+    # fallback candidates and are filtered by metadata before download.
+    query_templates = []
+    genre_terms = " OR ".join(GENRES)
+    for license_query in (
+        "licenseurl:http*publicdomain*",
+        "licenseurl:http*zero*",
+        "licenseurl:http*licenses/by*",
+        "licenseurl:http*by*",
+    ):
+        query_templates.append(f'mediatype:audio AND {license_query} AND ({genre_terms})')
+    for license_query in (
+        "licenseurl:http*publicdomain*",
+        "licenseurl:http*zero*",
+        "licenseurl:http*licenses/by*",
+        "licenseurl:http*by*",
+    ):
+        query_templates.append(f'mediatype:audio AND {license_query}')
+    successful_queries = []
+    for q in query_templates:
+        url = ("https://archive.org/advancedsearch.php?q=" + quote(q) +
+               "&fl[]=identifier,title,creator,year,licenseurl,subject,description&rows=500&page=1&output=json")
+        try:
+            payload = get_json(url)
+            docs = payload.get("response", {}).get("docs", [])
+            successful_queries.append({"query": q, "count": len(docs),
+                                       "total": payload.get("response", {}).get("numFound", 0)})
+            for d in docs:
+                if d.get("identifier"):
+                    found[d["identifier"]] = d
+        except Exception as e:
+            print("HUNTER_SEARCH_ERROR", q, str(e)[:180])
+        time.sleep(0.25)
+    print("HUNTER_QUERIES", json.dumps(successful_queries))
+    # Keep relevant musical items when metadata is available; the broad
+    # fallback is still useful when archive genre tags are incomplete.
+    genres = tuple(g.lower() for g in GENRES)
+    docs = list(found.values())
+    relevant = []
+    for d in docs:
+        text = " ".join(str(d.get(k, "")) for k in ("title", "creator", "subject", "description")).lower()
+        if any(g in text for g in genres) or not text.strip():
+            relevant.append(d)
+    if relevant:
+        docs = relevant
+    print("HUNTER_FOUND", len(docs))
+    return docs
 
 def license_is_usable(value):
     u = str(value or "").strip().lower().rstrip("/")
