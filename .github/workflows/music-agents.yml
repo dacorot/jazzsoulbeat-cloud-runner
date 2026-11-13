@@ -1,0 +1,31 @@
+name: Jazz Soul Beat - Music Agents
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 11 * * 1,3,5"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: jazz-soul-beat-music-agents
+  cancel-in-progress: false
+jobs:
+  acquire-music:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install audio probe
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+      - name: Run Hunter, Guardian, Downloader and Curator
+        run: python scripts/music_agents.py
+      - name: Upload catalog, license evidence and approved-for-review audio
+        uses: actions/upload-artifact@v4
+        with:
+          name: jazz-soul-beat-music-library
+          path: music-library/
+          if-no-files-found: error
+          retention-days: 30
