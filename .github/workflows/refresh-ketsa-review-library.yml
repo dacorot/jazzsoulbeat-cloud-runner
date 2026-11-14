@@ -15,8 +15,8 @@ permissions:
   statuses: write
 
 concurrency:
-  group: jazzsoulbeat-ketsa-library-refresh
-  cancel-in-progress: true
+  group: jazz-soul-beat-shared-private-drive-state
+  cancel-in-progress: false
 
 jobs:
   refresh:
