@@ -140,7 +140,13 @@ def main():
         "endpoint": "/generation_wrapper",
         "parameters": mapped,
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
-        "rights_note": "Model code/weights are MIT per the model card. This does not guarantee output uniqueness or clear every third-party right. Check audio for similarity and retain generation records before commercial release.",
+        "rights_note": "ACE-Step repository code is Apache-2.0; ACE-Step/Ace-Step1.5 model weights are MIT. The official model card explicitly permits commercial use of generated music. It does not provide a separate, explicit Spotify/Apple Music distribution clause or guarantee copyrightability/uniqueness. Human listening and similarity review remain mandatory.",
+        "model_card_url": "https://huggingface.co/ACE-Step/Ace-Step1.5",
+        "code_license_url": "https://github.com/ace-step/ACE-Step/blob/main/LICENSE",
+        "commercial_use_statement": "explicitly_allowed_by_model_card",
+        "streaming_distribution_status": "not_explicitly_addressed",
+        "rights_verified": false,
+        "human_review_required": true,
         "publication_status": "NOT_PUBLISHED"
     }
     write_json(OUT / "production_report.json", report)
