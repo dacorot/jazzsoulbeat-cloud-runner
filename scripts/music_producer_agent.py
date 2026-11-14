@@ -35,6 +35,9 @@ def main():
         raw_duration = os.getenv("MUSIC_DURATION_SECONDS", str(DEFAULT_DURATION_SECONDS))
         duration = int(raw_duration)
         brief = choose_brief(os.getenv("MUSIC_CATEGORY", "coffee_time"))
+        model = os.getenv("ACE_STEP_MODEL", "acestep-v15-turbo")
+        if model not in {"acestep-v15-turbo", "acestep-v15-xl-turbo"}:
+            raise ValueError("Only vetted free ACE-Step turbo models are permitted.")
         prompt = brief.prompt(duration)
     except (TypeError, ValueError) as exc:
         return fail(
@@ -57,7 +60,7 @@ def main():
 
     # Use the endpoint's advertised parameter order and defaults; override only known fields.
     overrides = {
-        "selected_model": "acestep-v15-xl-turbo",
+        "selected_model": model,
         "generation_mode": "custom",
         "simple_query_input": prompt,
         "simple_vocal_language": "unknown",
@@ -138,6 +141,13 @@ def main():
 
     if not target:
         preview = str(result)[:2500]
+        if "Expected all tensors to be on the same device" in preview:
+            return fail(
+                "blocked_provider_device_mismatch",
+                "Provider mixed CPU and GPU tensors during inference; no audio was produced.",
+                {"endpoint": "/generation_wrapper", "model": model,
+                 "result_preview": preview[:800]},
+            )
         if "Model not fully initialized" in preview or "Missing components:" in preview:
             return fail(
                 "blocked_model_uninitialized",
@@ -190,7 +200,7 @@ def main():
         "prompt": prompt,
         "negative_prompt": NEGATIVE,
         "engine": SPACE,
-        "model": "acestep-v15-xl-turbo",
+        "model": model,
         "editorial_verdict": "PENDING_HUMAN_LISTENING",
         "creative_approval": False,
         "eligible_for_video_assembly": False,
