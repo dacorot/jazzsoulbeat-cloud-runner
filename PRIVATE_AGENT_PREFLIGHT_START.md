@@ -17,3 +17,5 @@ Regression round 1 retry 2026-11-14: corrected license regex escaping after firs
 Regression round 1 final rerun 2026-11-14: all source and regression-test fixes committed; validate exact current agent HEAD, including corrected strict-license regex and YouTube upload approval boundary.
 
 Regression round 1 extended data-validation tests 2026-11-14: current private-agent head includes truncated CSV row normalization and rejects non-finite audio duration values; execute complete suite again.
+
+Regression round 1: corrected truncated-manifest test to query the agent's canonical absolute SQLite file key; rerun full QA against latest commit.
