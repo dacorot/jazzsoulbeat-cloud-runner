@@ -20,7 +20,8 @@ for p in (AUDIO, EVIDENCE):
 
 # Deliberately narrow: CC0 and CC BY only. BY-SA can impose share-alike
 # obligations on adapted video; ND is unsuitable for synchronization/editing.
-GENRES = ("jazz", "soul", "blues", "bossa", "lofi", "gospel", "ambient")
+GENRES = ("jazz", "soul", "blues", "bossa", "lofi", "gospel")
+REJECT_TERMS = ("podcast", "episode", "sermon", "bible", "scripture", "lecture", "speech", "audiobook", "spoken word", "interview", "radio show", "radio program", "news", "cyberspace", "reading", "documentary", "soundtrack", "anime", "sample pack")
 LICENSE_QUERIES = (
     "licenseurl:http*publicdomain/zero*",
     "licenseurl:http*licenses/by/*",
@@ -113,7 +114,7 @@ def guardian(item):
                 if size and size <= MAX_AUDIO_FILE_BYTES:
                     candidates.append(f)
         if not candidates:
-            return None, "No supported audio file under 120 MB"
+            return None, "No supported MP3/OGG/FLAC audio file under 30 MB"
         candidates.sort(key=lambda f: (
             0 if f["name"].lower().endswith(".mp3") else
             1 if f["name"].lower().endswith(".ogg") else 2,
@@ -158,7 +159,7 @@ def curator(path):
         info = json.loads(raw)
         duration = float(info.get("format", {}).get("duration", 0))
         if duration < MIN_CANDIDATE_DURATION_SECONDS:
-            return False, duration, "Under 2 minutes"
+            return False, duration, "Under 3 minutes"
         return True, duration, "Duration passed; audio listening and rights-holder review required"
     except Exception as e:
         return False, 0, "Probe failed: " + str(e)[:120]
