@@ -89,17 +89,27 @@ def main() -> int:
         and x not in final_videos and x not in review_videos
     ]
 
+    review_package_ready = bool(review_audio_files) and bool(review_videos) and len(scene_images) >= 8
     gates = {
         "audio_candidates_delivered": bool(audio_candidates),
         "rights_approved_catalog_entries": bool(approved_flag_rows),
         "original_scene_images_delivered": len(scene_images) >= 8,
         "final_video_delivered": bool(final_videos),
+        "private_review_package_ready": review_package_ready,
     }
-    ready = all(gates.values())
+    production_ready = all(gates[name] for name in (
+        "audio_candidates_delivered", "rights_approved_catalog_entries",
+        "original_scene_images_delivered", "final_video_delivered",
+    ))
+    status = (
+        "READY_FOR_HUMAN_REVIEW" if production_ready
+        else "REVIEW_PACKAGE_READY_PENDING_RIGHTS" if review_package_ready
+        else "BLOCKED_INCOMPLETE_INPUTS"
+    )
     report = {
         "project": "Jazz Soul Beat",
         "created_at": datetime.now(timezone.utc).isoformat(),
-        "status": "READY_FOR_HUMAN_REVIEW" if ready else "BLOCKED_INCOMPLETE_INPUTS",
+        "status": status,
         "publication": "NOT_AUTHORIZED - no upload or publication performed",
         "summary": {
             "files_received": len(inventory),
@@ -110,6 +120,7 @@ def main() -> int:
             "minimum_original_scene_images_required": 8,
             "final_videos": len(final_videos),
             "review_videos": len(review_videos),
+            "private_review_package_ready": review_package_ready,
             "synthetic_qa_videos": len(synthetic_videos),
             "catalog_rows": len(catalog_rows),
             "approved_catalog_rows_detected": len(approved_flag_rows),
@@ -139,6 +150,7 @@ def main() -> int:
     lines += [
         "",
         "## Required next actions",
+        "- A private review package is not publication approval; complete the rights-holder, license-version and contributor checks before production release.",
         "- Review candidate audio item by item; deliver only tracks with documented rights-holder authority, license, source URL and attribution.",
         "- Deliver at least eight original scene images in the category scene library; synthetic QA frames do not count.",
         "- Render the full-length video only after approved audio covers the requested duration; synthetic test MP4s do not count.",
