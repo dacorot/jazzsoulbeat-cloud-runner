@@ -125,7 +125,18 @@ def main():
             continue
 
     if not target:
-        return fail("blocked_no_audio_file", "ACE-Step returned from the generation endpoint, but no downloadable audio file could be verified.", {"endpoint": "/generation_wrapper", "result_preview": str(result)[:2500]})
+        preview = str(result)[:2500]
+        if "Model not fully initialized" in preview or "Missing components:" in preview:
+            return fail(
+                "blocked_model_uninitialized",
+                "The free ACE-Step Space responded, but its model was not loaded on the provider. No paid fallback or unverified initialization call was attempted.",
+                {"endpoint": "/generation_wrapper", "result_preview": preview},
+            )
+        return fail(
+            "blocked_no_audio_file",
+            "ACE-Step returned no verifiable audio; no upload or publication occurred.",
+            {"endpoint": "/generation_wrapper", "result_preview": preview},
+        )
 
     # A large file is not necessarily audio. Validate the returned media before
     # announcing even a preliminary result; musical approval still stays human-gated.
