@@ -405,7 +405,7 @@ jobs:
       - visual-directors
       - rights-regression
       - video-engine-qa
-      - first-video-render
+      - first-video-review-render
     runs-on: ubuntu-latest
     steps:
       - name: Report independent lane results
