@@ -108,7 +108,27 @@ def main():
     try:
         result = client.predict(*values, api_name="/generation_wrapper")
     except Exception as e:
-        return fail("blocked_generation", "The correct ACE-Step generation endpoint was called but did not complete. No paid fallback was used.", {"endpoint": "/generation_wrapper", "error": str(e)[:1800], "parameters": mapped})
+        failure = str(e)
+        if "ZeroGPU quota" in failure or "quota exceeded" in failure.lower():
+            return fail(
+                "blocked_free_quota",
+                "The free ZeroGPU allowance is exhausted; no paid fallback or immediate retry.",
+                {"endpoint": "/generation_wrapper",
+                 "provider_retry_hint": failure[:500], "category": brief.slug},
+            )
+        if "429" in failure or "rate limit" in failure.lower():
+            return fail(
+                "blocked_rate_limit",
+                "Free model provider rate-limited this request; no immediate retry.",
+                {"endpoint": "/generation_wrapper",
+                 "provider_retry_hint": failure[:500], "category": brief.slug},
+            )
+        return fail(
+            "blocked_generation",
+            "The ACE-Step generation endpoint failed; no paid fallback was used.",
+            {"endpoint": "/generation_wrapper", "error": failure[:1000],
+             "category": brief.slug, "requested_duration": duration},
+        )
 
     found = []
     def walk(x):
