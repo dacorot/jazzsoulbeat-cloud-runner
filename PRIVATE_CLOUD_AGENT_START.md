@@ -21,3 +21,5 @@ Safe regression 2026-11-14: validate the scheduled production eligibility gate a
 Safe regression 2026-11-14: re-parse the final production workflow after QHD video, MP3 duration and 1280x720 thumbnail checks were added.
 
 Final safe regression 2026-11-14: validate explicit production-gate summary, per-track source manifest, video SHA-256 provenance, audio and thumbnail quality checks.
+
+Regression trigger 2026-11-14: validate cloud production workflow after adding private persistence for newly generated visual scenes; no upload or publication is enabled.
