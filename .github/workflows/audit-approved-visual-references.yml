@@ -164,10 +164,13 @@ jobs:
           else:
               (root / "NO_IMAGES_FOUND.txt").write_text("No images were found in the scanned reference folders.")
           PY
-      - name: Upload private visual-reference audit
-        uses: actions/upload-artifact@v4
-        with:
-          name: jazz-soul-beat-approved-visual-reference-audit
-          path: visual-reference-audit/
-          if-no-files-found: error
-          retention-days: 7
+      - name: Persist visual-reference audit to private Drive
+        id: persist
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: |
+          mkdir -p "output/visual-reference-audit/run-${{ github.run_id }}"
+          cp -a ../visual-reference-audit/. "output/visual-reference-audit/run-${{ github.run_id }}/"
+          python main.py drive-push
+          python main.py drive-status
