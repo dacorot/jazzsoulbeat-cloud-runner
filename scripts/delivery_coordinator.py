@@ -65,11 +65,17 @@ def main() -> int:
         x for x in inventory if x["kind"] == "image"
         and any(token in x["path"].lower() for token in ("scenes/", "visual-agents/"))
     ]
+    review_videos = [
+        x for x in inventory if x["kind"] == "video" and "review" in x["path"].lower()
+    ]
     final_videos = [
-        x for x in inventory if x["kind"] == "video"
+        x for x in inventory if x["kind"] == "video" and x not in review_videos
         and ("final" in Path(x["path"]).name.lower() or "delivery" in x["path"].lower())
     ]
-    synthetic_videos = [x for x in inventory if x["kind"] == "video" and x not in final_videos]
+    synthetic_videos = [
+        x for x in inventory if x["kind"] == "video"
+        and x not in final_videos and x not in review_videos
+    ]
 
     gates = {
         "audio_candidates_delivered": bool(audio_candidates),
@@ -89,6 +95,7 @@ def main() -> int:
             "original_scene_images": len(scene_images),
             "minimum_original_scene_images_required": 8,
             "final_videos": len(final_videos),
+            "review_videos": len(review_videos),
             "synthetic_qa_videos": len(synthetic_videos),
             "catalog_rows": len(catalog_rows),
             "approved_catalog_rows_detected": len(approved_flag_rows),
@@ -110,7 +117,7 @@ def main() -> int:
         "",
         f"**Status:** {report['status']}",
         "",
-        f"Files received: {len(inventory)} | audio candidates: {len(audio_candidates)} | original scenes: {len(scene_images)} | final videos: {len(final_videos)} | synthetic QA videos: {len(synthetic_videos)}",
+        f"Files received: {len(inventory)} | audio candidates: {len(audio_candidates)} | original scenes: {len(scene_images)} | review videos: {len(review_videos)} | final videos: {len(final_videos)} | synthetic QA videos: {len(synthetic_videos)}",
         "",
         "## Delivery gates",
     ]
