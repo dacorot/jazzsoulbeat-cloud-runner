@@ -11,6 +11,9 @@ on:
     - cron: "0 */6 * * *"
 permissions:
   contents: read
+concurrency:
+  group: jazz-soul-beat-shared-private-drive-state
+  cancel-in-progress: false
 jobs:
   validate:
     name: Reusable private-agent QA
