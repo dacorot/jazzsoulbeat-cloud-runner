@@ -12,3 +12,6 @@ Safety:
 - If the library gate fails, stop without using pending candidates or synthetic filler.
 - Save any eligible review package only to private Google Drive.
 - Never upload to YouTube or change visibility.
+
+
+Latest audit trigger: exercise scheduled-production eligibility gate. This run must skip video generation while the approved evergreen library is insufficient and must keep all output in private Drive.
