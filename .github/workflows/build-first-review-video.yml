@@ -11,7 +11,7 @@ permissions:
   statuses: write
 
 concurrency:
-  group: jazz-soul-beat-private-review-build-ffmpeg-portable-v10
+  group: jazz-soul-beat-shared-private-drive-state
   cancel-in-progress: false
 
 jobs:
