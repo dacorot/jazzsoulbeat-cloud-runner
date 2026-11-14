@@ -21,8 +21,9 @@ Controlador público mínimo para ejecutar el agente privado `dacorot/jazzsoulbe
 | Tarea | Función |
 |---|---|
 | `self-test` | Genera un video sintético breve para comprobar el pipeline. |
-| `build-original` | Sintetiza música instrumental original, construye un video y persiste los archivos en Drive. No usa pistas externas. |
 | `build-evergreen` | Construye un video usando exclusivamente la biblioteca evergreen aprobada. Requiere pistas aprobadas suficientes. |
+
+La generación original con ACE-Step está separada en `music-producer.yml`: produce un instrumental de 120 segundos y conserva el resultado como artefacto para revisión. No construye todavía el video final ni se ejecuta automáticamente. El comando `make-original` que aparece en algunas ramas del agente no está expuesto como tarea en este formulario cloud; no debe confundirse con una capacidad ya desplegada.
 
 La duración configurada en el formulario manual está limitada a 1, 2 o 3 horas. La tarea estacional requiere un slug válido y una biblioteca estacional revisada.
 
