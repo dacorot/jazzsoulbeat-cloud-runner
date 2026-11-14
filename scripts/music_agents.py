@@ -114,6 +114,23 @@ def guardian(item):
         license_url = str(m.get("licenseurl", "")).strip()
         if not license_is_usable(license_url):
             return None, "License not CC0 or CC BY (commercial video use filter)"
+        subjects = m.get("subject", [])
+        if not isinstance(subjects, list):
+            subjects = [subjects]
+        subject_text = " ".join(str(value) for value in subjects).lower()
+        title_text = str(m.get("title", item.get("title", ""))).lower()
+        description_text = str(m.get("description", "")).lower()
+        combined_text = " ".join((title_text, description_text, subject_text))
+        if any(term in combined_text for term in REJECT_TERMS):
+            return None, "Spoken-word, podcast or non-music content rejected"
+        if not any(genre in subject_text for genre in GENRES):
+            return None, "No explicit Jazz/Soul/Blues/Bossa/Lo-fi/Gospel subject tag"
+        creator = str(m.get("creator", item.get("creator", ""))).strip()
+        uploader = str(m.get("uploader", "")).strip()
+        # Archive license metadata may be entered by an unrelated uploader.
+        normalize = lambda value: re.sub(r"[^a-z0-9]+", "", value.casefold())
+        if not creator or not uploader or normalize(creator) not in normalize(uploader):
+            return None, "Uploader authority does not match the named creator"
         files = meta.get("files", [])
         candidates = []
         for f in files:
@@ -132,7 +149,10 @@ def guardian(item):
         return {
             "identifier": ident,
             "title": m.get("title", item.get("title", "")),
-            "creator": m.get("creator", item.get("creator", "Unknown")),
+            "creator": creator,
+            "uploader": uploader,
+            "genre_evidence": subject_text,
+            "uploader_authority": "creator/uploader metadata match",
             "license_url": license_url,
             "license_evidence_url": "https://archive.org/metadata/" + ident,
             "source_url": "https://archive.org/details/" + ident,
