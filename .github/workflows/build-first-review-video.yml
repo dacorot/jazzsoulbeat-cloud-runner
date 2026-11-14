@@ -84,7 +84,7 @@ jobs:
           python main.py drive-status
           python main.py library-status
 
-      - name: Start Deming PDCA cycle for the daily video build
+      - name: Start Deming PDCA cycle for the scheduled two-hour private video build
         id: pdca_start
         uses: ./.github/actions/pdca-start
         with:
