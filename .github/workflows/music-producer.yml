@@ -78,6 +78,10 @@ jobs:
           assert 165 <= duration <= 205, f"Unexpected duration: {duration}"
           print(f"PASS: generated audio is readable, {duration:.2f}s; rights remain pending.")
           PY
+      - name: Verify loudness, silence and SHA; keep editorial review pending
+        if: ${{ steps.generate_music.outcome == 'success' }}
+        run: |
+          python -m scripts.music_audio_qc --report music-production/production_report.json --output music-production/TECHNICAL_AUDIO_QA.json
       - name: Checkout private agent for private Drive persistence
         if: always()
         uses: actions/checkout@v4
@@ -96,7 +100,6 @@ jobs:
           cp -a music-production/. "agent/output/original-music/run-${{ github.run_id }}/"
       - name: Persist original-music result and diagnostics to private Drive
         if: always()
-        continue-on-error: true
         working-directory: agent
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
