@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Free-only ACE-Step producer. Calls the verified Gradio generation endpoint."""
 import hashlib, json, math, os, shutil, subprocess, sys
+from urllib.parse import urlparse
+
+from scripts.music_briefs import choose_brief
 from pathlib import Path
 from datetime import datetime, timezone
 
@@ -9,21 +12,12 @@ AUDIO = OUT / "generated"
 OUT.mkdir(exist_ok=True)
 AUDIO.mkdir(exist_ok=True)
 SPACE = os.getenv("ACE_STEP_SPACE", "ACE-Step/Ace-Step-v1.5")
-# Start with a two-minute instrumental to maximize the chance of fitting free GPU quota.
-DURATION = int(os.getenv("MUSIC_DURATION_SECONDS", "120"))
-PROMPT = (
-    "Original sophisticated contemporary jazz soul instrumental, 84 BPM, D minor. "
-    "Expressive acoustic grand piano leads with a distinctive memorable melodic theme. "
-    "Warm tenor saxophone answers the piano with emotional phrasing. Deep upright bass, "
-    "brushed acoustic drums, subtle jazz guitar accents, rich extended jazz harmonies, "
-    "elegant chord substitutions, organic live ensemble feel. Mature, cinematic, intimate "
-    "midnight atmosphere. Beautiful melodic development, dynamic changes, carefully "
-    "arranged introduction, memorable main theme, contrasting bridge, refined instrumental "
-    "solo and natural musical ending. High fidelity professional studio recording. "
-    "Entirely original melody and arrangement. No vocals, no samples, no recognizable "
-    "existing melodies, no imitation of any named artist."
+# An audition must be one song, 3–6 minutes; never stretch a loop to fill a video.
+DEFAULT_DURATION_SECONDS = 180
+NEGATIVE = (
+    "copyrighted melody, cover, soundalike, artist imitation, childish, chiptune, "
+    "synthetic test tones, robotically repeated arpeggios, low fidelity"
 )
-NEGATIVE = "copyrighted melody, cover, soundalike, artist imitation, childish, chiptune, low fidelity"
 
 def write_json(path, data):
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -38,8 +32,19 @@ def fail(status, message, details=None):
 
 def main():
     try:
+        raw_duration = os.getenv("MUSIC_DURATION_SECONDS", str(DEFAULT_DURATION_SECONDS))
+        duration = int(raw_duration)
+        brief = choose_brief(os.getenv("MUSIC_CATEGORY", "coffee_time"))
+        prompt = brief.prompt(duration)
+    except (TypeError, ValueError) as exc:
+        return fail(
+            "blocked_invalid_brief",
+            "Category or requested song length is outside the approved 3–6 minute range.",
+            {"reason": str(exc)[:200]},
+        )
+    try:
         from gradio_client import Client
-        client = Client(SPACE, token=os.getenv("HF_TOKEN") or None, verbose=True)
+        client = Client(SPACE, token=os.getenv("HF_TOKEN") or None, verbose=False)
         api = client.view_api(return_format="dict")
     except Exception as e:
         return fail("blocked_free_service", "Could not connect to the public ACE-Step Space or inspect its API. No paid fallback was used.", {"error": str(e)[:1200]})
@@ -54,18 +59,18 @@ def main():
     overrides = {
         "selected_model": "acestep-v15-xl-turbo",
         "generation_mode": "custom",
-        "simple_query_input": PROMPT,
+        "simple_query_input": prompt,
         "simple_vocal_language": "unknown",
-        "param_4": PROMPT,
+        "param_4": prompt,
         "param_5": "[Instrumental]",
-        "param_6": 84,
-        "param_7": "D minor",
+        "param_6": brief.bpm,
+        "param_7": brief.key,
         "param_8": "4",
         "param_9": "unknown",
         "param_10": 8,
         "param_12": True,
         "param_13": "-1",
-        "param_15": DURATION,
+        "param_15": duration,
         "param_16": 1,
         "param_23": "text2music",
         "param_30": "mp3",
@@ -74,8 +79,19 @@ def main():
         "param_43": False,
         "param_44": False,
     }
+    parameters = info.get("parameters", [])
+    names = {p.get("parameter_name") for p in parameters if isinstance(p, dict)}
+    # Gradio uses positional arguments. A renamed or removed control can alter
+    # the meaning of every following value, so reject silently changed schemas.
+    if not isinstance(parameters, list) or not {
+        "selected_model", "param_4", "param_5", "param_6",
+        "param_7", "param_15", "param_16", "param_23",
+    }.issubset(names):
+        return fail("blocked_api_changed",
+                    "Public generation interface changed its critical parameters.",
+                    {"endpoint": "/generation_wrapper"})
     values, mapped = [], {}
-    for p in info.get("parameters", []):
+    for p in parameters:
         name = p.get("parameter_name", "")
         if name in overrides:
             value = overrides[name]
@@ -94,11 +110,15 @@ def main():
     found = []
     def walk(x):
         if isinstance(x, str):
-            p = Path(x)
-            if p.is_file():
-                found.append(p)
-            elif x.startswith(("http://", "https://")):
-                found.append(x)
+            # Only Gradio-downloaded local files qualify as audio inputs.
+            # Never fetch arbitrary URLs contained in untrusted model output.
+            if len(x) < 2048 and Path(x).suffix.lower() in {".mp3", ".wav", ".flac", ".ogg", ".m4a"}:
+                try:
+                    p = Path(x)
+                    if p.is_file() and not p.is_symlink():
+                        found.append(p)
+                except OSError:
+                    pass
         elif isinstance(x, dict):
             for v in x.values(): walk(v)
         elif isinstance(x, (list, tuple)):
@@ -108,20 +128,12 @@ def main():
     target = None
     for item in found:
         try:
-            if isinstance(item, Path):
-                if item.stat().st_size > 100_000:
-                    target = AUDIO / ("midnight_has_a_soul" + (item.suffix.lower() or ".mp3"))
-                    shutil.copy2(item, target)
-                    break
-            else:
-                from urllib.request import urlretrieve
-                suffix = Path(item.split("?", 1)[0]).suffix or ".mp3"
-                candidate = AUDIO / ("midnight_has_a_soul" + suffix)
-                urlretrieve(item, candidate)
-                if candidate.stat().st_size > 100_000:
-                    target = candidate
-                    break
-        except Exception:
+            if item.stat().st_size > 100_000:
+                candidate = AUDIO / ("candidate" + item.suffix.lower())
+                shutil.copy2(item, candidate)
+                target = candidate
+                break
+        except OSError:
             continue
 
     if not target:
@@ -153,7 +165,7 @@ def main():
             for stream in media_info.get("streams", [])
         )
         if not has_audio or not math.isfinite(actual_duration) or not (
-            0 < actual_duration and abs(actual_duration - DURATION) <= max(20, DURATION * 0.15)
+            0 < actual_duration and abs(actual_duration - duration) <= max(20, duration * 0.15)
         ):
             raise ValueError("No valid audio stream or duration outside expected range.")
         with target.open("rb") as handle:
@@ -168,16 +180,16 @@ def main():
 
     report = {
         "status": "generated_audio_needs_human_review",
-        "title": "Midnight Has a Soul",
+        "title": brief.title,\n        "category": brief.slug,
         "file": str(target),
         "bytes": target.stat().st_size,
         "sha256": audio_sha256,
         "duration_actual_seconds": round(actual_duration, 3),
-        "duration_requested_seconds": DURATION,
-        "prompt": PROMPT,
+        "duration_requested_seconds": duration,
+        "prompt": prompt,
         "negative_prompt": NEGATIVE,
         "engine": SPACE,
-        "model": "acestep-v15-xl-turbo",
+        "model": "acestep-v15-xl-turbo",\n        "editorial_verdict": "PENDING_HUMAN_LISTENING",\n        "creative_approval": False,\n        "eligible_for_video_assembly": False,
         "endpoint": "/generation_wrapper",
         "parameters": mapped,
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
