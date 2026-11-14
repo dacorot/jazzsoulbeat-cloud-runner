@@ -341,13 +341,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: incompetech-first-video-review
-          path: incoming/audio/
+          path: agent/incoming/audio/
       - name: Collect original visual scenes
         if: needs.visual-directors.result == 'success'
         uses: actions/download-artifact@v4
         with:
           name: parallel-visual-directors-report
-          path: incoming/visual/
+          path: agent/incoming/visual/
       - name: Test multi-scene loop playlist
         working-directory: agent
         run: python -m unittest tests.test_multi_scene_video
