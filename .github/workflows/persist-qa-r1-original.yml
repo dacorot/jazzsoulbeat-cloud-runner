@@ -1,0 +1,78 @@
+name: Jazz Soul Beat - Persist QA R1 Original Audio in Private Drive
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/persist-qa-r1-original.yml
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: jazz-soul-beat-shared-private-drive-state
+  cancel-in-progress: false
+jobs:
+  persist-original:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - name: Download verified original instrumental from successful QA run
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 43638716191
+          github-token: ${{ github.token }}
+          name: jazz-soul-beat-qa-r1-original-audition
+          path: incoming/
+      - name: Check out private Drive persistence agent
+        uses: actions/checkout@v4
+        with:
+          repository: dacorot/jazzsoulbeat-agent
+          ref: integration/longform-original-qhd-v1
+          token: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
+          persist-credentials: false
+          path: agent
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install free dependencies
+        working-directory: agent
+        run: python -m pip install -r requirements.txt
+      - name: Verify source SHA-256 and stage only original approved-for-review files
+        run: |
+          python - <<'PY'
+          import hashlib, json, shutil
+          from pathlib import Path
+          candidates = []
+          for p in Path("incoming").rglob("ORIGINAL_REVIEW_REPORT.json"):
+              r = json.loads(p.read_text(encoding="utf-8"))
+              if r.get("bars") == 512:
+                  candidates.append((p, r))
+          if len(candidates) != 1:
+              raise SystemExit(f"Expected one original 512-bar audition; found {len(candidates)}")
+          manifest_path, report = candidates[0]
+          source = manifest_path.parent / report["file"]
+          if not source.is_file():
+              raise SystemExit("Original MP3 not found.")
+          digest = hashlib.file_digest(source.open("rb"), "sha256").hexdigest()
+          expected = "c2bc3cf2f33cab33bc9720f79f60f32b95d62f220e258e874cede848a77565f2"
+          if digest != expected or digest != report["sha256"]:
+              raise SystemExit("Audio SHA-256 mismatch; aborting Drive upload.")
+          if report.get("can_publish") is not False or report.get("youtube_upload") != "NOT_ATTEMPTED":
+              raise SystemExit("Unexpected publication/approval flag; aborting.")
+          target = Path("agent/output/original-music/qa-r1-original-20261114")
+          target.mkdir(parents=True, exist_ok=False)
+          for name in ("original-jazz-audition.mp3", "ORIGINAL_REVIEW_REPORT.json", "ORIGINAL_MUSIC_SOURCE.json"):
+              shutil.copy2(manifest_path.parent / name, target / name)
+          print(f"Verified original audio SHA-256 {digest}; staged private Drive data only.")
+          PY
+      - name: Persist original audition to private Drive
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: |
+          python main.py drive-push-original-music
+          python main.py drive-status
+      - name: Record preservation boundary
+        if: always()
+        run: |
+          echo "No YouTube credentials, public uploads or paid media providers were used." >> "$GITHUB_STEP_SUMMARY"
+          echo "This is a private, review-only 512-bar original instrumental, not a release master." >> "$GITHUB_STEP_SUMMARY"
