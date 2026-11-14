@@ -10,6 +10,9 @@ from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 OUT = Path("music-library")
+MAX_CANDIDATES = 12
+MAX_AUDIO_FILE_BYTES = 30000000
+MIN_CANDIDATE_DURATION_SECONDS = 180.0
 AUDIO = OUT / "approved"
 EVIDENCE = OUT / "evidence"
 for p in (AUDIO, EVIDENCE):
@@ -107,13 +110,13 @@ def guardian(item):
             name = f.get("name", "")
             if name.lower().endswith((".mp3", ".flac", ".ogg")) and not name.startswith("__MACOSX"):
                 size = int(f.get("size", 0) or 0)
-                if size and size < 120_000_000:
+                if size and size <= MAX_AUDIO_FILE_BYTES:
                     candidates.append(f)
         if not candidates:
             return None, "No supported audio file under 120 MB"
         candidates.sort(key=lambda f: (
-            0 if f["name"].lower().endswith(".flac") else
-            1 if f["name"].lower().endswith(".mp3") else 2,
+            0 if f["name"].lower().endswith(".mp3") else
+            1 if f["name"].lower().endswith(".ogg") else 2,
             int(f.get("size", 0) or 0)))
         f = candidates[0]
         return {
@@ -154,7 +157,7 @@ def curator(path):
              "-of", "json", str(path)], text=True)
         info = json.loads(raw)
         duration = float(info.get("format", {}).get("duration", 0))
-        if duration < 120:
+        if duration < MIN_CANDIDATE_DURATION_SECONDS:
             return False, duration, "Under 2 minutes"
         return True, duration, "Duration passed; audio listening and rights-holder review required"
     except Exception as e:
@@ -166,7 +169,7 @@ def main():
     # Process more than the first 20 broad archive results; cap successful
     # review candidates to keep each free runner execution bounded.
     for item in candidates:
-        if len(approved) >= 30:
+        if len(approved) >= MAX_CANDIDATES:
             break
         record, reason = guardian(item)
         if not record:
@@ -197,18 +200,41 @@ def main():
     fields = ["identifier", "title", "creator", "license_url", "license_evidence_url",
               "source_url", "file_name", "file_size", "download_url", "date",
               "local_file", "duration_seconds", "curator_status", "curator_note"]
-    with open(OUT / "approved_catalog.csv", "w", newline="", encoding="utf-8-sig") as f:
+    with open(OUT / "candidate_catalog.csv", "w", newline="", encoding="utf-8-sig") as f:
         w = csv.DictWriter(f, fieldnames=fields)
         w.writeheader()
         w.writerows(approved)
+    review_lines = [
+        "# Jazz Soul Beat — music candidate review",
+        "",
+        "**Status: NOT APPROVED.** These files passed only metadata, download and minimum-duration checks.",
+        "Every track requires human listening and item-page/rights-holder/license verification before use.",
+        "",
+        "| Track | Creator | Duration (s) | License | Source |",
+        "|---|---|---:|---|---|",
+    ]
+    for record in approved:
+        review_lines.append(
+            "| {title} | {creator} | {duration_seconds} | [{license}]({license}) | [Item page]({source_url}) |".format(
+                title=str(record.get("title", "")).replace("|", "/"),
+                creator=str(record.get("creator", "")).replace("|", "/"),
+                duration_seconds=record.get("duration_seconds", ""),
+                license=record.get("license_url", ""),
+                source_url=record.get("source_url", ""),
+            )
+        )
+    (OUT / "CANDIDATE_REVIEW.md").write_text("\\n".join(review_lines) + "\\n", encoding="utf-8")
     (OUT / "rejected_report.json").write_text(
         json.dumps(rejected, ensure_ascii=False, indent=2), encoding="utf-8")
     summary = {
         "found": len(candidates),
-        "approved_for_listening_review": len(approved),
+        "candidate_tracks_for_listening_review": len(approved),
+        "minimum_duration_seconds": MIN_CANDIDATE_DURATION_SECONDS,
+        "maximum_file_bytes": MAX_AUDIO_FILE_BYTES,
+        "rights_approved": 0,
         "rejected": len(rejected),
         "license_policy": "CC0 and CC BY only; NC, ND and SA excluded",
-        "note": "Technical pass is not final legal or listening approval. Verify item page, rights holder, license and attribution before publishing."
+        "note": "Unapproved candidates only. Metadata and duration checks do not establish rights-holder authority or final license clearance. Human listening and item-by-item rights review are mandatory."
     }
     (OUT / "run_summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     print(json.dumps(summary, indent=2))
