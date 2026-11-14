@@ -1,14 +1,7 @@
 name: Jazz Soul Beat - Parallel Production Control
 on:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/parallel-production.yml"
-      - "scripts/music_agents.py"
-      - "scripts/delivery_coordinator.py"
-      - "scene_factory.py"
-      - "cloud_backgrounds.py"
-      - "visual_directors.py"
+  # Manual only: this workflow fans out into rights audits, image generation and
+  # multi-hour rendering. Scheduled discovery runs independently in its own workflows.
   workflow_dispatch:
 permissions:
   contents: read
