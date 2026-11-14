@@ -30,7 +30,7 @@ jobs:
       - name: Generate original instrumental through ACE-Step public Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          MUSIC_DURATION_SECONDS: "180"
+          MUSIC_DURATION_SECONDS: "120"
           MUSIC_MAX_WAIT_SECONDS: "2400"
         run: python scripts/music_producer_agent.py
       - name: Validate audio and attach report
