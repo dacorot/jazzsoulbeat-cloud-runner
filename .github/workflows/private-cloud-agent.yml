@@ -256,7 +256,7 @@ jobs:
               assert visual.get("video_sha256"), "Falta hash de video en procedencia."
           print(f"PASS: {folder} | {duration:.2f}s | H.264 QHD | AAC estéreo")
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
-              output.write(f"run_dir={folder.as_posix()}\\n")
+              output.write(f"run_dir={folder.as_posix()}\n")
           PY
 
       - name: Persist only the validated production folder and production database
