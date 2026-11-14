@@ -120,7 +120,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: dacorot/jazzsoulbeat-agent
-          ref: fix/real-music-and-cinematic-motion
+          ref: b2b18fbe48f0378a88e04a2fbd9f14931dcf20c6
           token: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
           path: agent
           persist-credentials: false
@@ -196,7 +196,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: dacorot/jazzsoulbeat-agent
-          ref: fix/real-music-and-cinematic-motion
+          ref: b2b18fbe48f0378a88e04a2fbd9f14931dcf20c6
           token: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
           path: agent
           persist-credentials: false
@@ -274,7 +274,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: dacorot/jazzsoulbeat-agent
-          ref: fix/real-music-and-cinematic-motion
+          ref: b2b18fbe48f0378a88e04a2fbd9f14931dcf20c6
           token: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
           path: agent
           persist-credentials: false
@@ -343,7 +343,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: dacorot/jazzsoulbeat-agent
-          ref: fix/real-music-and-cinematic-motion
+          ref: b2b18fbe48f0378a88e04a2fbd9f14931dcf20c6
           token: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
           path: agent
           persist-credentials: false
