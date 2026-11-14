@@ -97,12 +97,21 @@ jobs:
       - name: Create consolidated review queue and discovery summary
         id: consolidate
         working-directory: agent
+        env:
+          COMMONS_OUTCOME: ${{ steps.commons.outcome }}
+          INTERNET_ARCHIVE_OUTCOME: ${{ steps.internet_archive.outcome }}
+          OPENVERSE_OUTCOME: ${{ steps.openverse.outcome }}
+          INCOMPETECH_OUTCOME: ${{ steps.incompetech.outcome }}
+          CCMIXTER_OUTCOME: ${{ steps.ccmixter.outcome }}
+          KETSA_OUTCOME: ${{ steps.ketsa.outcome }}
         run: |
           python - <<'PY'
           from pathlib import Path
           import csv
           root = Path("output")
           source_files = sorted(p for p in root.glob("*_candidates.csv"))
+          if not source_files:
+              raise SystemExit("No catalogue produced a candidate CSV; discovery cannot be reported as a successful empty scan.")
           fields = [
               "source_catalog", "title", "artist", "duration_seconds", "duration_raw", "genre",
               "instruments", "mood", "license_name", "license_url", "source_url",
@@ -238,6 +247,14 @@ jobs:
               "",
               f"Consolidated candidates: {len(master)}",
               f"Sources scanned: {len(counts)}",
+              "",
+              "Provider execution outcomes:",
+              f"- Wikimedia Commons: {__import__('os').environ.get('COMMONS_OUTCOME', 'unknown')}",
+              f"- Internet Archive: {__import__('os').environ.get('INTERNET_ARCHIVE_OUTCOME', 'unknown')}",
+              f"- Openverse: {__import__('os').environ.get('OPENVERSE_OUTCOME', 'unknown')}",
+              f"- Incompetech: {__import__('os').environ.get('INCOMPETECH_OUTCOME', 'unknown')}",
+              f"- ccMixter: {__import__('os').environ.get('CCMIXTER_OUTCOME', 'unknown')}",
+              f"- Ketsa: {__import__('os').environ.get('KETSA_OUTCOME', 'unknown')}",
               "",
               "Automated candidate discovery only. Every row remains pending; no audio is approved, no rights flags are changed and no track enters production automatically.",
               "",
