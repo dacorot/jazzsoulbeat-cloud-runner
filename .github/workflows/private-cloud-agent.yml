@@ -4,7 +4,6 @@ on:
   push:
     paths:
       - "PRIVATE_CLOUD_AGENT_START.md"
-      - ".github/workflows/private-cloud-agent.yml"
   schedule:
     # Three private production drafts weekly: Monday, Wednesday and Friday at 06:00 Colombia (UTC-5).
     - cron: "0 11 * * 1,3,5"
@@ -154,13 +153,6 @@ jobs:
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
               output.write("eligible=true\n")
           PY
-
-      - name: Organize approved songs into their playlist folders
-        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' && steps.production_gate.outputs.eligible == 'true' }}
-        working-directory: agent
-        run: |
-          echo "Only approved and fully rights-verified tracks are copied into tracks/playlists/."
-          find tracks/playlists -maxdepth 2 -type f -print 2>/dev/null || true
 
       - name: Start Deming PDCA cycle for requested cloud task
         id: pdca_start
