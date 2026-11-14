@@ -11,3 +11,5 @@ Regression trigger 2026-11-14: reject Windows-style traversal, alternate data st
 Regression trigger 2026-11-14: re-run full QA after hardening production music-manifest path resolution against symlink substitution and Windows/noncanonical path forms.
 
 Regression round 1 (2026-11-14): strict production license allowlist (CC BY 4.0/CC0 only); reject symlinked playlist roots, folders and sources; enforce exact SHA-256 human approval inside the YouTube upload function; retry resumable YouTube API chunks with bounded Google client retries. Run full private-agent QA, no YouTube upload.
+
+Regression round 1 retry 2026-11-14: corrected license regex escaping after first QA exposed parser regressions; fixed upload test artifact lifetime; rerun all tests against current agent head.
