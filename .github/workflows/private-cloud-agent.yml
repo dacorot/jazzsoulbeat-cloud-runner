@@ -212,7 +212,7 @@ jobs:
         run: |
           set -euo pipefail
           python - <<'PY'
-          import json, os
+          import hashlib, json, os
           from pathlib import Path
           import subprocess
           root = Path("output")
@@ -255,12 +255,16 @@ jobs:
           thumb_data = json.loads(thumb_probe.stdout)
           thumb_stream = thumb_data.get("streams", [{}])[0]
           assert (thumb_stream.get("width"), thumb_stream.get("height")) == (1280, 720), thumb_data
+          source_text = (folder / "MUSIC_SOURCE.txt").read_text(encoding="utf-8")
+          source_entries = [line for line in source_text.splitlines() if line[:1].isdigit() and ". " in line[:6]]
+          assert source_entries, "MUSIC_SOURCE.txt contains no individual track entries."
           if os.environ.get("COLLECTION") == "evergreen" and os.environ.get("JSB_REQUIRE_MULTI_SCENE") == "1":
               provenance = folder / "VISUAL_SCENE_PROVENANCE.json"
               assert provenance.is_file(), "Falta procedencia de escenas."
               visual = json.loads(provenance.read_text(encoding="utf-8"))
               assert visual.get("scene_count", 0) >= 8
-              assert visual.get("video_sha256"), "Falta hash de video en procedencia."
+              expected_hash = hashlib.sha256((folder / "video.mp4").read_bytes()).hexdigest()
+              assert visual.get("video_sha256") == expected_hash, "El hash de video no coincide con su procedencia."
           print(f"PASS: {folder} | {duration:.2f}s | H.264 QHD | AAC estéreo")
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
               output.write(f"run_dir={folder.as_posix()}\n")
