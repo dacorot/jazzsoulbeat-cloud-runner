@@ -1,0 +1,41 @@
+name: Jazz Soul Beat - Safe Weekly Production Plan
+on:
+  workflow_dispatch:
+  schedule:
+    # Every Monday at 05:10 America/Bogota (UTC-5); schedule may be delayed by GitHub
+    - cron: "10 10 * * 1"
+  push:
+    paths:
+      - scripts/weekly_planner.py
+      - tests/test_weekly_planner.py
+      - .github/workflows/weekly-production-plan.yml
+permissions:
+  contents: read
+concurrency:
+  group: jazz-soul-beat-weekly-plan
+  cancel-in-progress: false
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run planning and safety regression tests
+        run: python -m unittest discover -s tests -p 'test_weekly_planner.py' -v
+      - name: Plan three targets without claiming production
+        env:
+          TZ: America/Bogota
+        run: |
+          DATE_IN_BOGOTA="$(TZ=America/Bogota date +%F)"
+          python -m scripts.weekly_planner --date "$DATE_IN_BOGOTA" --output output/weekly-plan
+          echo "Planning complete. No audio, video, approval or YouTube upload performed." >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve weekly plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: jazz-soul-beat-weekly-production-plan
+          path: output/weekly-plan/
+          if-no-files-found: error
+          retention-days: 30
