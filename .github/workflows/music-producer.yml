@@ -32,8 +32,8 @@ jobs:
           MUSIC_DURATION_SECONDS: "180"
           MUSIC_CATEGORY: "coffee_time"
           ACE_STEP_SPACE: "Blursed/Ace-Step-v1.5"
-          MUSIC_MAX_WAIT_SECONDS: "2400"
-        run: python scripts/music_producer_agent.py
+          MUSIC_MAX_WAIT_SECONDS: "900"
+        run: timeout --signal=TERM --kill-after=15s "${MUSIC_MAX_WAIT_SECONDS}s" python -m scripts.music_producer_agent
       - name: Validate generated audio and attach diagnostics
         if: always()
         run: |
