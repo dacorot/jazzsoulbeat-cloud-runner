@@ -1,0 +1,214 @@
+name: Jazz Soul Beat - Parallel Production Control
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/parallel-production.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: jazz-soul-beat-parallel-production
+  cancel-in-progress: false
+
+# Independent lanes run concurrently. They exchange artifacts, not mutable shared
+# Drive/database state. No lane uploads to YouTube or publishes publicly.
+jobs:
+  music-discovery:
+    name: Music discovery and rights-first screening
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install audio inspection tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run independent music discovery agents
+        run: python scripts/music_agents.py
+      - name: Preserve candidate and screening reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parallel-music-discovery
+          path: music-library/
+          if-no-files-found: warn
+          retention-days: 7
+
+  visual-directors:
+    name: Four visual directors - isolated regression tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout private agent
+        uses: actions/checkout@v4
+        with:
+          repository: dacorot/jazzsoulbeat-agent
+          ref: fix/real-music-and-cinematic-motion
+          token: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
+          path: agent
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install test dependencies
+        working-directory: agent
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt pytest
+      - name: Test category isolation, master identity and character continuity
+        working-directory: agent
+        run: |
+          python -m compileall -q visual_directors.py
+          python -m pytest -q tests/test_visual_directors.py
+      - name: Preserve visual director test report
+        if: always()
+        run: |
+          mkdir -p reports
+          echo "Visual director lane completed. See preceding pytest output." > reports/visual-directors.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: parallel-visual-directors-report
+          path: reports/
+          if-no-files-found: warn
+          retention-days: 7
+
+  rights-regression:
+    name: Music rights and provenance regression tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout private agent
+        uses: actions/checkout@v4
+        with:
+          repository: dacorot/jazzsoulbeat-agent
+          ref: fix/real-music-and-cinematic-motion
+          token: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
+          path: agent
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        working-directory: agent
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+      - name: Run rights, license and source-audit tests
+        working-directory: agent
+        run: |
+          python -m unittest -v \
+            tests.test_licenses \
+            tests.test_incompetech_rights_audit \
+            tests.test_incompetech_source_audit \
+            tests.test_ketsa_catalog \
+            tests.test_ketsa_review_pack
+      - name: Preserve rights regression report
+        if: always()
+        run: |
+          mkdir -p reports
+          echo "Rights regression lane completed. See preceding unittest output." > reports/rights-regression.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: parallel-rights-regression-report
+          path: reports/
+          if-no-files-found: warn
+          retention-days: 7
+
+  video-engine-qa:
+    name: Video engine synthetic render and media validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout private agent
+        uses: actions/checkout@v4
+        with:
+          repository: dacorot/jazzsoulbeat-agent
+          ref: fix/real-music-and-cinematic-motion
+          token: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
+          path: agent
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install FFmpeg and Python dependencies
+        working-directory: agent
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+      - name: Run synthetic end-to-end video test
+        working-directory: agent
+        run: python main.py self-test
+      - name: Verify synthetic MP4 and audio with FFprobe
+        working-directory: agent
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import subprocess
+          folders = sorted(Path("output").glob("self-test-*"))
+          if not folders:
+              raise SystemExit("No self-test output folder was produced.")
+          folder = folders[-1]
+          videos = list(folder.glob("*.mp4"))
+          audios = list(folder.glob("*.mp3"))
+          if not videos or not audios:
+              raise SystemExit(f"Missing synthetic media in {folder}")
+          for media in videos + audios:
+              probe = subprocess.run(
+                  ["ffprobe", "-v", "error", "-show_entries", "format=duration,size",
+                   "-of", "json", str(media)],
+                  check=True, capture_output=True, text=True,
+              )
+              data = json.loads(probe.stdout)["format"]
+              if float(data["duration"]) <= 0 or int(data["size"]) <= 0:
+                  raise SystemExit(f"Invalid media: {media}")
+              print(json.dumps({"file": str(media), **data}))
+          PY
+      - name: Preserve synthetic QA output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parallel-video-engine-qa
+          path: agent/output/self-test-*/
+          if-no-files-found: warn
+          retention-days: 7
+
+  coordinator-summary:
+    name: Coordinator summary
+    if: always()
+    needs:
+      - music-discovery
+      - visual-directors
+      - rights-regression
+      - video-engine-qa
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report independent lane results
+        env:
+          MUSIC: ${{ needs.music-discovery.result }}
+          VISUAL: ${{ needs.visual-directors.result }}
+          RIGHTS: ${{ needs.rights-regression.result }}
+          VIDEO: ${{ needs.video-engine-qa.result }}
+        run: |
+          {
+            echo "## Jazz Soul Beat - Parallel production report"
+            echo ""
+            echo "| Workstream | Result |"
+            echo "|---|---|"
+            echo "| Music discovery | $MUSIC |"
+            echo "| Visual directors | $VISUAL |"
+            echo "| Rights regression | $RIGHTS |"
+            echo "| Video engine QA | $VIDEO |"
+            echo ""
+            echo "These are independent QA/discovery lanes. No YouTube upload or public publication is performed."
+            echo "A passing technical test does not constitute rights approval or final creative approval."
+          } >> "$GITHUB_STEP_SUMMARY"
