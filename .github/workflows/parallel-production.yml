@@ -30,14 +30,86 @@ jobs:
           python-version: "3.11"
       - name: Run independent music discovery agents
         run: python scripts/music_agents.py
-      - name: Preserve candidate and screening reports
+      - name: Split audio delivery into transfer-safe bundles
+        if: always()
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import shutil
+          source = Path("music-library")
+          root = Path("music-delivery")
+          files = sorted((source / "approved").glob("*")) if (source / "approved").exists() else []
+          bins = [[] for _ in range(5)]
+          sizes = [0] * 5
+          for path in sorted(files, key=lambda p: p.stat().st_size, reverse=True):
+              index = min(range(5), key=lambda i: sizes[i])
+              bins[index].append(path)
+              sizes[index] += path.stat().st_size
+          for index, group in enumerate(bins, 1):
+              target = root / f"audio-part-{index}"
+              target.mkdir(parents=True, exist_ok=True)
+              for path in group:
+                  shutil.copy2(path, target / path.name)
+              print(f"audio-part-{index}: {len(group)} files, {sizes[index-1]} bytes")
+          reports = root / "reports"
+          reports.mkdir(parents=True, exist_ok=True)
+          for path in source.rglob("*"):
+              if path.is_file() and path.parent.name != "approved":
+                  shutil.copy2(path, reports / path.name)
+          PY
+      - name: Preserve music screening reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: parallel-music-discovery
-          path: music-library/
+          name: parallel-music-discovery-reports
+          path: music-delivery/reports/
           if-no-files-found: warn
           retention-days: 7
+      - name: Deliver audio bundle 1
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parallel-music-audio-1
+          path: music-delivery/audio-part-1/
+          if-no-files-found: ignore
+          retention-days: 7
+          compression-level: 0
+      - name: Deliver audio bundle 2
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parallel-music-audio-2
+          path: music-delivery/audio-part-2/
+          if-no-files-found: ignore
+          retention-days: 7
+          compression-level: 0
+      - name: Deliver audio bundle 3
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parallel-music-audio-3
+          path: music-delivery/audio-part-3/
+          if-no-files-found: ignore
+          retention-days: 7
+          compression-level: 0
+      - name: Deliver audio bundle 4
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parallel-music-audio-4
+          path: music-delivery/audio-part-4/
+          if-no-files-found: ignore
+          retention-days: 7
+          compression-level: 0
+      - name: Deliver audio bundle 5
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parallel-music-audio-5
+          path: music-delivery/audio-part-5/
+          if-no-files-found: ignore
+          retention-days: 7
+          compression-level: 0
 
   visual-directors:
     name: Four visual directors - isolated regression tests
