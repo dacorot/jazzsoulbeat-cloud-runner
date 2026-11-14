@@ -4,12 +4,12 @@ Controlador público mínimo para ejecutar el agente privado `dacorot/jazzsoulbe
 
 ## Estado operativo verificado
 
-- El workflow `.github/workflows/private-cloud-agent.yml` está integrado en `main` y solo se inicia manualmente mediante `workflow_dispatch`.
+- El workflow `.github/workflows/private-cloud-agent.yml` está integrado en `main`: admite ejecución manual, marcador `PRIVATE_CLOUD_AGENT_START.md` y programación lunes/miércoles/viernes a las 06:00 de Colombia (11:00 UTC). En ejecución programada usa `build-evergreen` con gate estricto; si no hay música aprobada suficiente, termina sin render ni publicación.
 - Usa `ubuntu-latest`, runner estándar en este repositorio público. No usa larger runners, servicios de pago ni facturación habilitada por este proyecto.
 - Accede al repositorio privado con `PRIVATE_REPO_READ_TOKEN`, limitado a lectura.
 - Restaura `tracks/`, `assets/visual-agents/`, `data/agent.db` y `output/` desde Google Drive; el flujo de producción solo recupera el audio de biblioteca aprobado y referenciado por manifiestos.
 - La carga inicial de Drive y una recuperación independiente de los 96 objetos (316,051,164 bytes) se completaron y la comprobación de integridad SQLite devolvió `ok`.
-- La ejecución cloud manual #3 terminó en `success`: checkout privado, instalación, compilación, pruebas, restauración de Drive, estado de biblioteca, prueba sintética, persistencia y comprobación final de Drive completados.
+- La ejecución cloud manual #3 terminó en `success` como validación histórica del pipeline inicial. Las validaciones posteriores están registradas en los informes de coordinación y en GitHub Actions; una prueba sintética exitosa no equivale a una producción musical final.
 - La ejecución #3 fue `self-test`: **no** generó una mezcla musical de producción. `build-evergreen` estaba disponible pero se omitió; `build-original` no forma parte del formulario cloud actual.
 - La biblioteca de terceros no tiene pistas con derechos comerciales completamente verificados; los candidatos en revisión permanecen pendientes.
 - La ejecución `43541129670` generó un video QHD de revisión privada de 2 horas con ocho vistas de escena. Está marcado `PRIVATE_REVIEW_ONLY_NOT_APPROVED`: no se subió a YouTube y no es un master de publicación. El artefacto de GitHub se conserva 30 días.
@@ -40,7 +40,7 @@ La tarea `self-test` genera únicamente el video sintético de comprobación; no
 
 ## Seguridad y límites
 
-- La automatización está separada por función: `music-agents.yml` ejecuta investigación lunes, miércoles y viernes (11:17 UTC); `discover-music-candidates.yml` ejecuta descubrimiento diario (12:30 UTC, 07:30 Colombia); `private-agent-preflight.yml` valida cada seis horas; `build-first-review-video.yml` comprueba producción privada lunes, miércoles y viernes a las 07:00 Colombia. Son tareas programadas, no un proceso persistente 24/7.
+- La automatización está separada por función: `discover-music-candidates.yml` ejecuta descubrimiento diario a las 11:00 Colombia (16:00 UTC); `private-cloud-agent.yml` intenta producción evergreen lunes, miércoles y viernes a las 06:00 Colombia (11:00 UTC), siempre sujeta al gate de derechos y duración; `private-agent-preflight.yml` valida cada seis horas. Otros workflows de investigación/revisión tienen sus propios horarios y límites. Son ejecuciones programadas en runners efímeros, no un proceso persistente 24/7.
 - `music-producer.yml` solo se ejecuta manualmente o mediante su marcador de inicio; intenta generar un instrumental original de 120 segundos con el Space público ACE-Step. Si el servicio gratuito no responde o cambia su API, falla sin recurrir a proveedores de pago. No equivale todavía a producción musical autónoma de larga duración.
 - `private-cloud-agent.yml` es manual y conserva el flujo de restauración/guardado en Drive. `parallel-production.yml` también queda manual: cada ejecución reúne auditoría de derechos, generación visual y render de varias horas, por lo que no debe dispararse por cada cambio de código.
 - La ejecución automática no garantiza puntualidad: GitHub puede retrasar o descartar schedules con alta carga y desactiva schedules en repositorios públicos tras 60 días sin actividad.
