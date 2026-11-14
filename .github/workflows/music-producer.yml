@@ -37,7 +37,7 @@ jobs:
         run: |
           mkdir -p music-production
           status="${{ job.status }}"
-          printf '{"workflow":"original-music-producer","run_id":"%s","generation_step":"%s","job_status":"%s","publication":"disabled"}\\n' "${GITHUB_RUN_ID}" "${{ steps.generate_music.outcome }}" "$status" > music-production/PRODUCER_RUN_DIAGNOSTICS.json
+          printf '{"workflow":"original-music-producer","run_id":"%s","generation_step":"%s","job_status":"%s","publication":"disabled"}\n' "${GITHUB_RUN_ID}" "${{ steps.generate_music.outcome }}" "$status" > music-production/PRODUCER_RUN_DIAGNOSTICS.json
           if compgen -G "music-production/generated/*" > /dev/null; then
             for f in music-production/generated/*; do
               if [ -f "$f" ]; then
