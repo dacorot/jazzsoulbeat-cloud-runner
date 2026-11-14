@@ -1,0 +1,63 @@
+name: Jazz Soul Beat - Audit First Real AI Song (Private)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/qa-real-original-audition.yml
+permissions:
+  contents: read
+concurrency:
+  group: jazz-soul-beat-shared-private-drive-state
+  cancel-in-progress: false
+jobs:
+  real-audio-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: dacorot/jazzsoulbeat-agent
+          ref: integration/longform-original-qhd-v1
+          token: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
+          persist-credentials: false
+          path: agent
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install only free dependencies and FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          python -m pip install -r agent/requirements.txt
+      - name: Recover exact original song from checksum-verified private Drive
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: |
+          python - <<'PY'
+          import os
+          from drive_storage import DriveStore
+          path = "output/original-music/run-43642680136/"
+          result = DriveStore.from_token_json(os.environ["DRIVE_TOKEN_JSON"]).pull(paths=(path,))
+          print("Recovered private source:", result.get("restored"))
+          PY
+      - name: Stage real model output with no public artifact
+        run: |
+          mkdir -p music-production/generated
+          cp agent/output/original-music/run-43642680136/generated/candidate.mp3 music-production/generated/
+          cp agent/output/original-music/run-43642680136/production_report.json music-production/
+      - name: Run independent FFprobe, spectral-level and silence QA
+        run: python -m scripts.music_audio_qc --report music-production/production_report.json --output music-production/TECHNICAL_AUDIO_QA.json
+      - name: Store QA result in private Drive under original exact run
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: |
+          cp ../music-production/TECHNICAL_AUDIO_QA.json output/original-music/run-43642680136/TECHNICAL_AUDIO_QA.json
+          python main.py drive-push-original-music
+      - name: State exact release boundary
+        if: always()
+        run: |
+          echo "Private original 3-minute AI song only. Technical QC does not mean approval for video assembly or publishing." >> "$GITHUB_STEP_SUMMARY"
+          echo "YouTube upload: NOT ATTEMPTED. Human creative and rights review: PENDING." >> "$GITHUB_STEP_SUMMARY"
