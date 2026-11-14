@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   build-and-store:
-    name: Build a new one-hour licensed jazz/soul review mix
+    name: Build a new two-hour licensed jazz/soul review mix
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
@@ -88,10 +88,10 @@ jobs:
         uses: ./.github/actions/pdca-start
         with:
           task: first-video-production
-          objective: Produce and verify the first one-hour private Jazz Soul Beat video when the approved music gate permits it
+          objective: Produce and verify a two-hour private Jazz Soul Beat video when the approved music gate permits it
           drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
 
-      - name: Check approved one-hour library gate
+      - name: Check approved two-hour library gate
         id: library_gate
         working-directory: agent
         run: |
@@ -110,7 +110,7 @@ jobs:
               c.close()
           durations = [float(row["duration"]) for row in rows]
           usable = sum(durations) - DEFAULT_CROSSFADE_SECONDS * max(0, len(durations)-1)
-          ready = bool(durations) and usable >= 3600
+          ready = bool(durations) and usable >= 7200
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
               f.write("ready=" + ("true" if ready else "false") + chr(10))
           print(f"Eligible approved tracks: {len(durations)}; usable seconds: {usable:.1f}; ready: {ready}")
@@ -119,9 +119,9 @@ jobs:
       - name: Skip safely until enough approved music exists
         if: ${{ steps.library_gate.outputs.ready != 'true' }}
         run: |
-          echo "No automatic build until the approved, rights-verified library contains a full hour. No repeats or shortened tracks."
+          echo "No automatic build until the approved, rights-verified library contains two full hours. No repeats or shortened tracks."
 
-      - name: Generate one-hour review video from approved real tracks
+      - name: Generate two-hour review video from approved real tracks
         if: ${{ steps.library_gate.outputs.ready == 'true' }}
         working-directory: agent
         env:
@@ -129,7 +129,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
           echo "No YouTube upload is performed by automation. Build locally in runner and persist only to private Google Drive for review."
-          python main.py make --hours 1 --auto
+          python main.py make --hours 2 --auto
 
       - name: Verify video, thumbnail, metadata, and licensed music provenance
         id: video_verify
@@ -154,7 +154,7 @@ jobs:
           streams = data["streams"]
           video = next(s for s in streams if s["codec_type"] == "video")
           audio = next(s for s in streams if s["codec_type"] == "audio")
-          assert 3590 <= duration <= 3610, duration
+          assert 7190 <= duration <= 7210, duration
           assert video["codec_name"] == "h264" and (video["width"], video["height"]) == (2560, 1440), video
           assert audio["codec_name"] == "aac" and audio["channels"] == 2, audio
           print(f"PASS: {duration:.2f}s | H.264 2560x1440 QHD | AAC stereo | {data['format']['size']} bytes")
@@ -202,7 +202,7 @@ jobs:
             description="Private review build failed; inspect workflow logs."
           elif [ "$READY" != "true" ]; then
             state=pending
-            description="Waiting for one complete hour of approved, rights-verified music; no video generated."
+            description="Waiting for two complete hours of approved, rights-verified music; no video generated."
           else
             state=success
             description="New private Drive review video generated; no YouTube upload performed."
