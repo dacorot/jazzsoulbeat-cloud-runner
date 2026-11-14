@@ -146,12 +146,12 @@ jobs:
               tracks, source_seconds = pick(hours * 3600, collection=collection, season=season)
           except SystemExit as exc:
               with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
-                  output.write("eligible=false\\n")
+                  output.write("eligible=false\n")
               print("SKIPPED safely: " + str(exc))
               raise SystemExit(0)
           print(f"ELIGIBLE: {len(tracks)} approved tracks; {source_seconds/3600:.2f} source hours for a {hours:.2f}-hour render.")
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
-              output.write("eligible=true\\n")
+              output.write("eligible=true\n")
           PY
 
       - name: Organize approved songs into their playlist folders
