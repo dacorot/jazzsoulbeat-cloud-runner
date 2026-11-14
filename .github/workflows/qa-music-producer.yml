@@ -5,8 +5,10 @@ on:
     paths:
       - scripts/music_producer_agent.py
       - scripts/music_briefs.py
+      - scripts/music_audio_qc.py
       - tests/test_music_producer.py
       - tests/test_music_briefs.py
+      - tests/test_music_audio_qc.py
       - .github/workflows/qa-music-producer.yml
 permissions:
   contents: read
@@ -21,7 +23,7 @@ jobs:
           python-version: "3.11"
       - name: Compile producer and execute 5 failure/safety tests
         run: |
-          python -m py_compile scripts/music_producer_agent.py scripts/music_briefs.py
+          python -m py_compile scripts/music_producer_agent.py scripts/music_briefs.py scripts/music_audio_qc.py
           python -c 'import scripts.music_producer_agent, scripts.music_briefs; print("Module imports: OK")'
           python -m unittest discover -s tests -p 'test_music*.py' -v
       - name: Confirm no external providers contacted
