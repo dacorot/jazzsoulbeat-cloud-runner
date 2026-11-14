@@ -189,18 +189,29 @@ jobs:
       - name: Capture official Incompetech license and track evidence
         working-directory: agent
         run: |
+          python main.py discover-incompetech
           python main.py audit-incompetech-sources
           python main.py audit-incompetech-track-pages
           python main.py download-incompetech
           python main.py inspect-incompetech
+          python rights_audit.py incompetech
+          python incompetech_review_mix.py
       - name: Preserve Incompetech evidence and review audio
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: parallel-incompetech-rights-review
+          name: incompetech-first-video-review
           path: |
-            agent/tracks/review/incompetech/
+            agent/output/first-video-review/
             agent/output/incompetech_candidates.csv
+            agent/output/incompetech-rights/INCOMPETECH_RIGHTS_AUDIT.csv
+            agent/output/incompetech-rights/INCOMPETECH_RIGHTS_EVIDENCE.json
+            agent/tracks/review/incompetech/source_audit.csv
+            agent/tracks/review/incompetech/source_evidence.json
+            agent/tracks/review/incompetech/track_page_audit.csv
+            agent/tracks/review/incompetech/track_page_evidence.json
+            agent/tracks/review/incompetech/inspection_report.csv
+            agent/tracks/review/incompetech/download_receipt.json
           if-no-files-found: warn
           retention-days: 30
           compression-level: 0
