@@ -239,7 +239,22 @@ jobs:
           duration = float(data["format"]["duration"])
           expected = float(os.environ["HOURS"]) * 3600
           assert abs(duration - expected) <= 3.0, (duration, expected)
-          assert (folder / "mix.mp3").stat().st_size > 1024
+          mix_probe = subprocess.run(
+              ["ffprobe", "-v", "error", "-show_entries", "stream=codec_type,codec_name:format=duration", "-of", "json", str(folder / "mix.mp3")],
+              check=True, capture_output=True, text=True
+          )
+          mix_data = json.loads(mix_probe.stdout)
+          mix_audio = next((s for s in mix_data.get("streams", []) if s.get("codec_type") == "audio"), None)
+          assert mix_audio and mix_audio.get("codec_name") == "mp3", mix_data
+          mix_duration = float(mix_data["format"]["duration"])
+          assert abs(mix_duration - expected) <= 3.0, (mix_duration, expected)
+          thumb_probe = subprocess.run(
+              ["ffprobe", "-v", "error", "-show_entries", "stream=width,height", "-of", "json", str(folder / "thumb.jpg")],
+              check=True, capture_output=True, text=True
+          )
+          thumb_data = json.loads(thumb_probe.stdout)
+          thumb_stream = thumb_data.get("streams", [{}])[0]
+          assert (thumb_stream.get("width"), thumb_stream.get("height")) == (1280, 720), thumb_data
           if os.environ.get("COLLECTION") == "evergreen" and os.environ.get("JSB_REQUIRE_MULTI_SCENE") == "1":
               provenance = folder / "VISUAL_SCENE_PROVENANCE.json"
               assert provenance.is_file(), "Falta procedencia de escenas."
