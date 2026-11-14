@@ -216,7 +216,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: incompetech-first-video-review
+          name: parallel-incompetech-first-video-review
           path: |
             agent/output/first-video-review/
             agent/output/incompetech_candidates.csv
@@ -340,7 +340,7 @@ jobs:
         if: needs.rights-regression.result == 'success'
         uses: actions/download-artifact@v4
         with:
-          name: incompetech-first-video-review
+          name: parallel-incompetech-first-video-review
           path: agent/incoming/audio/
       - name: Collect original visual scenes
         if: needs.visual-directors.result == 'success'
