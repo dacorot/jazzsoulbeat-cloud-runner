@@ -173,3 +173,5 @@ jobs:
 # Trigger corrected stable-download-ID Ketsa rights audit after the audit-code fix.
 # 2026-11-14: trigger a fresh private review-only Ketsa audit; no production or rights approval.
 # 2026-11-14: verify cached QHD background reuse, exact agent revision provenance, and private audition media integrity.
+
+# 2026-11-14: revalidate latest private-agent revision with cached QHD background reuse and strict fresh-video provenance checks.
