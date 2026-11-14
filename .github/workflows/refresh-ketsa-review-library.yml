@@ -119,18 +119,6 @@ jobs:
           evidence: 'GitHub Actions run ${{ github.run_id }}; Ketsa sampler, provenance, rights audit and receipt'
           drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
 
-      - name: Preserve private audition and evidence package
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: jazz-soul-beat-ketsa-review-package
-          path: |
-            agent/output/ketsa-review/*
-            agent/tracks/review/ketsa/download_receipt.json
-            agent/output/ketsa_candidates.csv
-          if-no-files-found: warn
-          retention-days: 14
-
       - name: Confirm publication safety
         run: |
           echo "Review-library refresh only: no YouTube OAuth, no upload, no scheduling, no public publication, no paid service."
