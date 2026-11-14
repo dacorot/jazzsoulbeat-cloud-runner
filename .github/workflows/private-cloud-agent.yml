@@ -44,7 +44,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: jazz-soul-beat-private-cloud-agent
+  group: jazz-soul-beat-shared-private-drive-state
   cancel-in-progress: false
 
 jobs:
