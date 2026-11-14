@@ -74,7 +74,7 @@ def main() -> int:
     gates = {
         "audio_candidates_delivered": bool(audio_candidates),
         "rights_approved_catalog_entries": bool(approved_flag_rows),
-        "original_scene_images_delivered": bool(scene_images),
+        "original_scene_images_delivered": len(scene_images) >= 8,
         "final_video_delivered": bool(final_videos),
     }
     ready = all(gates.values())
@@ -87,6 +87,7 @@ def main() -> int:
             "files_received": len(inventory),
             "audio_candidates": len(audio_candidates),
             "original_scene_images": len(scene_images),
+            "minimum_original_scene_images_required": 8,
             "final_videos": len(final_videos),
             "synthetic_qa_videos": len(synthetic_videos),
             "catalog_rows": len(catalog_rows),
@@ -118,7 +119,7 @@ def main() -> int:
         "",
         "## Required next actions",
         "- Review candidate audio item by item; deliver only tracks with documented rights-holder authority, license, source URL and attribution.",
-        "- Deliver original scene images in the category scene library; synthetic QA frames do not count.",
+        "- Deliver at least eight original scene images in the category scene library; synthetic QA frames do not count.",
         "- Render the full-length video only after approved audio covers the requested duration; synthetic test MP4s do not count.",
         "- Run final media and creative QA; keep publication blocked until explicit owner approval.",
         "",
