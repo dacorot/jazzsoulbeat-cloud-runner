@@ -10,7 +10,8 @@ from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 OUT = Path("music-library")
-MAX_CANDIDATES = 12
+MAX_CANDIDATES = 8
+MAX_METADATA_CHECKS = 80
 MAX_AUDIO_FILE_BYTES = 30000000
 MIN_CANDIDATE_DURATION_SECONDS = 180.0
 AUDIO = OUT / "candidates"
@@ -43,23 +44,14 @@ def hunter():
     query_templates = []
     genre_terms = " OR ".join(GENRES)
     for license_query in (
-        "licenseurl:http*publicdomain*",
-        "licenseurl:http*zero*",
-        "licenseurl:http*licenses/by*",
-        "licenseurl:http*by*",
+        "licenseurl:http*publicdomain/zero*",
+        "licenseurl:http*licenses/by/*",
     ):
-        query_templates.append(f'mediatype:audio AND {license_query} AND ({genre_terms})')
-    for license_query in (
-        "licenseurl:http*publicdomain*",
-        "licenseurl:http*zero*",
-        "licenseurl:http*licenses/by*",
-        "licenseurl:http*by*",
-    ):
-        query_templates.append(f'mediatype:audio AND {license_query}')
+        query_templates.append(f"mediatype:audio AND {license_query} AND ({genre_terms})")
     successful_queries = []
     for q in query_templates:
         url = ("https://archive.org/advancedsearch.php?q=" + quote(q) +
-               "&fl[]=identifier,title,creator,year,licenseurl,subject,description&rows=500&page=1&output=json")
+               "&fl[]=identifier,title,creator,year,licenseurl,subject,description&rows=150&page=1&output=json")
         try:
             payload = get_json(url)
             docs = payload.get("response", {}).get("docs", [])
@@ -91,8 +83,8 @@ def hunter():
         if not any(genre in subject_text for genre in genres):
             continue
         relevant.append(d)
-    docs = relevant
-    print("HUNTER_FOUND", len(docs))
+    docs = relevant[:MAX_METADATA_CHECKS]
+    print("HUNTER_FOUND", len(relevant), "METADATA_CHECK_LIMIT", MAX_METADATA_CHECKS)
     return docs
 
 def license_is_usable(value):
@@ -198,7 +190,7 @@ def main():
     approved, rejected, seen = [], [], set()
     # Process more than the first 20 broad archive results; cap successful
     # review candidates to keep each free runner execution bounded.
-    for item in candidates:
+    for item in candidates[:MAX_METADATA_CHECKS]:
         if len(approved) >= MAX_CANDIDATES:
             break
         record, reason = guardian(item)
