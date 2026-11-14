@@ -92,6 +92,7 @@ def main() -> int:
         "summary": {
             "files_received": len(inventory),
             "audio_candidates": len(audio_candidates),
+            "review_audio_files": len(review_audio_files),
             "original_scene_images": len(scene_images),
             "minimum_original_scene_images_required": 8,
             "final_videos": len(final_videos),
@@ -117,7 +118,7 @@ def main() -> int:
         "",
         f"**Status:** {report['status']}",
         "",
-        f"Files received: {len(inventory)} | audio candidates: {len(audio_candidates)} | original scenes: {len(scene_images)} | review videos: {len(review_videos)} | final videos: {len(final_videos)} | synthetic QA videos: {len(synthetic_videos)}",
+        f"Files received: {len(inventory)} | audio candidates: {len(audio_candidates)} | review audio files: {len(review_audio_files)} | original scenes: {len(scene_images)} | review videos: {len(review_videos)} | final videos: {len(final_videos)} | synthetic QA videos: {len(synthetic_videos)}",
         "",
         "## Delivery gates",
     ]
