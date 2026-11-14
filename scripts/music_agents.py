@@ -104,7 +104,7 @@ def claimed_license_text(license_url):
     value = str(license_url or "").strip().lower().rstrip("/")
     if "creativecommons.org/publicdomain/zero/1.0" in value:
         return "CC0 1.0 (metadata claim; not independently verified)"
-    match = re.search(r"creativecommons\\.org/licenses/by/(1\\.0|2\\.0|2\\.5|3\\.0|4\\.0)", value)
+    match = re.search(r"creativecommons\.org/licenses/by/(1\.0|2\.0|2\.5|3\.0|4\.0)", value)
     if match:
         return f"CC BY {match.group(1)} (metadata claim; not independently verified)"
     return "Unknown"
@@ -116,7 +116,7 @@ def license_is_candidate(value):
         return True
     if "creativecommons.org/licenses/by/" in value:
         tail = value.split("creativecommons.org/licenses/by/", 1)[1]
-        return bool(re.fullmatch(r"(1\\.0|2\\.0|2\\.5|3\\.0|4\\.0)(/[a-z-]+)?", tail))
+        return bool(re.fullmatch(r"(1\.0|2\.0|2\.5|3\.0|4\.0)(/[a-z-]+)?", tail))
     return False
 
 
