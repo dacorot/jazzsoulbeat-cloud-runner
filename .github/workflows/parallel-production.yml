@@ -182,6 +182,36 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+
+  coordinator-delivery:
+    name: Coordinator - assemble delivery package and readiness gates
+    if: always()
+    needs:
+      - music-discovery
+      - visual-directors
+      - rights-regression
+      - video-engine-qa
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Collect outputs from every completed lane
+        uses: actions/download-artifact@v4
+        with:
+          pattern: parallel-*
+          path: incoming/
+          merge-multiple: true
+      - name: Inventory, checksum and gate delivered assets
+        run: python scripts/delivery_coordinator.py incoming delivery-package
+      - name: Preserve integrated delivery package
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jazz-soul-beat-delivery-package
+          path: delivery-package/
+          if-no-files-found: error
+          retention-days: 30
+
   coordinator-summary:
     name: Coordinator summary
     if: always()
