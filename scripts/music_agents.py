@@ -13,7 +13,7 @@ OUT = Path("music-library")
 MAX_CANDIDATES = 12
 MAX_AUDIO_FILE_BYTES = 30000000
 MIN_CANDIDATE_DURATION_SECONDS = 180.0
-AUDIO = OUT / "approved"
+AUDIO = OUT / "candidates"
 EVIDENCE = OUT / "evidence"
 for p in (AUDIO, EVIDENCE):
     p.mkdir(parents=True, exist_ok=True)
