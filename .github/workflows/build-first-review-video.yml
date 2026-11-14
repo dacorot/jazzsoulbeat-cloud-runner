@@ -128,8 +128,13 @@ jobs:
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          JSB_REQUIRE_MULTI_SCENE: "1"
         run: |
           echo "No YouTube upload is performed by automation. Build locally in runner and persist only to private Google Drive for review."
+          SCENE_MANIFEST="assets/visual-agents/midnight_jazz_soul/scenes/SCENE_MANIFEST.json"
+          if [ ! -s "$SCENE_MANIFEST" ]; then
+            python scene_factory.py
+          fi
           python main.py make --hours 2 --auto
 
       - name: Verify video, thumbnail, metadata, and licensed music provenance
@@ -145,6 +150,7 @@ jobs:
           test -s "$RUN_DIR/thumb.jpg"
           test -s "$RUN_DIR/description.txt"
           test -s "$RUN_DIR/MUSIC_SOURCE.txt"
+          test -s "$RUN_DIR/VISUAL_SCENE_PROVENANCE.json"
           test -s "$RUN_DIR/mix.mp3"
           ffprobe -v error -show_entries format=duration,size -show_entries stream=codec_type,codec_name,width,height,channels -of json "$VIDEO" > "$RUN_DIR/review-probe.json"
           python - "$RUN_DIR/review-probe.json" <<'PY'
@@ -159,6 +165,11 @@ jobs:
           assert video["codec_name"] == "h264" and (video["width"], video["height"]) == (2560, 1440), video
           assert audio["codec_name"] == "aac" and audio["channels"] == 2, audio
           print(f"PASS: {duration:.2f}s | H.264 2560x1440 QHD | AAC stereo | {data['format']['size']} bytes")
+          visual = json.loads((Path(sys.argv[1]).parent / "VISUAL_SCENE_PROVENANCE.json").read_text())
+          assert visual["scene_count"] >= 8, visual
+          assert len(visual["scene_loop_checks"]) >= 8, visual
+          assert all(item["status"] == "PASS" for item in visual["scene_loop_checks"]), visual
+          print(f"PASS: {visual['scene_count']} seamless 60-second visual loops verified.")
           PY
           echo "Review package: $RUN_DIR"
           find "$RUN_DIR" -maxdepth 1 -type f -printf '%f %s bytes\n' | sort
