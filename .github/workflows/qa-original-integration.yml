@@ -1,5 +1,5 @@
 name: Jazz Soul Beat - QA Round 1 Original Music Integration
-# Revalidate complete packages, explicit seed constraints and failure injection.
+# Revalidate complete packages, explicit seed constraints, encoder crashes, corrupt audio, and network outage.
 # Runs no YouTube upload, approval, paid service, or public publication.
 on:
   workflow_dispatch:
