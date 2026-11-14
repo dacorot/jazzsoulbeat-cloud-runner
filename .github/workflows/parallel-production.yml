@@ -193,6 +193,8 @@ jobs:
             tests.test_licenses \
             tests.test_incompetech_rights_audit \
             tests.test_incompetech_source_audit \
+            tests.test_incompetech_track_pages \
+            tests.test_incompetech_review_mix \
             tests.test_ketsa_catalog \
             tests.test_ketsa_review_pack
       - name: Install FFmpeg for audio inspection
