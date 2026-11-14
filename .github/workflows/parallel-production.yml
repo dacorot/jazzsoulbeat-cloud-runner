@@ -310,7 +310,7 @@ jobs:
 
 
   first-video-review-render:
-    name: Assemble first 2h20 QHD private review video
+    name: Assemble first 2h00 QHD private review video
     if: always()
     needs:
       - rights-regression
@@ -351,7 +351,7 @@ jobs:
       - name: Test multi-scene loop playlist
         working-directory: agent
         run: python -m unittest tests.test_multi_scene_video
-      - name: Render and verify the 2h20 QHD private review video
+      - name: Render and verify the 2h00 QHD private review video
         if: needs.rights-regression.result == 'success' && needs.visual-directors.result == 'success'
         working-directory: agent
         run: python first_video_review.py --incoming incoming --output output/first-video-private-review
