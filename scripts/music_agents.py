@@ -78,11 +78,20 @@ def hunter():
     docs = list(found.values())
     relevant = []
     for d in docs:
-        text = " ".join(str(d.get(k, "")) for k in ("title", "creator", "subject", "description")).lower()
-        if any(g in text for g in genres) or not text.strip():
-            relevant.append(d)
-    if relevant:
-        docs = relevant
+        subjects = d.get("subject", [])
+        if not isinstance(subjects, list):
+            subjects = [subjects]
+        subject_text = " ".join(str(value) for value in subjects).lower()
+        title = str(d.get("title", "")).lower()
+        description = str(d.get("description", "")).lower()
+        text = " ".join((title, description, subject_text))
+        if any(term in text for term in REJECT_TERMS):
+            continue
+        # Require a genre in the item subject tags, not only in the search query/title.
+        if not any(genre in subject_text for genre in genres):
+            continue
+        relevant.append(d)
+    docs = relevant
     print("HUNTER_FOUND", len(docs))
     return docs
 
