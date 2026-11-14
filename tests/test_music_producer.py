@@ -158,6 +158,23 @@ class ProducerTests(unittest.TestCase):
         self.assertIs(report["eligible_for_video_assembly"], False)
         self.assertEqual(report["category"], "coffee_time")
 
+    def test_provider_device_mismatch_is_not_a_song(self):
+        message = (
+            "❌ Error: Expected all tensors to be on the same device, "
+            "but got mat2 is on cpu, different from other tensors on cuda:0"
+        )
+        with self.fake_client(result=message):
+            self.assertEqual(self.producer.main(), 1)
+        report = json.loads((self.producer.OUT / "production_report.json").read_text())
+        self.assertEqual(report["status"], "blocked_provider_device_mismatch")
+        self.assertFalse(any(self.producer.AUDIO.iterdir()))
+
+    def test_unapproved_backend_model_is_rejected_without_network(self):
+        with patch.dict(os.environ, {"ACE_STEP_MODEL": "paid-proprietary-model"}, clear=False):
+            self.assertEqual(self.producer.main(), 1)
+        report = json.loads((self.producer.OUT / "production_report.json").read_text())
+        self.assertEqual(report["status"], "blocked_invalid_brief")
+
     def test_wrong_duration_is_rejected(self):
         source = Path(self.temp.name) / "bad-duration.mp3"
         source.write_bytes(b"fake-data" * 15000)
