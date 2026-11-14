@@ -21,3 +21,5 @@ Regression round 1 extended data-validation tests 2026-11-14: current private-ag
 Regression round 1: corrected truncated-manifest test to query the agent's canonical absolute SQLite file key; rerun full QA against latest commit.
 
 Security preflight 2026-11-14: verify production-branch public/social/scheduled publication are absolutely denied even with legacy approval IDs.
+
+Security preflight: reject any future use of the exact owner-rejected 512-bar audio at final FFmpeg mix boundary even when track metadata claims approved. 2026-11-14.
