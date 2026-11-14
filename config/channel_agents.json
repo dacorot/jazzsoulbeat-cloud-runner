@@ -1,0 +1,230 @@
+{
+  "schema_version": 1,
+  "channel": "Jazz Soul Beat",
+  "production_target": {
+    "songs_per_month": 12,
+    "planning_pace": "approximately one approved song per day until the monthly target is met",
+    "target_is_not_a_generation_guarantee": true,
+    "publication_requires_explicit_user_approval": true,
+    "free_services_only": true
+  },
+  "orchestration": {
+    "model": "four category-specific creative agents, one shared production scheduler",
+    "run_one_gpu_generation_at_a_time": true,
+    "fallback_only_after_preflight": true,
+    "do_not_spend_gpu_quota_on_api_discovery": true,
+    "record_engine_version_prompt_duration_and_rights_evidence": true,
+    "failed_engine_must_not_block_other_categories": true,
+    "no_paid_fallback": true
+  },
+  "shared_pipeline": [
+    "category_director",
+    "composer_and_arranger",
+    "engine_router",
+    "audio_generation",
+    "audio_quality_control",
+    "rights_and_provenance_review",
+    "catalog_manager"
+  ],
+  "agents": [
+    {
+      "id": "midnight_jazz_soul",
+      "display_name": "Midnight Jazz & Soul Agent",
+      "playlist": "01 — Midnight Jazz & Soul",
+      "mission": "Create sophisticated, intimate, cinematic late-night jazz-soul for reading, working and unwinding.",
+      "default_mode": "instrumental",
+      "sound_identity": [
+        "contemporary jazz soul",
+        "warm",
+        "mature",
+        "intimate",
+        "cinematic"
+      ],
+      "tempo_bpm": [
+        76,
+        94
+      ],
+      "harmonic_direction": [
+        "minor and major seventh colors",
+        "9th and 11th extensions",
+        "elegant substitutions",
+        "emotional but restrained resolutions"
+      ],
+      "instrumentation": [
+        "grand piano",
+        "warm tenor saxophone",
+        "upright bass",
+        "brushed drums",
+        "subtle jazz guitar"
+      ],
+      "arrangement": [
+        "distinctive opening motif",
+        "memorable main theme",
+        "instrumental conversation",
+        "contrasting bridge",
+        "natural resolved ending"
+      ],
+      "avoid": [
+        "generic lounge loops",
+        "childish sounds",
+        "artist imitation",
+        "recognizable melodies",
+        "unlicensed samples"
+      ]
+    },
+    {
+      "id": "coffee_smooth_jazz",
+      "display_name": "Coffee & Smooth Jazz Agent",
+      "playlist": "02 — Coffee & Smooth Jazz",
+      "mission": "Create bright, relaxed, elegant music for mornings, cafés, concentration and light social spaces.",
+      "default_mode": "instrumental",
+      "sound_identity": [
+        "smooth jazz",
+        "bossa nova",
+        "light acoustic jazz",
+        "sunny",
+        "organic"
+      ],
+      "tempo_bpm": [
+        88,
+        116
+      ],
+      "harmonic_direction": [
+        "warm major and modal colors",
+        "gentle jazz extensions",
+        "flowing harmonic movement"
+      ],
+      "instrumentation": [
+        "nylon-string guitar",
+        "soft piano or Rhodes",
+        "upright or electric bass",
+        "light percussion",
+        "flute or mellow saxophone"
+      ],
+      "arrangement": [
+        "gentle introduction",
+        "clear melodic hook",
+        "subtle instrumental variations",
+        "consistent organic groove",
+        "soft ending"
+      ],
+      "avoid": [
+        "overly sleepy elevator music",
+        "harsh percussion",
+        "repetitive copy-paste arrangements",
+        "artist imitation",
+        "unlicensed samples"
+      ]
+    },
+    {
+      "id": "soulful_blues",
+      "display_name": "Soulful Blues Agent",
+      "playlist": "03 — Soulful Blues",
+      "mission": "Create expressive, emotionally rich blues and soul with authentic phrasing and memorable instrumental storytelling.",
+      "default_mode": "instrumental",
+      "tempo_bpm": [
+        66,
+        98
+      ],
+      "sound_identity": [
+        "soul blues",
+        "modern blues",
+        "warm",
+        "expressive",
+        "human-feeling"
+      ],
+      "harmonic_direction": [
+        "12-bar and expanded blues forms",
+        "blue notes",
+        "dominant seventh colors",
+        "gospel-influenced turnarounds"
+      ],
+      "instrumentation": [
+        "expressive electric guitar",
+        "Rhodes or piano",
+        "Hammond organ",
+        "electric bass",
+        "live-feel drums",
+        "optional harmonica"
+      ],
+      "arrangement": [
+        "recognizable blues theme",
+        "call and response",
+        "dynamic solo section",
+        "harmonic lift or bridge",
+        "intentional ending"
+      ],
+      "avoid": [
+        "stock blues clichés without a hook",
+        "overdriven muddy mix",
+        "artist imitation",
+        "recognizable melodies",
+        "unlicensed samples"
+      ]
+    },
+    {
+      "id": "christian_jazz_gospel",
+      "display_name": "Christian Jazz & Gospel Agent",
+      "playlist": "04 — Christian Jazz & Gospel",
+      "mission": "Create spiritually grounded, musically rich Christian jazz and gospel, with coherent original English lyrics rooted in biblical themes.",
+      "default_mode": "original_english_vocals",
+      "lyric_language": "English",
+      "lyric_rules": [
+        "Write original, coherent lyrics; do not assemble disconnected Bible phrases.",
+        "Use Psalms and Proverbs as thematic foundations and record the biblical references used.",
+        "Do not invent quotations or attribute wording to Scripture inaccurately.",
+        "Prefer original paraphrase; if quoting a translation, verify its copyright and commercial-use conditions first.",
+        "Include a clear spiritual message, meaningful progression and singable chorus."
+      ],
+      "tempo_bpm": [
+        68,
+        108
+      ],
+      "sound_identity": [
+        "jazz gospel",
+        "soul gospel",
+        "reverent",
+        "hopeful",
+        "uplifting",
+        "adult and sophisticated"
+      ],
+      "instrumentation": [
+        "expressive piano",
+        "Hammond organ",
+        "warm bass",
+        "live gospel drums",
+        "tasteful choir",
+        "soulful lead vocal"
+      ],
+      "arrangement": [
+        "thematic introduction",
+        "verse with coherent narrative",
+        "memorable chorus",
+        "development or bridge",
+        "resolved worshipful ending"
+      ],
+      "avoid": [
+        "generic inspirational lyrics",
+        "theological contradictions",
+        "unverified scripture quotations",
+        "artist imitation",
+        "unlicensed samples"
+      ]
+    }
+  ],
+  "quality_gates": [
+    "audio file exists and decodes",
+    "actual duration and sample rate are measured",
+    "no clipping, corrupt audio, abrupt truncation or unintended silence",
+    "musical structure and category identity are reviewed",
+    "duplicates and near-duplicates are checked",
+    "model, version, prompt, generation date and source are recorded",
+    "commercial-use terms for the exact model, weights, host and output workflow are reviewed",
+    "human listening approval is required before catalog approval"
+  ],
+  "storage": {
+    "required_library": "permanent private music library",
+    "current_state": "not yet connected; GitHub Actions artifacts are temporary and expire",
+    "publication_state": "never publish without explicit user approval"
+  }
+}
