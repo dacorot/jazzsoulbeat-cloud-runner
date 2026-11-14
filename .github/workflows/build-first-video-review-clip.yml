@@ -178,11 +178,18 @@ jobs:
           motion_mean = sum(motion_diff.getdata()) / (motion_diff.width * motion_diff.height)
           diff = ImageChops.difference(start, boundary)
           mean_diff = sum(diff.convert("L").getdata()) / (diff.width * diff.height)
+          last = Image.open(root / "frames/frame-0899.jpg").convert("RGB")
+          seam = ImageChops.difference(last, start).convert("L")
+          seam_mean = sum(seam.getdata()) / (seam.width * seam.height)
           assert motion_mean > 0.5, motion_mean
           assert mean_diff < 5.0, mean_diff
+          # Compare the final encoded frame before the 60-second cut with frame zero.
+          # Frame 0900 is the repeated first frame and cannot by itself prove a smooth seam.
+          assert seam_mean < 3.0, seam_mean
           print(json.dumps({"duration": duration, "resolution": [2560,1440], "codec": "H.264/AAC",
                             "midcycle_mean_pixel_difference": round(motion_mean,4),
-                            "start_to_60s_mean_pixel_difference": round(mean_diff,4)}))
+                            "start_to_60s_mean_pixel_difference": round(mean_diff,4),
+                            "last_to_first_seam_mean_pixel_difference": round(seam_mean,4)}))
           import hashlib
           import datetime
           audio_path = Path("output/first-video-review/INCOMPETECH_JAZZ_FIRST_HOUR_REVIEW_ONLY.mp3")
