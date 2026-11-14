@@ -143,6 +143,7 @@ jobs:
           python -m compileall -q visual_directors.py cloud_backgrounds.py scene_factory.py
           python -m pytest -q tests/test_visual_directors.py tests/test_cloud_backgrounds.py tests/test_scene_factory.py
       # One-shot free-only scene generation; the commit marker prevents repeat quota use.
+      # One-shot free-only scene generation; the commit message marker avoids repeat quota use.
       - name: Generate eight original Midnight Jazz scenes (free account only)
         if: contains(github.event.head_commit.message, '[generate-scenes]') || contains(github.event.head_commit.message, 'first-video review render') || contains(github.event.head_commit.message, 'free-only scene generation') || contains(github.event.head_commit.message, 'review mix')
         working-directory: agent
