@@ -29,7 +29,8 @@ jobs:
       - name: Generate original instrumental through the free public ACE-Step Space
         id: generate_music
         env:
-          MUSIC_DURATION_SECONDS: "120"
+          MUSIC_DURATION_SECONDS: "180"
+          MUSIC_CATEGORY: "coffee_time"
           MUSIC_MAX_WAIT_SECONDS: "2400"
         run: python scripts/music_producer_agent.py
       - name: Validate generated audio and attach diagnostics
@@ -58,6 +59,9 @@ jobs:
           assert report.get("status") == "generated_audio_needs_human_review", report.get("status")
           assert report.get("rights_verified") is False
           assert report.get("human_review_required") is True
+          assert report.get("editorial_verdict") == "PENDING_HUMAN_LISTENING"
+          assert report.get("creative_approval") is False
+          assert report.get("eligible_for_video_assembly") is False
           assert report.get("publication_status") == "NOT_PUBLISHED"
           audio = Path(report["file"]).resolve()
           root = Path("music-production/generated").resolve()
@@ -69,7 +73,7 @@ jobs:
           data = json.loads(probe.stdout)
           assert any(s.get("codec_type") == "audio" for s in data.get("streams", [])), data
           duration = float(data["format"]["duration"])
-          assert 110 <= duration <= 130, f"Unexpected duration: {duration}"
+          assert 165 <= duration <= 205, f"Unexpected duration: {duration}"
           print(f"PASS: generated audio is readable, {duration:.2f}s; rights remain pending.")
           PY
       - name: Checkout private agent for private Drive persistence
