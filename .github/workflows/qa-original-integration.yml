@@ -1,4 +1,4 @@
-name: Jazz Soul Beat - QA Round 1 Original Music Integration
+name: Jazz Soul Beat - Integration Safety and Original Music QA
 # Revalidate complete packages, explicit seed constraints, encoder crashes, corrupt audio, and network outage.
 # Only short synthetic QA checks; never expose audio artifacts from this public repository.
 on:
@@ -56,7 +56,7 @@ jobs:
           assert Path("output/qa-r1-smoke/original-jazz-audition.mp3").stat().st_size > 100000
           print("SMOKE PASS: stereo original audio and all publish gates closed.")
           PY
-      - name: Confirm procedural synth is never a release candidate
+      - name: Confirm procedural synth is never a release candidate and public publishing is denied
         working-directory: agent
         run: |
           python - <<'PY'
