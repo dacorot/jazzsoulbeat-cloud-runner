@@ -132,7 +132,20 @@ jobs:
         run: |
           echo "No YouTube upload is performed by automation. Build locally in runner and persist only to private Google Drive for review."
           SCENE_MANIFEST="assets/visual-agents/midnight_jazz_soul/scenes/SCENE_MANIFEST.json"
-          if [ ! -s "$SCENE_MANIFEST" ]; then
+          if ! python - "$SCENE_MANIFEST" <<'PY'
+          import json, sys
+          from pathlib import Path
+          from video import _validated_scene_selection
+          path = Path(sys.argv[1])
+          if not path.is_file():
+              raise SystemExit(1)
+          manifest = json.loads(path.read_text(encoding="utf-8"))
+          if manifest.get("status") not in {"SCENE_SET_GENERATED_PENDING_HUMAN_QA", "SCENE_SET_COMPLETE_WITH_DERIVED_VARIANTS_PENDING_HUMAN_QA"}:
+              raise SystemExit(1)
+          _validated_scene_selection(path, manifest, minimum_scenes=8)
+          PY
+          then
+            echo "No hay una biblioteca visual completa; se intentará generarla solo con cuotas gratuitas."
             python scene_factory.py
           fi
           python main.py make --hours 2 --auto
