@@ -137,3 +137,5 @@ Commits:
 - `8549540dace1c04da43b40211673ca068ff62d14` — corrección de la instrucción contradictoria sobre `build-original` en el README.
 
 La repetición manual de `parallel-production.yml` depende ahora del artefacto de escenas de la ejecución `43539653311`, cuya retención es de 30 días. Antes de que expire, hay que mover ese paquete a una persistencia duradera privada (por ejemplo, Drive) o crear un nuevo paquete de escenas revisado. No se debe asumir que un artefacto temporal equivale a almacenamiento permanente.
+
+- `a5211e46b26908e8efefb2e045fde0d3f074b479` — precisión de la documentación del workflow: la repetición reutiliza escenas preservadas y no solicita inferencia visual nueva.
