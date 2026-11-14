@@ -40,11 +40,17 @@ class ProducerTests(unittest.TestCase):
                 return {
                     "named_endpoints": {
                         "/generation_wrapper": {
-                            "parameters": [{
-                                "parameter_name": "param_15",
-                                "parameter_has_default": True,
-                                "parameter_default": 120,
-                            }],
+                            "parameters": [
+                                {
+                                    "parameter_name": n,
+                                    "parameter_has_default": True,
+                                    "parameter_default": 180,
+                                } for n in (
+                                    "selected_model", "param_4", "param_5",
+                                    "param_6", "param_7", "param_15",
+                                    "param_16", "param_23",
+                                )
+                            ],
                         },
                     },
                 }
@@ -60,7 +66,7 @@ class ProducerTests(unittest.TestCase):
         source = Path(self.temp.name) / "external-output.mp3"
         source.write_bytes(b"faked audio bytes" * 9000)
         probe = {
-            "format": {"duration": "120.02"},
+            "format": {"duration": "180.02"},
             "streams": [{"codec_type": "audio"}],
         }
         with self.fake_client(result=source), patch.object(
@@ -75,10 +81,10 @@ class ProducerTests(unittest.TestCase):
         self.assertIs(report["rights_verified"], False)
         self.assertIs(report["human_review_required"], True)
         self.assertEqual(report["publication_status"], "NOT_PUBLISHED")
-        self.assertAlmostEqual(report["duration_actual_seconds"], 120.02)
+        self.assertAlmostEqual(report["duration_actual_seconds"], 180.02)
         self.assertEqual(
             report["sha256"],
-            hashlib.sha256((self.producer.AUDIO / "midnight_has_a_soul.mp3").read_bytes()).hexdigest(),
+            hashlib.sha256((self.producer.AUDIO / "candidate.mp3").read_bytes()).hexdigest(),
         )
 
     def test_corrupt_audio_fails_closed_and_removes_candidate(self):
@@ -91,7 +97,7 @@ class ProducerTests(unittest.TestCase):
             self.assertEqual(self.producer.main(), 1)
         report = json.loads((self.producer.OUT / "production_report.json").read_text())
         self.assertEqual(report["status"], "blocked_invalid_audio")
-        self.assertFalse((self.producer.AUDIO / "midnight_has_a_soul.mp3").exists())
+        self.assertFalse((self.producer.AUDIO / "candidate.mp3").exists())
         self.assertNotIn("rights_verified", report)
 
     def test_changed_endpoint_is_reported_not_guessed(self):
@@ -115,6 +121,42 @@ class ProducerTests(unittest.TestCase):
         self.assertEqual(report["status"], "blocked_model_uninitialized")
         self.assertEqual(report["cost_policy"], "free_only")
         self.assertFalse(any(self.producer.AUDIO.iterdir()))
+
+    def test_untrusted_urls_are_not_downloaded(self):
+        with self.fake_client(result="http://169.254.169.254/latest/meta-data/"):
+            self.assertEqual(self.producer.main(), 1)
+        result = json.loads((self.producer.OUT / "production_report.json").read_text())
+        self.assertEqual(result["status"], "blocked_no_audio_file")
+        self.assertFalse(any(self.producer.AUDIO.iterdir()))
+
+    def test_invalid_category_fails_before_network(self):
+        with patch.dict(os.environ, {"MUSIC_CATEGORY": "../unapproved"}, clear=False):
+            self.assertEqual(self.producer.main(), 1)
+        report = json.loads((self.producer.OUT / "production_report.json").read_text())
+        self.assertEqual(report["status"], "blocked_invalid_brief")
+
+    def test_too_short_track_fails_before_network(self):
+        with patch.dict(os.environ, {"MUSIC_DURATION_SECONDS": "120"}, clear=False):
+            self.assertEqual(self.producer.main(), 1)
+        report = json.loads((self.producer.OUT / "production_report.json").read_text())
+        self.assertEqual(report["status"], "blocked_invalid_brief")
+
+    def test_success_still_cannot_be_assembled_without_human_review(self):
+        source = Path(self.temp.name) / "approved-output.flac"
+        source.write_bytes(b"faked media bytes" * 14000)
+        probe = {"format": {"duration": "184"}, "streams": [{"codec_type": "audio"}]}
+        with self.fake_client(result=source), patch.object(
+            self.producer.subprocess, "run",
+            return_value=subprocess.CompletedProcess(
+                args=["ffprobe"], returncode=0, stdout=json.dumps(probe),
+            ),
+        ):
+            self.assertEqual(self.producer.main(), 0)
+        report = json.loads((self.producer.OUT / "production_report.json").read_text())
+        self.assertEqual(report["editorial_verdict"], "PENDING_HUMAN_LISTENING")
+        self.assertIs(report["creative_approval"], False)
+        self.assertIs(report["eligible_for_video_assembly"], False)
+        self.assertEqual(report["category"], "coffee_time")
 
     def test_wrong_duration_is_rejected(self):
         source = Path(self.temp.name) / "bad-duration.mp3"
