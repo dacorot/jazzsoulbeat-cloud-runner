@@ -20,3 +20,5 @@ jobs:
     secrets:
       PRIVATE_REPO_READ_TOKEN: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
       DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+
+# 2026-11-14: regression validation for scoped original-music Drive persistence and review-only sync boundaries.
