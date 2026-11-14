@@ -16,6 +16,7 @@ concurrency:
   group: jazz-soul-beat-first-video-review
   cancel-in-progress: false
 
+# Retry after rights-test fixture and free-plan diagnostics fixes.
 # Independent lanes run concurrently. They exchange artifacts, not mutable shared
 # Drive/database state. No lane uploads to YouTube or publishes publicly.
 jobs:
