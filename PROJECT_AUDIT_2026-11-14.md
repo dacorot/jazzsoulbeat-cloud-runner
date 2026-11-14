@@ -122,3 +122,18 @@ Los runners usan `ubuntu-latest`; no se configuraron runners grandes ni proveedo
 
 ---
 **Conclusión:** hay un primer video de revisión QHD real y un pipeline técnico que ya supera el render de dos horas. El proyecto aún no ha alcanzado el objetivo de una canción original completa, escenas con continuidad aprobada y agentes que produzcan y entreguen automáticamente un master publicable.
+
+
+## 8. Endurecimiento adicional posterior a la primera auditoría
+
+Después de documentar los hallazgos, se corrigieron otros dos riesgos operativos en `parallel-production.yml`:
+
+- El workflow manual ahora reutiliza el paquete de ocho escenas ya preservado en la ejecución `43539653311`, valida los SHA-256 de cada imagen y no vuelve a llamar a Cloudflare ni a Hugging Face durante una repetición del pipeline. Esto evita que una revisión técnica dependa de cuotas gratuitas que ya están agotadas.
+- Los cuatro jobs del workflow fijan el motor privado al SHA exacto `b2b18fbe48f0378a88e04a2fbd9f14931dcf20c6`, en vez de seguir una rama mutable. Así, las pruebas y el render usan la misma versión que produjo el video exitoso.
+
+Commits:
+- `2e5c5a7dbfc48c10edcddcb013830145fff6e340` — reutilización y verificación de las ocho escenas.
+- `295a6b86758715aa941dbee7056f71321d22cef4` — fijación del SHA del motor de render.
+- `8549540dace1c04da43b40211673ca068ff62d14` — corrección de la instrucción contradictoria sobre `build-original` en el README.
+
+La repetición manual de `parallel-production.yml` depende ahora del artefacto de escenas de la ejecución `43539653311`, cuya retención es de 30 días. Antes de que expire, hay que mover ese paquete a una persistencia duradera privada (por ejemplo, Drive) o crear un nuevo paquete de escenas revisado. No se debe asumir que un artefacto temporal equivale a almacenamiento permanente.
