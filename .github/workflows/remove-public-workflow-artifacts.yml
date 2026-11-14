@@ -33,12 +33,24 @@ jobs:
 
           def request(url, method="GET"):
               req = urllib.request.Request(url, headers=headers, method=method)
-              try:
-                  with urllib.request.urlopen(req, timeout=60) as response:
-                      body = response.read().decode("utf-8", errors="replace")
-                      return response.status, body
-              except urllib.error.HTTPError as error:
-                  return error.code, error.read().decode("utf-8", errors="replace")
+              last_error = None
+              for attempt in range(7):
+                  try:
+                      with urllib.request.urlopen(req, timeout=90) as response:
+                          body = response.read().decode("utf-8", errors="replace")
+                          return response.status, body
+                  except urllib.error.HTTPError as error:
+                      body = error.read().decode("utf-8", errors="replace")
+                      if error.code in (429, 500, 502, 503, 504):
+                          retry_after = error.headers.get("Retry-After")
+                          delay = float(retry_after) if retry_after else min(2 ** attempt, 20)
+                          time.sleep(delay)
+                          continue
+                      return error.code, body
+                  except (urllib.error.URLError, TimeoutError, OSError) as error:
+                      last_error = error
+                      time.sleep(min(2 ** attempt, 20))
+              return 599, str(last_error or "request failed after retries")
 
           artifacts = []
           page = 1
@@ -72,7 +84,7 @@ jobs:
                   )
               deleted += status == 204
               print(f"artifact={artifact_id} name={item.get('name')} delete_status={status}")
-              time.sleep(0.1)
+              time.sleep(0.5)
 
           status, body = request(f"{base}?per_page=100&page=1")
           if status != 200:
