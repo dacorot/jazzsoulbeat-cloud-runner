@@ -253,7 +253,7 @@ def main():
                 source_url=record.get("source_url", ""),
             )
         )
-    (OUT / "CANDIDATE_REVIEW.md").write_text("\\n".join(review_lines) + "\\n", encoding="utf-8")
+    (OUT / "CANDIDATE_REVIEW.md").write_text("\n".join(review_lines) + "\n", encoding="utf-8")
     (OUT / "rejected_report.json").write_text(
         json.dumps(rejected, ensure_ascii=False, indent=2), encoding="utf-8")
     summary = {
