@@ -121,13 +121,6 @@ jobs:
           fi
           python main.py drive-status
 
-      - name: Organize approved songs into their playlist folders
-        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' && steps.production_gate.outputs.eligible == 'true' }}
-        working-directory: agent
-        run: |
-          echo "Only approved and fully rights-verified tracks are copied into tracks/playlists/."
-          find tracks/playlists -maxdepth 2 -type f -print 2>/dev/null || true
-
       - name: Show approved library status
         if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
         working-directory: agent
@@ -160,6 +153,13 @@ jobs:
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
               output.write("eligible=true\\n")
           PY
+
+      - name: Organize approved songs into their playlist folders
+        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' && steps.production_gate.outputs.eligible == 'true' }}
+        working-directory: agent
+        run: |
+          echo "Only approved and fully rights-verified tracks are copied into tracks/playlists/."
+          find tracks/playlists -maxdepth 2 -type f -print 2>/dev/null || true
 
       - name: Start Deming PDCA cycle for requested cloud task
         id: pdca_start
