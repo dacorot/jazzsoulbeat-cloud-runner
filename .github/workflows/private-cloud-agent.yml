@@ -153,7 +153,16 @@ jobs:
           MIX_HOURS: ${{ env.HOURS }}
           COLLECTION: ${{ env.COLLECTION }}
           SEASON: ${{ env.SEASON }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
+          if [[ "$COLLECTION" == "evergreen" ]]; then
+            SCENE_MANIFEST="assets/visual-agents/midnight_jazz_soul/scenes/SCENE_MANIFEST.json"
+            if [ ! -s "$SCENE_MANIFEST" ]; then
+              python scene_factory.py
+            fi
+            export JSB_REQUIRE_MULTI_SCENE=1
+          fi
           args=(make --hours "$MIX_HOURS" --auto --collection "$COLLECTION")
           if [[ "$COLLECTION" == "seasonal" ]]; then
             if [[ ! "$SEASON" =~ ^[a-z0-9][a-z0-9_-]{0,39}$ ]]; then
