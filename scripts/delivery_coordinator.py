@@ -51,24 +51,31 @@ def main() -> int:
             "sha256": sha256(path),
         })
 
-    catalogs = [p for p in ROOT.rglob("approved_catalog.csv")]
-    approved_rows = []
+    catalogs = [p for p in ROOT.rglob("candidate_catalog.csv")] + [p for p in ROOT.rglob("approved_catalog.csv")]
+    catalog_rows = []
     for catalog in catalogs:
-        approved_rows.extend(csv_rows(catalog))
+        catalog_rows.extend(csv_rows(catalog))
     approved_flag_rows = [
-        row for row in approved_rows
-        if (row.get("approved") or row.get("rights_verified") or "").strip().lower()
-        in {"1", "true", "yes", "approved"}
+        row for row in catalog_rows
+        if any((row.get(field) or "").strip().lower() in {"1", "true", "yes", "approved"}
+               for field in ("approved", "rights_verified"))
     ]
-    audio_files = [x for x in inventory if x["kind"] == "audio"]
-    image_files = [x for x in inventory if x["kind"] == "image"]
-    video_files = [x for x in inventory if x["kind"] == "video"]
+    audio_candidates = [x for x in inventory if x["kind"] == "audio" and "music-library" in x["path"].lower()]
+    scene_images = [
+        x for x in inventory if x["kind"] == "image"
+        and any(token in x["path"].lower() for token in ("scenes/", "visual-agents/"))
+    ]
+    final_videos = [
+        x for x in inventory if x["kind"] == "video"
+        and ("final" in Path(x["path"]).name.lower() or "delivery" in x["path"].lower())
+    ]
+    synthetic_videos = [x for x in inventory if x["kind"] == "video" and x not in final_videos]
 
     gates = {
-        "audio_files_delivered": bool(audio_files),
+        "audio_candidates_delivered": bool(audio_candidates),
         "rights_approved_catalog_entries": bool(approved_flag_rows),
-        "visual_assets_delivered": bool(image_files),
-        "final_video_delivered": bool(video_files),
+        "original_scene_images_delivered": bool(scene_images),
+        "final_video_delivered": bool(final_videos),
     }
     ready = all(gates.values())
     report = {
@@ -78,10 +85,11 @@ def main() -> int:
         "publication": "NOT_AUTHORIZED - no upload or publication performed",
         "summary": {
             "files_received": len(inventory),
-            "audio_files": len(audio_files),
-            "image_files": len(image_files),
-            "video_files": len(video_files),
-            "catalog_rows": len(approved_rows),
+            "audio_candidates": len(audio_candidates),
+            "original_scene_images": len(scene_images),
+            "final_videos": len(final_videos),
+            "synthetic_qa_videos": len(synthetic_videos),
+            "catalog_rows": len(catalog_rows),
             "approved_catalog_rows_detected": len(approved_flag_rows),
         },
         "gates": gates,
@@ -109,9 +117,9 @@ def main() -> int:
     lines += [
         "",
         "## Required next actions",
-        "- Deliver audio files with per-track license, source URL, attribution and rights evidence.",
-        "- Deliver approved original visual scenes for the selected category.",
-        "- Render the full-length video only after the approved audio library covers the requested duration.",
+        "- Review candidate audio item by item; deliver only tracks with documented rights-holder authority, license, source URL and attribution.",
+        "- Deliver original scene images in the category scene library; synthetic QA frames do not count.",
+        "- Render the full-length video only after approved audio covers the requested duration; synthetic test MP4s do not count.",
         "- Run final media and creative QA; keep publication blocked until explicit owner approval.",
         "",
         "See delivery_manifest.json for the file inventory and SHA-256 checksums.",
