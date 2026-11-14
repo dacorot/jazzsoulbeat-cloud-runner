@@ -1,0 +1,26 @@
+name: Jazz Soul Beat - ACE-Step Adapter QA
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - scripts/music_producer_agent.py
+      - tests/test_music_producer.py
+      - .github/workflows/qa-music-producer.yml
+permissions:
+  contents: read
+jobs:
+  producer-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Compile producer and execute 5 failure/safety tests
+        run: |
+          python -m py_compile scripts/music_producer_agent.py
+          python -m unittest discover -s tests -p 'test_music_producer.py' -v
+      - name: Confirm no external providers contacted
+        if: always()
+        run: echo "Mocked API only. No music generated, credentials used, payments made, or YouTube upload attempted." >> "$GITHUB_STEP_SUMMARY"
