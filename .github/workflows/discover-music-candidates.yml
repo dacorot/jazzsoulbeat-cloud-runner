@@ -108,6 +108,7 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           import csv
+          import os
           root = Path("output")
           source_files = sorted(p for p in root.glob("*_candidates.csv"))
           if not source_files:
@@ -249,7 +250,7 @@ jobs:
               f"Sources scanned: {len(counts)}",
               "",
               "Provider execution outcomes:",
-              f"- Wikimedia Commons: {__import__('os').environ.get('COMMONS_OUTCOME', 'unknown')}",
+              f"- Wikimedia Commons: {os.environ.get('COMMONS_OUTCOME', 'unknown')}",
               f"- Internet Archive: {__import__('os').environ.get('INTERNET_ARCHIVE_OUTCOME', 'unknown')}",
               f"- Openverse: {__import__('os').environ.get('OPENVERSE_OUTCOME', 'unknown')}",
               f"- Incompetech: {__import__('os').environ.get('INCOMPETECH_OUTCOME', 'unknown')}",
