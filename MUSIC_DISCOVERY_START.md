@@ -6,3 +6,5 @@ Run the official-source discovery workflow. This is a read-only catalogue scan:
 - Record exact source pages, license evidence URLs, claimed attribution, metadata duration, and missing-rights fields.
 - Persist reports only to the private Google Drive library.
 - Do not upload GitHub Actions artifacts, publish to YouTube, or change privacy.
+
+Regression 2026-11-14: validate provider outcome reporting and fail the consolidation step if no catalogue CSV exists; keep all candidates pending.
