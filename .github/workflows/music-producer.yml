@@ -4,6 +4,9 @@ on:
     paths:
       - "MUSIC_PRODUCER_START.md"
   workflow_dispatch:
+  schedule:
+    # Tue/Thu/Sat 08:30 America/Bogota. Quotas may prevent successful generation.
+    - cron: "30 13 * * 2,4,6"
 permissions:
   contents: read
 concurrency:
@@ -26,11 +29,23 @@ jobs:
           python-version: "3.11"
       - name: Install free Gradio client
         run: python -m pip install --upgrade gradio_client
+      - name: Rotate original jazz styles on each production day
+        run: |
+          python - <<'PY'
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+          from scripts.music_briefs import BRIEFS
+          import os
+          today = datetime.now(ZoneInfo("America/Bogota")).date()
+          category = list(BRIEFS)[today.toordinal() % len(BRIEFS)]
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as handle:
+              handle.write(f"MUSIC_CATEGORY={category}\n")
+          print(f"Scheduled original-music audition: {today.isoformat()}, category {category}")
+          PY
       - name: Generate original instrumental through the free public ACE-Step Space
         id: generate_music
         env:
-          MUSIC_DURATION_SECONDS: "180"
-          MUSIC_CATEGORY: "coffee_time"
+          MUSIC_DURATION_SECONDS: "240"
           ACE_STEP_SPACE: "Blursed/Ace-Step-v1.5"
           ACE_STEP_MODEL: "acestep-v15-turbo"
           MUSIC_MAX_WAIT_SECONDS: "900"
@@ -75,7 +90,7 @@ jobs:
           data = json.loads(probe.stdout)
           assert any(s.get("codec_type") == "audio" for s in data.get("streams", [])), data
           duration = float(data["format"]["duration"])
-          assert 165 <= duration <= 205, f"Unexpected duration: {duration}"
+          assert 220 <= duration <= 260, f"Unexpected duration: {duration}"
           print(f"PASS: generated audio is readable, {duration:.2f}s; rights remain pending.")
           PY
       - name: Verify loudness, silence and SHA; keep editorial review pending
