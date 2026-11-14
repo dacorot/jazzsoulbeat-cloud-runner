@@ -1,5 +1,8 @@
 name: Discover new Jazz Soul Beat music candidates
 on:
+  push:
+    paths:
+      - "MUSIC_DISCOVERY_START.md"
   workflow_dispatch:
   schedule:
     # Daily at 07:30 Colombia (UTC-5).
