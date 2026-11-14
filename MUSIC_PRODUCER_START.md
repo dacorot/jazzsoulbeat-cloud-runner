@@ -1,5 +1,5 @@
-Jazz Soul Beat — controlled free-only ACE-Step instrumental audition attempt v5.
-2026-11-14. Reject previous original_music.py oscillator compositions for creative release.
-Attempt one 120-second, 84 BPM, D minor mature jazz/soul instrumental using the existing verified public Space endpoint if currently reachable. Only a high-quality human-reviewed song may advance.
-No local computer, no paid credits, no billing, no alternative provider, no YouTube upload or public publication.
-Validate actual audio stream and duration; if unavailable, record failure and preserve private diagnostics in Drive.
+Jazz Soul Beat — free-only alternative ACE-Step community ZeroGPU audition.
+User rejected procedural oscillator composition. Production target: one real original 180s coffee-time jazz track, no covers, no sampled third-party music, no published video.
+2026-11-14 alternative generation attempt: Blursed/Ace-Step-v1.5 (free ZeroGPU, verified public listing).
+No paid backend, free credits purchase, billing, external publish, or model-provider auto rights approvals.
+Verify output duration/codec and preserve only private Drive report. Failure must be explicit and not replaced with synthetic demo music.
