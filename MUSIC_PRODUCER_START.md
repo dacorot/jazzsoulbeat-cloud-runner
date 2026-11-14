@@ -5,3 +5,5 @@ No paid backend, free credits purchase, billing, external publish, or model-prov
 Verify output duration/codec and preserve only private Drive report. Failure must be explicit and not replaced with synthetic demo music.
 
 Second safe attempt: module entrypoint fixed and 900-second hard timeout. Test alternate free Space once; fail closed if unavailable. 2026-11-14.
+
+Third bounded attempt: switch free ACE-Step backend model to acetep-v15-turbo? Correct model ID: acestep-v15-turbo. Avoid XL CPU/CUDA bug. No paid fallback.
