@@ -122,18 +122,6 @@ jobs:
         run: |
           python main.py drive-push
           python main.py drive-status
-      - name: Upload updated private rights evidence
-        uses: actions/upload-artifact@v4
-        with:
-          name: jazz-soul-beat-first-video-rights-evidence
-          path: |
-            agent/output/incompetech-rights/INCOMPETECH_RIGHTS_AUDIT.csv
-            agent/output/incompetech-rights/INCOMPETECH_RIGHTS_EVIDENCE.json
-            agent/output/first-video-review/REVIEW_MIX_PROVENANCE.json
-            agent/output/first-video-review/MUSIC_SOURCE_REVIEW_ONLY.txt
-            agent/output/first-video-review/INCOMPETECH_JAZZ_FIRST_HOUR_REVIEW_ONLY.mp3
-          if-no-files-found: error
-          retention-days: 7
       - name: Confirm no approval or publication
         run: |
           echo "Rights evidence refresh only. All 16 tracks remain unapproved; no YouTube upload or publication."
