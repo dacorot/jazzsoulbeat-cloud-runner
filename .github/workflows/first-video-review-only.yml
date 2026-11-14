@@ -1,0 +1,75 @@
+name: Jazz Soul Beat - First Video Review Only
+
+on:
+  push:
+    paths:
+      - ".github/workflows/first-video-review-only.yml"
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: jazz-soul-beat-first-video-review-final
+  cancel-in-progress: false
+
+jobs:
+  render:
+    name: Render 2h00 QHD private review from preserved source artifacts
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Checkout exact corrected private video engine
+        uses: actions/checkout@v4
+        with:
+          repository: dacorot/jazzsoulbeat-agent
+          ref: afc492a9688f6b2f2679d87f1efe4dbb6a72153f
+          token: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
+          path: agent
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install FFmpeg and render dependencies
+        working-directory: agent
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Reuse preserved two-hour audio and rights evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: parallel-incompetech-first-video-review
+          run-id: 43539653311
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: agent/incoming/audio/
+
+      - name: Reuse preserved eight-view visual package
+        uses: actions/download-artifact@v4
+        with:
+          name: parallel-visual-directors-report
+          run-id: 43539653311
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: agent/incoming/visual/
+
+      - name: Test scene playlist and loop QA helpers
+        working-directory: agent
+        run: python -m unittest tests.test_multi_scene_video
+
+      - name: Render and verify the 2h00 QHD private review video
+        working-directory: agent
+        run: python first_video_review.py --incoming incoming --output output/first-video-private-review
+
+      - name: Preserve the private review video, attribution and rights evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: jazz-soul-beat-first-video-review-2h00
+          path: agent/output/first-video-private-review/
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0
