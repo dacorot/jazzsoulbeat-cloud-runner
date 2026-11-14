@@ -12,6 +12,9 @@ Controlador público mínimo para ejecutar el agente privado `dacorot/jazzsoulbe
 - La ejecución cloud manual #3 terminó en `success`: checkout privado, instalación, compilación, pruebas, restauración de Drive, estado de biblioteca, prueba sintética, persistencia y comprobación final de Drive completados.
 - La ejecución #3 fue `self-test`: **no** generó una mezcla musical de producción. Las tareas `build-original` y `build-evergreen` estaban disponibles pero se omitieron en esa ejecución.
 - La biblioteca de terceros no tiene pistas con derechos comerciales completamente verificados; los candidatos en revisión permanecen pendientes.
+- La ejecución `43541129670` generó un video QHD de revisión privada de 2 horas con ocho vistas de escena. Está marcado `PRIVATE_REVIEW_ONLY_NOT_APPROVED`: no se subió a YouTube y no es un master de publicación. El artefacto de GitHub se conserva 30 días.
+- El paquete coordinado anterior registró 44 pistas de Incompetech descargadas para revisión, pero 0 derechos aprobados. El informe marca una discrepancia entre enlaces históricos CC BY 3.0 y las referencias actuales CC BY 4.0, además de dos créditos de terceros que requieren revisión.
+- El conjunto visual contiene seis imágenes originales y dos variantes de recorte/color derivadas de la primera; las ocho siguen pendientes de aprobación creativa. La cuota gratuita de generación visual se agotó y Cloudflare devolvió 403 de verificación de facturación; no se activó facturación ni un fallback de pago.
 
 ## Tareas disponibles
 
@@ -36,7 +39,10 @@ La tarea `self-test` genera únicamente el video sintético de comprobación; no
 
 ## Seguridad y límites
 
-- No hay `schedule` ni ejecuciones automáticas. El runner estándar `ubuntu-latest` de este repositorio público es gratuito e ilimitado según GitHub; los runners grandes sí se cobran. Aun así, una programación no garantiza puntualidad: GitHub puede retrasarla o descartar ejecuciones con alta carga y desactiva schedules en repositorios públicos tras 60 días sin actividad. No activar `schedule` sin autorización expresa.
+- La automatización está separada por función: `music-agents.yml` ejecuta descubrimiento lunes, miércoles y viernes (11:17 UTC); `discover-music-candidates.yml` ejecuta una búsqueda diaria (12:30 UTC, 07:30 Colombia). Son procesos de descubrimiento: no aprueban derechos ni publican.
+- `music-producer.yml` solo se ejecuta manualmente o mediante su marcador de inicio; intenta generar un instrumental original de 120 segundos con el Space público ACE-Step. Si el servicio gratuito no responde o cambia su API, falla sin recurrir a proveedores de pago. No equivale todavía a producción musical autónoma de larga duración.
+- `private-cloud-agent.yml` es manual y conserva el flujo de restauración/guardado en Drive. `parallel-production.yml` también queda manual: cada ejecución reúne auditoría de derechos, generación visual y render de varias horas, por lo que no debe dispararse por cada cambio de código.
+- La ejecución automática no garantiza puntualidad: GitHub puede retrasar o descartar schedules con alta carga y desactiva schedules en repositorios públicos tras 60 días sin actividad.
 - El workflow no recibe `YOUTUBE_TOKEN_JSON`, no ejecuta `--upload` y no publica videos. Los resultados se guardan únicamente en Google Drive privado.
 - No se aprueban pistas automáticamente. La licencia comercial, autoridad del publicador y derechos de composición, interpretación y master requieren evidencia y revisión humana.
 - No se deben guardar secretos, tokens, audios, bases de datos ni videos en este repositorio público.
