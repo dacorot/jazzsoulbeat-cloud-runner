@@ -17,3 +17,5 @@ Safety:
 Latest audit trigger: exercise scheduled-production eligibility gate. This run must skip video generation while the approved evergreen library is insufficient and must keep all output in private Drive.
 
 Safe regression 2026-11-14: validate the scheduled production eligibility gate and scoped persistence; zero approved tracks must skip rendering without broad Drive sync.
+
+Safe regression 2026-11-14: re-parse the final production workflow after QHD video, MP3 duration and 1280x720 thumbnail checks were added.
