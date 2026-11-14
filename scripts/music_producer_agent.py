@@ -180,7 +180,8 @@ def main():
 
     report = {
         "status": "generated_audio_needs_human_review",
-        "title": brief.title,\n        "category": brief.slug,
+        "title": brief.title,
+        "category": brief.slug,
         "file": str(target),
         "bytes": target.stat().st_size,
         "sha256": audio_sha256,
@@ -189,7 +190,10 @@ def main():
         "prompt": prompt,
         "negative_prompt": NEGATIVE,
         "engine": SPACE,
-        "model": "acestep-v15-xl-turbo",\n        "editorial_verdict": "PENDING_HUMAN_LISTENING",\n        "creative_approval": False,\n        "eligible_for_video_assembly": False,
+        "model": "acestep-v15-xl-turbo",
+        "editorial_verdict": "PENDING_HUMAN_LISTENING",
+        "creative_approval": False,
+        "eligible_for_video_assembly": False,
         "endpoint": "/generation_wrapper",
         "parameters": mapped,
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
