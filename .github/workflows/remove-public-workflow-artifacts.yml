@@ -1,0 +1,88 @@
+name: Jazz Soul Beat - Remove Public Workflow Artifacts
+on:
+  push:
+    paths:
+      - "PUBLIC_ARTIFACT_CLEANUP.md"
+permissions:
+  contents: read
+  actions: write
+jobs:
+  remove-public-artifacts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Delete all existing Actions artifacts from this public controller
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import time
+          import urllib.error
+          import urllib.request
+
+          repository = "dacorot/jazzsoulbeat-cloud-runner"
+          token = os.environ["GITHUB_TOKEN"]
+          base = f"https://api.github.com/repos/{repository}/actions/artifacts"
+          headers = {
+              "Accept": "application/vnd.github+json",
+              "Authorization": f"Bearer {token}",
+              "X-GitHub-Api-Version": "2022-11-28",
+          }
+
+          def request(url, method="GET"):
+              req = urllib.request.Request(url, headers=headers, method=method)
+              try:
+                  with urllib.request.urlopen(req, timeout=60) as response:
+                      body = response.read().decode("utf-8", errors="replace")
+                      return response.status, body
+              except urllib.error.HTTPError as error:
+                  return error.code, error.read().decode("utf-8", errors="replace")
+
+          artifacts = []
+          page = 1
+          while True:
+              status, body = request(f"{base}?per_page=100&page={page}")
+              if status != 200:
+                  raise RuntimeError(f"Artifact listing failed ({status}): {body[:500]}")
+              payload = json.loads(body)
+              batch = payload.get("artifacts", [])
+              artifacts.extend(batch)
+              if len(batch) < 100:
+                  break
+              page += 1
+
+          total_bytes = sum(int(item.get("size_in_bytes", 0)) for item in artifacts)
+          print(json.dumps({
+              "repository_visibility": "public",
+              "artifacts_found": len(artifacts),
+              "total_size_bytes": total_bytes,
+              "total_size_gib": round(total_bytes / (1024 ** 3), 3),
+              "action": "delete_all_existing_workflow_artifacts",
+          }, indent=2))
+
+          deleted = 0
+          for item in artifacts:
+              artifact_id = item["id"]
+              status, body = request(f"{base}/{artifact_id}", method="DELETE")
+              if status not in (204, 404):
+                  raise RuntimeError(
+                      f"Could not delete artifact {artifact_id} ({status}): {body[:500]}"
+                  )
+              deleted += status == 204
+              print(f"artifact={artifact_id} name={item.get('name')} delete_status={status}")
+              time.sleep(0.1)
+
+          status, body = request(f"{base}?per_page=100&page=1")
+          if status != 200:
+              raise RuntimeError(f"Artifact verification failed ({status}): {body[:500]}")
+          remaining = json.loads(body).get("total_count", 0)
+          if remaining:
+              raise RuntimeError(f"{remaining} public workflow artifacts remain.")
+          print(json.dumps({
+              "deleted": deleted,
+              "remaining": remaining,
+              "verified": True,
+          }, indent=2))
+          PY
