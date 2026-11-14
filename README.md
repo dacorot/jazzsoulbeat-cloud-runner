@@ -29,7 +29,7 @@ La duración configurada en el formulario manual está limitada a 1, 2 o 3 horas
 
 ## Validar una rama del agente
 
-El formulario manual incluye `agent_ref`, que permite seleccionar una rama o SHA del repositorio privado. Por defecto es `master`. Así se puede compilar y ejecutar la suite completa de pruebas contra una rama de trabajo sin fusionarla primero. La referencia se valida antes del checkout.
+El formulario manual incluye `agent_ref`, que permite seleccionar una rama o SHA del repositorio privado. Por defecto apunta a `fix/real-music-and-cinematic-motion`, la rama usada por el pipeline de revisión actual. Así se puede compilar y ejecutar la suite completa de pruebas contra otra rama de trabajo sin fusionarla primero. La referencia se valida antes del checkout.
 
 Para una validación técnica sin generar producción, seleccionar:
 - `task = self-test`
