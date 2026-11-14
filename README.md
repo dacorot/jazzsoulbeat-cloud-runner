@@ -7,7 +7,7 @@ Controlador público mínimo para ejecutar el agente privado `dacorot/jazzsoulbe
 - El workflow `.github/workflows/private-cloud-agent.yml` está integrado en `main` y solo se inicia manualmente mediante `workflow_dispatch`.
 - Usa `ubuntu-latest`, runner estándar en este repositorio público. No usa larger runners, servicios de pago ni facturación habilitada por este proyecto.
 - Accede al repositorio privado con `PRIVATE_REPO_READ_TOKEN`, limitado a lectura.
-- Restaura `tracks/`, `data/agent.db` y `output/` desde Google Drive; ejecuta la tarea seleccionada y guarda el estado y los resultados de nuevo en Drive.
+- Restaura `tracks/`, `assets/visual-agents/`, `data/agent.db` y `output/` desde Google Drive; el flujo de producción solo recupera el audio de biblioteca aprobado y referenciado por manifiestos.
 - La carga inicial de Drive y una recuperación independiente de los 96 objetos (316,051,164 bytes) se completaron y la comprobación de integridad SQLite devolvió `ok`.
 - La ejecución cloud manual #3 terminó en `success`: checkout privado, instalación, compilación, pruebas, restauración de Drive, estado de biblioteca, prueba sintética, persistencia y comprobación final de Drive completados.
 - La ejecución #3 fue `self-test`: **no** generó una mezcla musical de producción. `build-evergreen` estaba disponible pero se omitió; `build-original` no forma parte del formulario cloud actual.
@@ -40,7 +40,7 @@ La tarea `self-test` genera únicamente el video sintético de comprobación; no
 
 ## Seguridad y límites
 
-- La automatización está separada por función: `music-agents.yml` ejecuta descubrimiento lunes, miércoles y viernes (11:17 UTC); `discover-music-candidates.yml` ejecuta una búsqueda diaria (12:30 UTC, 07:30 Colombia). Son procesos de descubrimiento: no aprueban derechos ni publican.
+- La automatización está separada por función: `music-agents.yml` ejecuta investigación lunes, miércoles y viernes (11:17 UTC); `discover-music-candidates.yml` ejecuta descubrimiento diario (12:30 UTC, 07:30 Colombia); `private-agent-preflight.yml` valida cada seis horas; `build-first-review-video.yml` comprueba producción privada lunes, miércoles y viernes a las 07:00 Colombia. Son tareas programadas, no un proceso persistente 24/7.
 - `music-producer.yml` solo se ejecuta manualmente o mediante su marcador de inicio; intenta generar un instrumental original de 120 segundos con el Space público ACE-Step. Si el servicio gratuito no responde o cambia su API, falla sin recurrir a proveedores de pago. No equivale todavía a producción musical autónoma de larga duración.
 - `private-cloud-agent.yml` es manual y conserva el flujo de restauración/guardado en Drive. `parallel-production.yml` también queda manual: cada ejecución reúne auditoría de derechos, generación visual y render de varias horas, por lo que no debe dispararse por cada cambio de código.
 - La ejecución automática no garantiza puntualidad: GitHub puede retrasar o descartar schedules con alta carga y desactiva schedules en repositorios públicos tras 60 días sin actividad.
@@ -57,4 +57,4 @@ La tarea `self-test` genera únicamente el video sintético de comprobación; no
 3. Elige la tarea y los parámetros que correspondan. Para validar una rama sin producir música, usa `self-test` y establece `agent_ref` a la rama de trabajo.
 4. Revisa el resultado en la ejecución. No se realiza ninguna publicación en YouTube.
 
-El runner es efímero: no conserva archivos después del trabajo. La persistencia entre ejecuciones depende de Google Drive y del flujo pull → tarea → push. Este controlador no es todavía un servicio autónomo con programación automática.
+El runner es efímero: no conserva archivos después del trabajo. La continuidad depende de Google Drive y de los workflows programados/manuales. Esto ofrece ejecución por horarios, no un proceso 24/7 permanentemente activo. La producción se bloquea mientras no exista una hora completa de música aprobada con derechos verificados.
