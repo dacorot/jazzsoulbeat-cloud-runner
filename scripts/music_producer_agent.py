@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
-"""Cloud music producer for Jazz Soul Beat.
-Uses only the public ACE-Step Hugging Face Space through Gradio's public API.
-No paid API, no local GPU, no publishing. Fails closed if the Space/API is unavailable.
-"""
-import json, os, re, shutil, sys, time
+"""Free-only ACE-Step producer. Calls the verified Gradio generation endpoint."""
+import json, os, shutil, sys
 from pathlib import Path
 from datetime import datetime, timezone
 
@@ -12,8 +9,8 @@ AUDIO = OUT / "generated"
 OUT.mkdir(exist_ok=True)
 AUDIO.mkdir(exist_ok=True)
 SPACE = os.getenv("ACE_STEP_SPACE", "ACE-Step/Ace-Step-v1.5")
-DURATION = int(os.getenv("MUSIC_DURATION_SECONDS", "180"))
-MAX_WAIT = int(os.getenv("MUSIC_MAX_WAIT_SECONDS", "2400"))
+# Start with a two-minute instrumental to maximize the chance of fitting free GPU quota.
+DURATION = int(os.getenv("MUSIC_DURATION_SECONDS", "120"))
 PROMPT = (
     "Original sophisticated contemporary jazz soul instrumental, 84 BPM, D minor. "
     "Expressive acoustic grand piano leads with a distinctive memorable melodic theme. "
@@ -37,106 +34,88 @@ def fail(status, message, details=None):
               "engine": SPACE, "cost_policy": "free_only"}
     write_json(OUT / "production_report.json", report)
     print(json.dumps(report, ensure_ascii=False, indent=2))
-    return 0 if status == "blocked_free_service" else 1
-
-def param_name(p):
-    return str(p.get("parameter_name") or p.get("label") or p.get("name") or "").lower()
-
-def endpoint_list(api):
-    eps = api.get("named_endpoints", {})
-    if isinstance(eps, dict):
-        return [(name, value) for name, value in eps.items()]
-    return []
+    return 1
 
 def main():
     try:
         from gradio_client import Client
-    except Exception as e:
-        return fail("blocked_dependency", "gradio_client could not be imported", {"error": str(e)})
-
-    token = os.getenv("HF_TOKEN") or None
-    try:
-        client = Client(SPACE, token=token, verbose=True)
+        client = Client(SPACE, token=os.getenv("HF_TOKEN") or None, verbose=True)
         api = client.view_api(return_format="dict")
     except Exception as e:
         return fail("blocked_free_service", "Could not connect to the public ACE-Step Space or inspect its API. No paid fallback was used.", {"error": str(e)[:1200]})
 
     write_json(OUT / "space_api_snapshot.json", api)
-    candidates = []
-    for name, info in endpoint_list(api):
-        blob = (name + " " + str(info.get("description", ""))).lower()
-        params = info.get("parameters", [])
-        if any(k in blob for k in ("generate", "create", "music", "audio")) and params:
-            candidates.append((name, info))
-    if not candidates:
-        return fail("blocked_api_changed", "The Space is reachable, but no supported music-generation endpoint was identified. API snapshot saved for diagnosis.", {"named_endpoints": list(api.get("named_endpoints", {}).keys()) if isinstance(api.get("named_endpoints"), dict) else []})
+    endpoints = api.get("named_endpoints", {})
+    info = endpoints.get("/generation_wrapper") if isinstance(endpoints, dict) else None
+    if not info:
+        return fail("blocked_api_changed", "The verified /generation_wrapper endpoint is unavailable. No other endpoint will be guessed.", {"available_endpoints": list(endpoints)[:100] if isinstance(endpoints, dict) else []})
 
-    # Prefer the endpoint whose name most clearly indicates music generation.
-    candidates.sort(key=lambda x: (0 if "generate" in x[0].lower() else 1, 0 if "music" in x[0].lower() else 1))
-    endpoint, info = candidates[0]
-    params = info.get("parameters", [])
-    values = []
-    mapped = {}
-    for p in params:
-        name = param_name(p)
-        default = p.get("parameter_default", p.get("default", None))
-        value = default
-        if any(k in name for k in ("prompt", "description", "caption", "style", "tag")):
-            value = PROMPT
-        elif "negative" in name:
-            value = NEGATIVE
-        elif any(k in name for k in ("lyrics", "lyric")):
-            value = ""
-        elif any(k in name for k in ("instrumental", "is_instrumental")):
-            value = True
-        elif any(k in name for k in ("duration", "length", "seconds")):
-            value = DURATION
-        elif "bpm" in name or "tempo" in name:
-            value = 84
-        elif any(k in name for k in ("keyscale", "key_scale", "tonality")):
-            value = "D minor"
-        elif "batch" in name or "num_samples" in name:
-            value = 1
-        elif "thinking" in name or "use_llm" in name:
-            value = True
-        elif "format" in name and isinstance(default, str):
-            value = "wav" if "wav" in str(p) else default
-        # Fail closed for required file/audio/reference inputs without defaults.
-        ptype = str(p.get("parameter_type", {})).lower()
-        if value is None and any(k in name for k in ("audio", "file", "reference", "upload")):
-            return fail("blocked_required_input", "The generation endpoint requires a reference file or input the agent cannot safely invent.", {"endpoint": endpoint, "parameter": name})
+    # Use the endpoint's advertised parameter order and defaults; override only known fields.
+    overrides = {
+        "selected_model": "acestep-v15-xl-turbo",
+        "generation_mode": "custom",
+        "simple_query_input": PROMPT,
+        "simple_vocal_language": "unknown",
+        "param_4": PROMPT,
+        "param_5": "[Instrumental]",
+        "param_6": 84,
+        "param_7": "D minor",
+        "param_8": "4",
+        "param_9": "unknown",
+        "param_10": 8,
+        "param_12": True,
+        "param_13": "-1",
+        "param_15": DURATION,
+        "param_16": 1,
+        "param_23": "text2music",
+        "param_30": "mp3",
+        "param_32": True,
+        "param_36": NEGATIVE,
+        "param_43": False,
+        "param_44": False,
+    }
+    values, mapped = [], {}
+    for p in info.get("parameters", []):
+        name = p.get("parameter_name", "")
+        if name in overrides:
+            value = overrides[name]
+        elif p.get("parameter_has_default", False):
+            value = p.get("parameter_default")
+        else:
+            value = None  # optional file inputs / optional metadata with no default
         values.append(value)
         mapped[name or f"parameter_{len(values)}"] = value if isinstance(value, (str, int, float, bool, type(None))) else str(value)
 
     try:
-        result = client.predict(*values, api_name=endpoint)
+        result = client.predict(*values, api_name="/generation_wrapper")
     except Exception as e:
-        return fail("blocked_generation", "ACE-Step did not complete the generation request. No paid fallback was used.", {"endpoint": endpoint, "error": str(e)[:1600], "parameters": mapped})
+        return fail("blocked_generation", "The correct ACE-Step generation endpoint was called but did not complete. No paid fallback was used.", {"endpoint": "/generation_wrapper", "error": str(e)[:1800], "parameters": mapped})
 
-    # Gradio returns local downloaded paths for audio/file outputs; search recursively.
     found = []
     def walk(x):
         if isinstance(x, str):
-            if Path(x).is_file():
-                found.append(Path(x))
-            elif x.startswith("http://") or x.startswith("https://"):
+            p = Path(x)
+            if p.is_file():
+                found.append(p)
+            elif x.startswith(("http://", "https://")):
                 found.append(x)
         elif isinstance(x, dict):
             for v in x.values(): walk(v)
         elif isinstance(x, (list, tuple)):
             for v in x: walk(v)
     walk(result)
+
     target = None
     for item in found:
         try:
             if isinstance(item, Path):
                 if item.stat().st_size > 100_000:
-                    target = AUDIO / ("midnight_has_a_soul" + item.suffix.lower())
+                    target = AUDIO / ("midnight_has_a_soul" + (item.suffix.lower() or ".mp3"))
                     shutil.copy2(item, target)
                     break
             else:
                 from urllib.request import urlretrieve
-                suffix = Path(item.split("?", 1)[0]).suffix or ".wav"
+                suffix = Path(item.split("?", 1)[0]).suffix or ".mp3"
                 candidate = AUDIO / ("midnight_has_a_soul" + suffix)
                 urlretrieve(item, candidate)
                 if candidate.stat().st_size > 100_000:
@@ -146,7 +125,7 @@ def main():
             continue
 
     if not target:
-        return fail("blocked_no_audio_file", "The Space returned a response, but no downloadable audio file could be verified.", {"endpoint": endpoint, "result_preview": str(result)[:2000]})
+        return fail("blocked_no_audio_file", "ACE-Step returned from the generation endpoint, but no downloadable audio file could be verified.", {"endpoint": "/generation_wrapper", "result_preview": str(result)[:2500]})
 
     report = {
         "status": "generated_audio_needs_human_review",
@@ -157,10 +136,10 @@ def main():
         "prompt": PROMPT,
         "negative_prompt": NEGATIVE,
         "engine": SPACE,
-        "model_license_reference": "https://huggingface.co/spaces/ACE-Step/Ace-Step-v1.5",
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
-        "endpoint": endpoint,
+        "model": "acestep-v15-xl-turbo",
+        "endpoint": "/generation_wrapper",
         "parameters": mapped,
+        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "rights_note": "Model code/weights are MIT per the model card. This does not guarantee output uniqueness or clear every third-party right. Check audio for similarity and retain generation records before commercial release.",
         "publication_status": "NOT_PUBLISHED"
     }
