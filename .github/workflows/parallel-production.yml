@@ -17,6 +17,7 @@ concurrency:
   cancel-in-progress: false
 
 # Retry after rights-test fixture and free-plan diagnostics fixes.
+# Rebuild after track-page evidence and anonymous ZeroGPU fallback corrections.
 # Independent lanes run concurrently. They exchange artifacts, not mutable shared
 # Drive/database state. No lane uploads to YouTube or publishes publicly.
 jobs:
