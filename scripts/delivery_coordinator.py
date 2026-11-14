@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Assemble parallel-lane outputs into a traceable delivery/readiness package.
+"""Private review readiness is distinct from public production approval.
+
+Assemble parallel-lane outputs into a traceable delivery/readiness package.
 
 This coordinator never grants music rights, invents missing assets, or publishes.
 It reports READY_FOR_REVIEW only when evidence and production media are present.
