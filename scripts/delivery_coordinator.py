@@ -60,7 +60,7 @@ def main() -> int:
         if any((row.get(field) or "").strip().lower() in {"1", "true", "yes", "approved"}
                for field in ("approved", "rights_verified"))
     ]
-    audio_candidates = [x for x in inventory if x["kind"] == "audio" and "music-library" in x["path"].lower()]
+    audio_candidates = [x for x in inventory if x["kind"] == "audio" and "parallel-video-engine-qa" not in x["path"].lower()]
     scene_images = [
         x for x in inventory if x["kind"] == "image"
         and any(token in x["path"].lower() for token in ("scenes/", "visual-agents/"))
@@ -109,7 +109,7 @@ def main() -> int:
         "",
         f"**Status:** {report['status']}",
         "",
-        f"Files received: {len(inventory)} | audio: {len(audio_files)} | images: {len(image_files)} | videos: {len(video_files)}",
+        f"Files received: {len(inventory)} | audio candidates: {len(audio_candidates)} | original scenes: {len(scene_images)} | final videos: {len(final_videos)} | synthetic QA videos: {len(synthetic_videos)}",
         "",
         "## Delivery gates",
     ]
