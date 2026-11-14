@@ -19,3 +19,5 @@ Regression round 1 final rerun 2026-11-14: all source and regression-test fixes 
 Regression round 1 extended data-validation tests 2026-11-14: current private-agent head includes truncated CSV row normalization and rejects non-finite audio duration values; execute complete suite again.
 
 Regression round 1: corrected truncated-manifest test to query the agent's canonical absolute SQLite file key; rerun full QA against latest commit.
+
+Security preflight 2026-11-14: verify production-branch public/social/scheduled publication are absolutely denied even with legacy approval IDs.
