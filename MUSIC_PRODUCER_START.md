@@ -1,6 +1,5 @@
-Start original Jazz Soul Beat composition — single controlled v4 attempt.
-Title: Midnight Has a Soul.
-Free-only ACE-Step public Space; target 120 seconds, 84 BPM, D minor.
-Use verified /generation_wrapper endpoint, turbo model, batch size 1.
-Concurrency cancels duplicate runs to protect the daily free GPU quota.
-No paid fallback. Never publish. Upload output/report as Actions artifact.
+Jazz Soul Beat — controlled free-only ACE-Step instrumental audition attempt v5.
+2026-11-14. Reject previous original_music.py oscillator compositions for creative release.
+Attempt one 120-second, 84 BPM, D minor mature jazz/soul instrumental using the existing verified public Space endpoint if currently reachable. Only a high-quality human-reviewed song may advance.
+No local computer, no paid credits, no billing, no alternative provider, no YouTube upload or public publication.
+Validate actual audio stream and duration; if unavailable, record failure and preserve private diagnostics in Drive.
