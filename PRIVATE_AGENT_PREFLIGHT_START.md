@@ -15,3 +15,5 @@ Regression round 1 (2026-11-14): strict production license allowlist (CC BY 4.0/
 Regression round 1 retry 2026-11-14: corrected license regex escaping after first QA exposed parser regressions; fixed upload test artifact lifetime; rerun all tests against current agent head.
 
 Regression round 1 final rerun 2026-11-14: all source and regression-test fixes committed; validate exact current agent HEAD, including corrected strict-license regex and YouTube upload approval boundary.
+
+Regression round 1 extended data-validation tests 2026-11-14: current private-agent head includes truncated CSV row normalization and rejects non-finite audio duration values; execute complete suite again.
