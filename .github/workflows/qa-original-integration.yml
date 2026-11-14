@@ -1,5 +1,6 @@
 name: Jazz Soul Beat - Integration Safety and Original Music QA
 # Revalidate complete packages, explicit seed constraints, encoder crashes, corrupt audio, and network outage.
+# QA also verifies owner-rejected SHA cannot enter mixes, and public publication stays denied.
 # Only short synthetic QA checks; never expose audio artifacts from this public repository.
 on:
   workflow_dispatch:
