@@ -276,7 +276,12 @@ jobs:
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
         run: |
-          python main.py drive-push
+          RESEARCH_DIR="output/music-agents-research/run-${{ github.run_id }}"
+          mkdir -p "$RESEARCH_DIR"
+          for file in output/*_candidates.csv output/MUSIC_CANDIDATE_REVIEW.csv output/MUSIC_PRIORITY_REVIEW.csv output/MUSIC_DISCOVERY_SUMMARY.md; do
+            if [ -f "$file" ]; then cp "$file" "$RESEARCH_DIR/"; fi
+          done
+          python main.py drive-push-research
           python main.py drive-status
       - name: Verify and close music-discovery PDCA cycle
         if: ${{ always() && steps.pdca_start.outcome == 'success' }}
