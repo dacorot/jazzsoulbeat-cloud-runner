@@ -22,7 +22,7 @@ for p in (AUDIO, EVIDENCE):
 # Deliberately narrow: CC0 and CC BY only. BY-SA can impose share-alike
 # obligations on adapted video; ND is unsuitable for synchronization/editing.
 GENRES = ("jazz", "soul", "blues", "bossa", "lofi", "gospel")
-REJECT_TERMS = ("podcast", "episode", "sermon", "bible", "scripture", "lecture", "speech", "audiobook", "spoken word", "interview", "radio show", "radio program", "news", "cyberspace", "reading", "documentary", "soundtrack", "anime", "sample pack")
+REJECT_TERMS = ("podcast", "episode", "sermon", "bible", "scripture", "lecture", "speech", "audiobook", "spoken word", "interview", "radio show", "radio program", "news", "cyberspace", "reading", "documentary", "soundtrack", "anime", "sample pack", "pastor", "psalm", "church", "gospel hall", "worship", "devotional", "preaching", "preacher", "homily", "testimony", "righteousness", "question", "answers", "live concert", "concert recording", "live performance")
 LICENSE_QUERIES = (
     "licenseurl:http*publicdomain/zero*",
     "licenseurl:http*licenses/by/*",
@@ -219,7 +219,7 @@ def main():
         except Exception as e:
             rejected.append({"identifier": record["identifier"], "reason": "Download/probe error: " + str(e)[:180]})
         time.sleep(0.5)
-    fields = ["identifier", "title", "creator", "license_url", "license_evidence_url",
+    fields = ["identifier", "title", "creator", "uploader", "genre_evidence", "uploader_authority", "license_url", "license_evidence_url",
               "source_url", "file_name", "file_size", "download_url", "date",
               "local_file", "duration_seconds", "curator_status", "curator_note"]
     with open(OUT / "candidate_catalog.csv", "w", newline="", encoding="utf-8-sig") as f:
