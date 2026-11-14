@@ -22,6 +22,7 @@ jobs:
       - name: Compile producer and execute 5 failure/safety tests
         run: |
           python -m py_compile scripts/music_producer_agent.py scripts/music_briefs.py
+          python -c 'import scripts.music_producer_agent, scripts.music_briefs; print("Module imports: OK")'
           python -m unittest discover -s tests -p 'test_music*.py' -v
       - name: Confirm no external providers contacted
         if: always()
