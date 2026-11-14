@@ -60,7 +60,19 @@ def main() -> int:
         if any((row.get(field) or "").strip().lower() in {"1", "true", "yes", "approved"}
                for field in ("approved", "rights_verified"))
     ]
-    audio_candidates = [x for x in inventory if x["kind"] == "audio" and "parallel-video-engine-qa" not in x["path"].lower()]
+    all_audio_files = [x for x in inventory if x["kind"] == "audio"]
+    review_audio_files = [
+        x for x in all_audio_files
+        if "review" in x["path"].lower() or "review_only" in Path(x["path"]).name.lower()
+    ]
+    audio_candidates = [
+        x for x in all_audio_files
+        if x not in review_audio_files
+        and ("audio-part-" in x["path"].lower() or "candidates" in x["path"].lower())
+    ]
+    synthetic_audio_files = [
+        x for x in all_audio_files if x not in review_audio_files and x not in audio_candidates
+    ]
     scene_images = [
         x for x in inventory if x["kind"] == "image"
         and any(token in x["path"].lower() for token in ("scenes/", "visual-agents/"))
@@ -93,6 +105,7 @@ def main() -> int:
             "files_received": len(inventory),
             "audio_candidates": len(audio_candidates),
             "review_audio_files": len(review_audio_files),
+            "synthetic_qa_audio_files": len(synthetic_audio_files),
             "original_scene_images": len(scene_images),
             "minimum_original_scene_images_required": 8,
             "final_videos": len(final_videos),
@@ -118,7 +131,7 @@ def main() -> int:
         "",
         f"**Status:** {report['status']}",
         "",
-        f"Files received: {len(inventory)} | audio candidates: {len(audio_candidates)} | review audio files: {len(review_audio_files)} | original scenes: {len(scene_images)} | review videos: {len(review_videos)} | final videos: {len(final_videos)} | synthetic QA videos: {len(synthetic_videos)}",
+        f"Files received: {len(inventory)} | audio candidates: {len(audio_candidates)} | review audio files: {len(review_audio_files)} | synthetic QA audio: {len(synthetic_audio_files)} | original scenes: {len(scene_images)} | review videos: {len(review_videos)} | final videos: {len(final_videos)} | synthetic QA videos: {len(synthetic_videos)}",
         "",
         "## Delivery gates",
     ]
