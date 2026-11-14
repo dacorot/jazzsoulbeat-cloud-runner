@@ -106,6 +106,27 @@ class ProducerTests(unittest.TestCase):
         report = json.loads((self.producer.OUT / "production_report.json").read_text())
         self.assertEqual(report["status"], "blocked_api_changed")
 
+    def test_provider_quota_is_recorded_without_fallback(self):
+        with self.fake_client(
+            error=RuntimeError(
+                "You have exceeded your ZeroGPU quota (180s requested vs. 145s left). "
+                "Try again in 9:02:23."
+            )
+        ):
+            self.assertEqual(self.producer.main(), 1)
+        report = json.loads((self.producer.OUT / "production_report.json").read_text())
+        self.assertEqual(report["status"], "blocked_free_quota")
+        self.assertEqual(report["cost_policy"], "free_only")
+        self.assertIn("9:02:23", report["details"]["provider_retry_hint"])
+        self.assertFalse(any(self.producer.AUDIO.iterdir()))
+
+    def test_provider_rate_limit_fails_closed(self):
+        with self.fake_client(error=RuntimeError("HTTP 429: rate limit exceeded")):
+            self.assertEqual(self.producer.main(), 1)
+        report = json.loads((self.producer.OUT / "production_report.json").read_text())
+        self.assertEqual(report["status"], "blocked_rate_limit")
+        self.assertEqual(report["cost_policy"], "free_only")
+
     def test_generation_failure_cannot_be_marked_as_success(self):
         with self.fake_client(error=TimeoutError("free space timed out")):
             self.assertEqual(self.producer.main(), 1)
