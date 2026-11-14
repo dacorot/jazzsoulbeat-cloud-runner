@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: jazz-soul-beat-performance-review
+  group: jazz-soul-beat-shared-private-drive-state
   cancel-in-progress: false
 
 jobs:
