@@ -1,0 +1,89 @@
+name: Jazz Soul Beat - QA Round 1 Original Music Integration
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/qa-original-integration.yml
+permissions:
+  contents: read
+concurrency:
+  group: jazz-soul-beat-qa-original-integration
+  cancel-in-progress: false
+jobs:
+  integration-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout private integrated agent
+        uses: actions/checkout@v4
+        with:
+          repository: dacorot/jazzsoulbeat-agent
+          ref: integration/longform-original-qhd-v1
+          token: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
+          persist-credentials: false
+          path: agent
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install free dependencies
+        working-directory: agent
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ffmpeg
+          python -m pip install -r requirements.txt
+      - name: Compile and run all regression tests
+        working-directory: agent
+        run: |
+          python -m compileall -q .
+          python -m unittest discover -s tests -v
+      - name: Render and validate a 16-bar original smoke audition
+        working-directory: agent
+        run: |
+          python original_review.py --bars 16 --bpm 82 --seed 20261114 --output output/qa-r1-smoke
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path("output/qa-r1-smoke/ORIGINAL_REVIEW_REPORT.json")
+          assert p.is_file()
+          r = json.loads(p.read_text(encoding="utf-8"))
+          assert r["bars"] == 16
+          assert r["creative_approval"] is False
+          assert r["can_publish"] is False
+          assert r["youtube_upload"] == "NOT_ATTEMPTED"
+          assert 40 <= float(r["duration_seconds"]) <= 60
+          assert Path("output/qa-r1-smoke/original-jazz-audition.mp3").stat().st_size > 100000
+          print("SMOKE PASS: stereo original audio and all publish gates closed.")
+          PY
+      - name: Render and verify 512-bar original audition
+        working-directory: agent
+        timeout-minutes: 60
+        run: |
+          python original_review.py --bars 512 --bpm 82 --seed 20261114 --output output/qa-r1-original-full
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r = json.loads(Path("output/qa-r1-original-full/ORIGINAL_REVIEW_REPORT.json").read_text(encoding="utf-8"))
+          assert r["bars"] == 512
+          assert 1400 < r["duration_seconds"] < 1600
+          assert r["can_publish"] is False
+          assert r["is_full_length_release_master"] is False
+          assert r["youtube_upload"] == "NOT_ATTEMPTED"
+          print("FULL AUDITION PASS:",r["duration_seconds"],"seconds; SHA-256",r["sha256"])
+          PY
+      - name: Preserve completed private audition and QA proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jazz-soul-beat-qa-r1-original-audition
+          path: |
+            agent/output/qa-r1-smoke/
+            agent/output/qa-r1-original-full/
+          if-no-files-found: warn
+          retention-days: 30
+          compression-level: 0
+      - name: State non-publication boundary
+        if: always()
+        run: |
+          echo "## QA Round 1: ORIGINAL MUSIC AUDITION ONLY" >> "$GITHUB_STEP_SUMMARY"
+          echo "No Telegram action, YouTube upload, public publication, paid provider or automatic rights approval was attempted." >> "$GITHUB_STEP_SUMMARY"
+          echo "512 bars (~25 min) is not a 2–3 hour release master." >> "$GITHUB_STEP_SUMMARY"
