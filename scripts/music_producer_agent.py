@@ -145,8 +145,8 @@ def main():
         "code_license_url": "https://github.com/ace-step/ACE-Step/blob/main/LICENSE",
         "commercial_use_statement": "explicitly_allowed_by_model_card",
         "streaming_distribution_status": "not_explicitly_addressed",
-        "rights_verified": false,
-        "human_review_required": true,
+        "rights_verified": False,
+        "human_review_required": True,
         "publication_status": "NOT_PUBLISHED"
     }
     write_json(OUT / "production_report.json", report)
