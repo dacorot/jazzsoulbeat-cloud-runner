@@ -106,6 +106,16 @@ class ProducerTests(unittest.TestCase):
         report = json.loads((self.producer.OUT / "production_report.json").read_text())
         self.assertEqual(report["status"], "blocked_generation")
 
+    def test_free_space_model_not_initialized_is_diagnosed(self):
+        with self.fake_client(
+            result="❌ Model not fully initialized. Missing components: ['model', 'vae', 'text_tokenizer', 'text_encoder']"
+        ):
+            self.assertEqual(self.producer.main(), 1)
+        report = json.loads((self.producer.OUT / "production_report.json").read_text())
+        self.assertEqual(report["status"], "blocked_model_uninitialized")
+        self.assertEqual(report["cost_policy"], "free_only")
+        self.assertFalse(any(self.producer.AUDIO.iterdir()))
+
     def test_wrong_duration_is_rejected(self):
         source = Path(self.temp.name) / "bad-duration.mp3"
         source.write_bytes(b"fake-data" * 15000)
