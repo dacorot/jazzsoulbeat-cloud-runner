@@ -2,8 +2,8 @@ name: Jazz Soul Beat weekly and long-range KPI review
 
 on:
   schedule:
-    # Monday 08:17 Colombia (UTC-5).
-    - cron: "17 13 * * 1"
+    # Monday 14:00 Colombia (UTC-5).
+    - cron: "0 19 * * 1"
   workflow_dispatch:
 
 permissions:
