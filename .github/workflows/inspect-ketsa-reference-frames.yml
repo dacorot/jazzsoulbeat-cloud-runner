@@ -111,15 +111,16 @@ jobs:
               sheet.paste(tile, ((i%2)*980, (i//2)*590))
           sheet.save("review-frames/contact-sheet.jpg", quality=92)
           PY
-      - name: Upload private inspection artifact
-        id: upload_frames
-        uses: actions/upload-artifact@v4
-        with:
-          name: ketsa-visual-reference-frames
-          path: review-frames/
-          if-no-files-found: error
-          retention-days: 7
-
+      - name: Persist Ketsa frame inspection to private Drive
+        id: persist_frames
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: |
+          mkdir -p "output/ketsa-review-frames/run-${{ github.run_id }}"
+          cp -a ../review-frames/. "output/ketsa-review-frames/run-${{ github.run_id }}/"
+          python main.py drive-push
+          python main.py drive-status
       - name: Verify and close Ketsa visual inspection PDCA cycle
         if: ${{ always() && steps.pdca_start.outcome == 'success' }}
         uses: ./.github/actions/pdca-finish
@@ -127,6 +128,6 @@ jobs:
           cycle_id: ${{ steps.pdca_start.outputs.cycle_id }}
           result_json: '{"workflow":"ketsa-visual-loop-inspection","run_id":"${{ github.run_id }}","job_status":"${{ job.status }}"}'
           checks_json: >-
-            [{"name":"private_video_download","passed":${{ steps.download_video.outcome == 'success' }}},{"name":"loop_boundary_frame_extraction","passed":${{ steps.extract_frames.outcome == 'success' }}},{"name":"private_inspection_artifact","passed":${{ steps.upload_frames.outcome == 'success' }}},{"name":"no_publication","passed":true}]
-          evidence: 'GitHub Actions run ${{ github.run_id }}; four boundary frames and contact sheet'
+            [{"name":"private_video_download","passed":${{ steps.download_video.outcome == 'success' }}},{"name":"loop_boundary_frame_extraction","passed":${{ steps.extract_frames.outcome == 'success' }}},{"name":"private_drive_persistence","passed":${{ steps.persist_frames.outcome == 'success' }}},{"name":"no_publication","passed":true}]
+          evidence: 'GitHub Actions run ${{ github.run_id }}; four boundary frames and contact sheet stored in private Drive'
           drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
