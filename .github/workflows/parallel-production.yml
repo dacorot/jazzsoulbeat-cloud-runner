@@ -4,6 +4,8 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/parallel-production.yml"
+      - "scripts/music_agents.py"
+      - "scripts/delivery_coordinator.py"
   workflow_dispatch:
 permissions:
   contents: read
@@ -38,7 +40,7 @@ jobs:
           import shutil
           source = Path("music-library")
           root = Path("music-delivery")
-          files = sorted((source / "approved").glob("*")) if (source / "approved").exists() else []
+          files = sorted((source / "candidates").glob("*")) if (source / "candidates").exists() else []
           bins = [[] for _ in range(5)]
           sizes = [0] * 5
           for path in sorted(files, key=lambda p: p.stat().st_size, reverse=True):
@@ -54,7 +56,7 @@ jobs:
           reports = root / "reports"
           reports.mkdir(parents=True, exist_ok=True)
           for path in source.rglob("*"):
-              if path.is_file() and path.parent.name != "approved":
+              if path.is_file() and path.parent.name != "candidates":
                   shutil.copy2(path, reports / path.name)
           PY
       - name: Preserve music screening reports
