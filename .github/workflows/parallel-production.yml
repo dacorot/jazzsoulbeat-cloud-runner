@@ -305,61 +305,6 @@ jobs:
           retention-days: 7
 
 
-  first-video-render:
-    name: Render the first 2h20 multi-scene review video
-    if: needs.rights-regression.result == 'success' && needs.visual-directors.result == 'success'
-    needs:
-      - rights-regression
-      - visual-directors
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    steps:
-      - name: Checkout private agent
-        uses: actions/checkout@v4
-        with:
-          repository: dacorot/jazzsoulbeat-agent
-          ref: fix/real-music-and-cinematic-motion
-          token: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
-          path: agent
-          persist-credentials: false
-      - name: Install FFmpeg
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ffmpeg
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - name: Install renderer dependencies
-        working-directory: agent
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt
-      - name: Collect approved-scope review audio and original scenes
-        uses: actions/download-artifact@v4
-        with:
-          name: incompetech-first-video-review
-          path: agent/
-      - name: Collect original scene library
-        uses: actions/download-artifact@v4
-        with:
-          name: parallel-visual-directors-report
-          path: agent/
-      - name: Validate multi-scene renderer
-        working-directory: agent
-        run: python -m unittest tests.test_multi_scene_video
-      - name: Render private first-video review MP4
-        working-directory: agent
-        run: python first_video_renderer.py
-      - name: Preserve first-video review output
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: parallel-first-video-review
-          path: agent/output/first-video-review/
-          if-no-files-found: warn
-          retention-days: 30
-          compression-level: 0
-
   first-video-review-render:
     name: Assemble first 2h20 QHD private review video
     if: always()
@@ -367,7 +312,7 @@ jobs:
       - rights-regression
       - visual-directors
     runs-on: ubuntu-latest
-    timeout-minutes: 150
+    timeout-minutes: 360
     steps:
       - name: Checkout private video engine
         uses: actions/checkout@v4
@@ -416,7 +361,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: jazz-soul-beat-first-video-private-review
+          name: parallel-first-video-review
           path: agent/output/first-video-private-review/
           if-no-files-found: warn
           retention-days: 30
@@ -430,7 +375,7 @@ jobs:
       - visual-directors
       - rights-regression
       - video-engine-qa
-      - first-video-render
+      - first-video-review-render
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -469,7 +414,7 @@ jobs:
           VISUAL: ${{ needs.visual-directors.result }}
           RIGHTS: ${{ needs.rights-regression.result }}
           VIDEO: ${{ needs.video-engine-qa.result }}
-          FIRST_VIDEO: ${{ needs.first-video-render.result }}
+          FIRST_VIDEO: ${{ needs.first-video-review-render.result }}
         run: |
           {
             echo "## Jazz Soul Beat - Parallel production report"
