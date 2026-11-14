@@ -1,4 +1,4 @@
-name: Jazz Soul Beat - Music Agents
+name: Jazz Soul Beat - Read-only Music Research
 on:
   push:
     paths:
@@ -8,27 +8,48 @@ on:
     - cron: "17 11 * * 1,3,5"
 permissions:
   contents: read
-  actions: read
 concurrency:
   group: jazz-soul-beat-music-agents
   cancel-in-progress: false
 jobs:
-  acquire-music:
+  discover:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - name: Checkout
+      - name: Checkout cloud controller
         uses: actions/checkout@v4
-      - name: Install audio probe
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ffmpeg
-      - name: Run Hunter, Guardian, Downloader and Curator
+      - name: Validate read-only research script
+        run: python -m py_compile scripts/music_agents.py
+      - name: Run metadata-only Hunter and Guardian
         run: python scripts/music_agents.py
-      - name: Upload catalog, license evidence and approved-for-review audio
-        uses: actions/upload-artifact@v4
+      - name: Assert no audio downloads or rights approvals
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          summary = json.loads(Path("music-library/run_summary.json").read_text(encoding="utf-8"))
+          assert summary["audio_downloads"] == 0
+          assert summary["audio_modifications"] == 0
+          assert summary["rights_approved"] == 0
+          print(json.dumps(summary, indent=2))
+          PY
+      - name: Checkout private agent for private Drive persistence
+        uses: actions/checkout@v4
         with:
-          name: jazz-soul-beat-music-library
-          path: music-library/
-          if-no-files-found: error
-          retention-days: 30
+          repository: dacorot/jazzsoulbeat-agent
+          ref: fix/real-music-and-cinematic-motion
+          token: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
+          path: agent
+      - name: Install private Drive sync dependencies
+        run: python -m pip install -r agent/requirements.txt
+      - name: Copy read-only research into private output library
+        run: |
+          mkdir -p "agent/output/music-agents-research/run-${{ github.run_id }}"
+          cp -a music-library/. "agent/output/music-agents-research/run-${{ github.run_id }}/"
+      - name: Persist research to private Google Drive
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: |
+          python main.py drive-push
+          python main.py drive-status
