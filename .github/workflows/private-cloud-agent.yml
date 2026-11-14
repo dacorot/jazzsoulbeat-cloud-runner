@@ -147,12 +147,17 @@ jobs:
           except SystemExit as exc:
               with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
                   output.write("eligible=false\n")
-              print("SKIPPED safely: " + str(exc))
+              reason = str(exc)
+              print("SKIPPED safely: " + reason)
+              with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
+                  summary.write("## Production gate\\n\\n**SKIPPED — no video was rendered.**\\n\\n" + reason + "\\n")
               raise SystemExit(0)
-          print(f"ELIGIBLE: {len(tracks)} approved tracks; {source_seconds/3600:.2f} source hours for a {hours:.2f}-hour render.")
+          message = f"ELIGIBLE: {len(tracks)} approved tracks; {source_seconds/3600:.2f} source hours for a {hours:.2f}-hour render."
+          print(message)
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
-              output.write("eligible=true\n")
-          PY
+              output.write("eligible=true\\n")
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
+              summary.write("## Production gate\\n\\n**ELIGIBLE** — " + message + "\\n")
 
       - name: Start Deming PDCA cycle for requested cloud task
         id: pdca_start
