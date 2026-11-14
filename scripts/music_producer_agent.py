@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Free-only ACE-Step producer. Calls the verified Gradio generation endpoint."""
-import json, os, shutil, sys
+import hashlib, json, math, os, shutil, subprocess, sys
 from pathlib import Path
 from datetime import datetime, timezone
 
@@ -127,11 +127,41 @@ def main():
     if not target:
         return fail("blocked_no_audio_file", "ACE-Step returned from the generation endpoint, but no downloadable audio file could be verified.", {"endpoint": "/generation_wrapper", "result_preview": str(result)[:2500]})
 
+    # A large file is not necessarily audio. Validate the returned media before
+    # announcing even a preliminary result; musical approval still stays human-gated.
+    try:
+        probe_result = subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries",
+             "format=duration:stream=codec_type", "-of", "json", str(target)],
+            check=True, capture_output=True, text=True, timeout=60,
+        )
+        media_info = json.loads(probe_result.stdout)
+        actual_duration = float(media_info.get("format", {}).get("duration", 0))
+        has_audio = any(
+            stream.get("codec_type") == "audio"
+            for stream in media_info.get("streams", [])
+        )
+        if not has_audio or not math.isfinite(actual_duration) or not (
+            0 < actual_duration and abs(actual_duration - DURATION) <= max(20, DURATION * 0.15)
+        ):
+            raise ValueError("No valid audio stream or duration outside expected range.")
+        with target.open("rb") as handle:
+            audio_sha256 = hashlib.file_digest(handle, "sha256").hexdigest()
+    except (OSError, ValueError, subprocess.SubprocessError) as exc:
+        target.unlink(missing_ok=True)
+        return fail(
+            "blocked_invalid_audio",
+            "ACE-Step returned an invalid or incomplete audio file; it was discarded.",
+            {"error": str(exc)[:800]},
+        )
+
     report = {
         "status": "generated_audio_needs_human_review",
         "title": "Midnight Has a Soul",
         "file": str(target),
         "bytes": target.stat().st_size,
+        "sha256": audio_sha256,
+        "duration_actual_seconds": round(actual_duration, 3),
         "duration_requested_seconds": DURATION,
         "prompt": PROMPT,
         "negative_prompt": NEGATIVE,
