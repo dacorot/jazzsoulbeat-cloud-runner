@@ -1,5 +1,6 @@
 name: Build private first-video visual loop preview
 # Revalidate the optimized 60-second loop-render-and-mux path for the Saturday first release.
+# Includes the independent category visual-director regression tests from the private agent.
 on:
   push:
     branches: [main]
