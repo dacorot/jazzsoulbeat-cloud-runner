@@ -80,6 +80,7 @@ jobs:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
         run: |
           python main.py drive-pull-library
+          python main.py scan
           python main.py drive-status
           python main.py library-status
 
