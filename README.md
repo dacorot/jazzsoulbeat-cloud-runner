@@ -36,7 +36,7 @@ Para una validación técnica sin generar producción, seleccionar:
 - `hours = 1` (no afecta a self-test)
 - `agent_ref = feature/original-arrangement-development` (o el SHA exacto que se quiera probar)
 
-La tarea `self-test` genera únicamente el video sintético de comprobación; no genera una mezcla musical de producción. Para probar el render original de producción se requiere seleccionar explícitamente `build-original`. Toda ejecución sigue guardando el estado y los resultados en Drive privado, por lo que debe elegirse conscientemente la tarea.
+La tarea `self-test` genera únicamente el video sintético de comprobación; no genera una mezcla musical de producción. Para probar generación musical original, usa el workflow separado `music-producer.yml`; su salida de 120 segundos requiere revisión y todavía no se integra con el render de video. Toda ejecución del agente privado sigue guardando el estado y los resultados en Drive privado.
 
 ## Seguridad y límites
 
