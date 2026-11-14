@@ -154,7 +154,7 @@ jobs:
           test -s "$RUN_DIR/mix.mp3"
           ffprobe -v error -show_entries format=duration,size -show_entries stream=codec_type,codec_name,width,height,channels -of json "$VIDEO" > "$RUN_DIR/review-probe.json"
           python - "$RUN_DIR/review-probe.json" <<'PY'
-          import json, sys
+          import hashlib, json, sys
           from pathlib import Path
           data = json.loads(Path(sys.argv[1]).read_text())
           duration = float(data["format"]["duration"])
@@ -165,11 +165,21 @@ jobs:
           assert video["codec_name"] == "h264" and (video["width"], video["height"]) == (2560, 1440), video
           assert audio["codec_name"] == "aac" and audio["channels"] == 2, audio
           print(f"PASS: {duration:.2f}s | H.264 2560x1440 QHD | AAC stereo | {data['format']['size']} bytes")
-          visual = json.loads((Path(sys.argv[1]).parent / "VISUAL_SCENE_PROVENANCE.json").read_text())
+          run_dir = Path(sys.argv[1]).parent
+          visual = json.loads((run_dir / "VISUAL_SCENE_PROVENANCE.json").read_text())
           assert visual["scene_count"] >= 8, visual
           assert len(visual["scene_loop_checks"]) >= 8, visual
           assert all(item["status"] == "PASS" for item in visual["scene_loop_checks"]), visual
+          video_sha = hashlib.sha256((run_dir / "video.mp4").read_bytes()).hexdigest()
+          assert visual["video_sha256"] == video_sha, visual
+          manifest = Path(visual["scene_manifest"])
+          assert manifest.is_file()
+          manifest_sha = hashlib.sha256(manifest.read_bytes()).hexdigest()
+          assert visual["scene_manifest_sha256"] == manifest_sha, visual
+          source_text = (run_dir / "MUSIC_SOURCE.txt").read_text(encoding="utf-8")
+          assert source_text.count("Audio SHA-256:") > 0
           print(f"PASS: {visual['scene_count']} seamless 60-second visual loops verified.")
+          print("PASS: video, scene manifest and selected music have exact SHA-256 provenance.")
           PY
           echo "Review package: $RUN_DIR"
           find "$RUN_DIR" -maxdepth 1 -type f -printf '%f %s bytes\n' | sort
