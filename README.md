@@ -10,7 +10,7 @@ Controlador público mínimo para ejecutar el agente privado `dacorot/jazzsoulbe
 - Restaura `tracks/`, `data/agent.db` y `output/` desde Google Drive; ejecuta la tarea seleccionada y guarda el estado y los resultados de nuevo en Drive.
 - La carga inicial de Drive y una recuperación independiente de los 96 objetos (316,051,164 bytes) se completaron y la comprobación de integridad SQLite devolvió `ok`.
 - La ejecución cloud manual #3 terminó en `success`: checkout privado, instalación, compilación, pruebas, restauración de Drive, estado de biblioteca, prueba sintética, persistencia y comprobación final de Drive completados.
-- La ejecución #3 fue `self-test`: **no** generó una mezcla musical de producción. Las tareas `build-original` y `build-evergreen` estaban disponibles pero se omitieron en esa ejecución.
+- La ejecución #3 fue `self-test`: **no** generó una mezcla musical de producción. `build-evergreen` estaba disponible pero se omitió; `build-original` no forma parte del formulario cloud actual.
 - La biblioteca de terceros no tiene pistas con derechos comerciales completamente verificados; los candidatos en revisión permanecen pendientes.
 - La ejecución `43541129670` generó un video QHD de revisión privada de 2 horas con ocho vistas de escena. Está marcado `PRIVATE_REVIEW_ONLY_NOT_APPROVED`: no se subió a YouTube y no es un master de publicación. El artefacto de GitHub se conserva 30 días.
 - El paquete coordinado anterior registró 44 pistas de Incompetech descargadas para revisión, pero 0 derechos aprobados. El informe marca una discrepancia entre enlaces históricos CC BY 3.0 y las referencias actuales CC BY 4.0, además de dos créditos de terceros que requieren revisión.
