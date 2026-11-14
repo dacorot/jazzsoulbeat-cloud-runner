@@ -151,15 +151,15 @@ jobs:
         run: python scene_factory.py
       - name: Preserve visual director test report
         if: always()
+        working-directory: agent
         run: |
-          mkdir -p reports
-          echo "Visual director lane completed. See preceding pytest output." > reports/visual-directors.txt
+          mkdir -p output/visual-scenes
+          echo "Visual director lane completed. See preceding pytest output." > output/visual-scenes/visual-directors-tests.txt
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: parallel-visual-directors-report
           path: |
-            reports/
             agent/assets/visual-agents/midnight_jazz_soul/scenes/
             agent/output/visual-scenes/
           if-no-files-found: warn
@@ -305,6 +305,61 @@ jobs:
           retention-days: 7
 
 
+  first-video-render:
+    name: Render the first 2h20 multi-scene review video
+    if: needs.rights-regression.result == 'success' && needs.visual-directors.result == 'success'
+    needs:
+      - rights-regression
+      - visual-directors
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Checkout private agent
+        uses: actions/checkout@v4
+        with:
+          repository: dacorot/jazzsoulbeat-agent
+          ref: fix/real-music-and-cinematic-motion
+          token: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
+          path: agent
+          persist-credentials: false
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install renderer dependencies
+        working-directory: agent
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+      - name: Collect approved-scope review audio and original scenes
+        uses: actions/download-artifact@v4
+        with:
+          name: incompetech-first-video-review
+          path: agent/
+      - name: Collect original scene library
+        uses: actions/download-artifact@v4
+        with:
+          name: parallel-visual-directors-report
+          path: agent/
+      - name: Validate multi-scene renderer
+        working-directory: agent
+        run: python -m unittest tests.test_multi_scene_video
+      - name: Render private first-video review MP4
+        working-directory: agent
+        run: python first_video_renderer.py
+      - name: Preserve first-video review output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parallel-first-video-review
+          path: agent/output/first-video-review/
+          if-no-files-found: warn
+          retention-days: 30
+          compression-level: 0
+
   coordinator-delivery:
     name: Coordinator - assemble delivery package and readiness gates
     if: always()
@@ -313,6 +368,7 @@ jobs:
       - visual-directors
       - rights-regression
       - video-engine-qa
+      - first-video-render
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -342,6 +398,7 @@ jobs:
       - visual-directors
       - rights-regression
       - video-engine-qa
+      - first-video-render
     runs-on: ubuntu-latest
     steps:
       - name: Report independent lane results
@@ -350,6 +407,7 @@ jobs:
           VISUAL: ${{ needs.visual-directors.result }}
           RIGHTS: ${{ needs.rights-regression.result }}
           VIDEO: ${{ needs.video-engine-qa.result }}
+          FIRST_VIDEO: ${{ needs.first-video-render.result }}
         run: |
           {
             echo "## Jazz Soul Beat - Parallel production report"
@@ -360,6 +418,7 @@ jobs:
             echo "| Visual directors | $VISUAL |"
             echo "| Rights regression | $RIGHTS |"
             echo "| Video engine QA | $VIDEO |"
+            echo "| First video render | $FIRST_VIDEO |"
             echo ""
             echo "These are independent QA/discovery lanes. No YouTube upload or public publication is performed."
             echo "A passing technical test does not constitute rights approval or final creative approval."
