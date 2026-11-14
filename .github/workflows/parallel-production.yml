@@ -360,6 +360,68 @@ jobs:
           retention-days: 30
           compression-level: 0
 
+  first-video-review-render:
+    name: Assemble first 2h20 QHD private review video
+    if: always()
+    needs:
+      - rights-regression
+      - visual-directors
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - name: Checkout private video engine
+        uses: actions/checkout@v4
+        with:
+          repository: dacorot/jazzsoulbeat-agent
+          ref: fix/real-music-and-cinematic-motion
+          token: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
+          path: agent
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install FFmpeg and render dependencies
+        working-directory: agent
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+      - name: Collect private review audio
+        if: needs.rights-regression.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: incompetech-first-video-review
+          path: incoming/audio/
+      - name: Collect original visual scenes
+        if: needs.visual-directors.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: parallel-visual-directors-report
+          path: incoming/visual/
+      - name: Render and verify the 2h20 QHD private review video
+        if: needs.rights-regression.result == 'success' && needs.visual-directors.result == 'success'
+        working-directory: agent
+        run: python first_video_review.py --incoming incoming --output output/first-video-private-review
+      - name: Record blocked status when a required lane did not complete
+        if: always() && (needs.rights-regression.result != 'success' || needs.visual-directors.result != 'success')
+        working-directory: agent
+        env:
+          RIGHTS_RESULT: ${{ needs.rights-regression.result }}
+          VISUAL_RESULT: ${{ needs.visual-directors.result }}
+        run: |
+          mkdir -p output/first-video-private-review
+          printf '# First video review blocked\\n\\nRights lane: %s\\nVisual lane: %s\\nNo video was rendered.\\n' "$RIGHTS_RESULT" "$VISUAL_RESULT" > output/first-video-private-review/BLOCKED.md
+      - name: Preserve private review render and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jazz-soul-beat-first-video-private-review
+          path: agent/output/first-video-private-review/
+          if-no-files-found: warn
+          retention-days: 30
+          compression-level: 0
+
   coordinator-delivery:
     name: Coordinator - assemble delivery package and readiness gates
     if: always()
