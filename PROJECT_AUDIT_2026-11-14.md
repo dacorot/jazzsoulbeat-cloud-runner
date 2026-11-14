@@ -139,3 +139,4 @@ Commits:
 La repetición manual de `parallel-production.yml` depende ahora del artefacto de escenas de la ejecución `43539653311`, cuya retención es de 30 días. Antes de que expire, hay que mover ese paquete a una persistencia duradera privada (por ejemplo, Drive) o crear un nuevo paquete de escenas revisado. No se debe asumir que un artefacto temporal equivale a almacenamiento permanente.
 
 - `a5211e46b26908e8efefb2e045fde0d3f074b479` — precisión de la documentación del workflow: la repetición reutiliza escenas preservadas y no solicita inferencia visual nueva.
+- `b751bdb2b9cbbedefcf5d3bc3f5c043ff58a21e8` y `49ad49e98e83b5cbf9816b27fdc0eb7b72f4a639` — README alineado con la rama predeterminada real y las tareas disponibles en el formulario.
