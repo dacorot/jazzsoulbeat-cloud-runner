@@ -182,6 +182,28 @@ jobs:
             tests.test_incompetech_source_audit \
             tests.test_ketsa_catalog \
             tests.test_ketsa_review_pack
+      - name: Install FFmpeg for audio inspection
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+      - name: Capture official Incompetech license and track evidence
+        working-directory: agent
+        run: |
+          python main.py audit-incompetech-sources
+          python main.py audit-incompetech-track-pages
+          python main.py download-incompetech
+          python main.py inspect-incompetech
+      - name: Preserve Incompetech evidence and review audio
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parallel-incompetech-rights-review
+          path: |
+            agent/tracks/review/incompetech/
+            agent/output/incompetech_candidates.csv
+          if-no-files-found: warn
+          retention-days: 30
+          compression-level: 0
       - name: Preserve rights regression report
         if: always()
         run: |
