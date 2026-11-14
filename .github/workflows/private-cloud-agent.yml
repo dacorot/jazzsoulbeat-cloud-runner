@@ -16,7 +16,7 @@ on:
       hours:
         description: "Duración del video evergreen aprobado (horas)"
         required: true
-        default: "1"
+        default: "2"
         type: choice
         options:
           - "1"
