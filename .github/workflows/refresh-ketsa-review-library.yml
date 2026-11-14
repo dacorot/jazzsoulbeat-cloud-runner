@@ -172,3 +172,4 @@ jobs:
 # Refresh trigger: corrected audit uses stable Ketsa download IDs and records a commit status.
 # Trigger corrected stable-download-ID Ketsa rights audit after the audit-code fix.
 # 2026-11-14: trigger a fresh private review-only Ketsa audit; no production or rights approval.
+# 2026-11-14: verify cached QHD background reuse, exact agent revision provenance, and private audition media integrity.
