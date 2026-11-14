@@ -23,3 +23,5 @@ Safe regression 2026-11-14: re-parse the final production workflow after QHD vid
 Final safe regression 2026-11-14: validate explicit production-gate summary, per-track source manifest, video SHA-256 provenance, audio and thumbnail quality checks.
 
 Regression trigger 2026-11-14: validate cloud production workflow after adding private persistence for newly generated visual scenes; no upload or publication is enabled.
+
+Regression trigger 2026-11-14: parse and validate the latest production workflow including the explicit visual-library persistence PDCA acceptance check; expected result remains a safe no-render gate while approved audio is absent.
