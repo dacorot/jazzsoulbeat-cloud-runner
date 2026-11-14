@@ -1,6 +1,10 @@
 name: Private agent preflight (no upload)
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "PRIVATE_AGENT_PREFLIGHT_START.md"
   schedule:
     # Every six hours, staggered: 21:00, 03:00, 09:00 and 15:00 Colombia time. PDCA and KPI state are persisted after each pulse; safety-event tracking and three-layer memory are regression-tested.
     - cron: "0 2,8,14,20 * * *"
