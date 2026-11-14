@@ -1,7 +1,7 @@
 name: Jazz Soul Beat - Parallel Production Control
 on:
-  # Manual only: this workflow fans out into rights audits, image generation and
-  # multi-hour rendering. Scheduled discovery runs independently in its own workflows.
+  # Manual only: this workflow fans out into rights audits, visual QA and
+  # multi-hour rendering. It reuses preserved scenes; scheduled discovery is separate.
   workflow_dispatch:
 permissions:
   contents: read
@@ -9,8 +9,8 @@ concurrency:
   group: jazz-soul-beat-first-video-review
   cancel-in-progress: false
 
-# Retry after rights-test fixture and free-plan diagnostics fixes.
-# Rebuild after track-page evidence and anonymous ZeroGPU fallback corrections.
+# Production review pipeline. The visual lane reuses a verified artifact and does not
+# request new image inference, avoiding exhausted free-tier quotas.
 # Independent lanes run concurrently. They exchange artifacts, not mutable shared
 # Drive/database state. No lane uploads to YouTube or publishes publicly.
 jobs:
@@ -112,7 +112,7 @@ jobs:
           compression-level: 0
 
   visual-directors:
-    name: Four visual directors and original scene library
+    name: Visual QA and preserved original scene library
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
