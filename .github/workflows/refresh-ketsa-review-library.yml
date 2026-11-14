@@ -85,7 +85,7 @@ jobs:
         timeout-minutes: 45
         working-directory: agent
         env:
-          JSB_AGENT_REVISION: \${{ steps.agent_revision.outputs.sha }}
+          JSB_AGENT_REVISION: ${{ steps.agent_revision.outputs.sha }}
         run: |
           python main.py download-ketsa --limit 100
           python -c 'import csv; from pathlib import Path; p=Path("output/ketsa_candidates.csv"); rows=list(csv.DictReader(p.open(newline="", encoding="utf-8-sig"))); print("Ketsa candidates staged:", len(rows)); print("Owner-selected titles:", [(r.get("selection_order"), r.get("title"), r.get("duration_seconds") or "duration pending") for r in rows if r.get("previous_user_selection") == "yes"]); assert len(rows) > 0; assert all(r.get("source_url") and r.get("download_url") for r in rows)'
@@ -105,7 +105,7 @@ jobs:
         id: rights_audit
         working-directory: agent
         env:
-          JSB_AGENT_REVISION: \${{ steps.agent_revision.outputs.sha }}
+          JSB_AGENT_REVISION: ${{ steps.agent_revision.outputs.sha }}
         run: |
           set -euo pipefail
           test -s output/ketsa-review/KETSA_RIGHTS_AUDIT.csv
