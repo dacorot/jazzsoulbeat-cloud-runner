@@ -84,6 +84,8 @@ jobs:
         id: rebuild
         timeout-minutes: 45
         working-directory: agent
+        env:
+          JSB_AGENT_REVISION: \${{ steps.agent_revision.outputs.sha }}
         run: |
           python main.py download-ketsa --limit 100
           python -c 'import csv; from pathlib import Path; p=Path("output/ketsa_candidates.csv"); rows=list(csv.DictReader(p.open(newline="", encoding="utf-8-sig"))); print("Ketsa candidates staged:", len(rows)); print("Owner-selected titles:", [(r.get("selection_order"), r.get("title"), r.get("duration_seconds") or "duration pending") for r in rows if r.get("previous_user_selection") == "yes"]); assert len(rows) > 0; assert all(r.get("source_url") and r.get("download_url") for r in rows)'
@@ -99,13 +101,43 @@ jobs:
           python main.py drive-push
           python main.py drive-status
 
-      - name: Require complete Ketsa rights audit
+      - name: Require complete Ketsa rights audit and QHD audition video
         id: rights_audit
         working-directory: agent
+        env:
+          JSB_AGENT_REVISION: \${{ steps.agent_revision.outputs.sha }}
         run: |
+          set -euo pipefail
           test -s output/ketsa-review/KETSA_RIGHTS_AUDIT.csv
           test -s output/ketsa-review/KETSA_AUDITION_RIGHTS.csv
           test -s output/ketsa-review/KETSA_RIGHTS_EVIDENCE.json
+          test -s output/ketsa-review/KETSA_AUDITION_BACKGROUND.jpg
+          test -s output/ketsa-review/KETSA_CANDIDATE_AUDITION_REVIEW_ONLY.mp4
+          test -s output/ketsa-review/KETSA_AUDITION_VIDEO_PROVENANCE.json
+          ffprobe -v error -show_entries stream=codec_type,codec_name,width,height,channels:format=duration -of json output/ketsa-review/KETSA_CANDIDATE_AUDITION_REVIEW_ONLY.mp4 > output/ketsa-review/KETSA_AUDITION_VIDEO_PROBE.json
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          from mutagen import File as MFile
+          root = Path("output/ketsa-review")
+          probe = json.loads((root / "KETSA_AUDITION_VIDEO_PROBE.json").read_text(encoding="utf-8"))
+          streams = probe.get("streams", [])
+          video = next((item for item in streams if item.get("codec_type") == "video"), None)
+          audio = next((item for item in streams if item.get("codec_type") == "audio"), None)
+          assert video and video.get("codec_name") == "h264"
+          assert (video.get("width"), video.get("height")) == (2560, 1440), video
+          assert audio and audio.get("codec_name") == "aac" and audio.get("channels") == 2
+          video_seconds = float(probe["format"]["duration"])
+          sampler = MFile(root / "KETSA_CANDIDATE_AUDITION.mp3")
+          assert sampler and sampler.info and abs(video_seconds - float(sampler.info.length)) <= 2.0
+          provenance = json.loads((root / "KETSA_AUDITION_VIDEO_PROVENANCE.json").read_text(encoding="utf-8"))
+          assert provenance["agent_revision"] == os.environ["JSB_AGENT_REVISION"]
+          assert provenance["review_video"]["status"] == "created"
+          assert provenance["review_video"]["sha256"]
+          print(f"PASS: private Ketsa audition video {video_seconds:.2f}s | H.264 2560x1440 | AAC stereo")
+          print("PASS: exact agent revision and video SHA-256 recorded in provenance.")
+          PY
           echo "PASS: Ketsa license, track-page, file-provenance and audition-shortlist reports are present."
           echo "PASS: no rights approval, library mutation or public publication was performed."
       - name: Verify and close Ketsa audit PDCA cycle
