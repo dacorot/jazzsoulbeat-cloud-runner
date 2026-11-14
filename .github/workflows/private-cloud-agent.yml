@@ -128,26 +128,26 @@ jobs:
           drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
 
       - name: Organize approved songs into their playlist folders
-        if: ${{ steps.restore.outcome == 'success' && inputs.task == 'build-evergreen' }}
+        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
         working-directory: agent
         run: |
           echo "Only approved and fully rights-verified tracks are copied into tracks/playlists/."
           find tracks/playlists -maxdepth 2 -type f -print 2>/dev/null || true
 
       - name: Show approved library status
-        if: ${{ steps.restore.outcome == 'success' && inputs.task == 'build-evergreen' }}
+        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
         working-directory: agent
         run: python main.py library-status
 
       - name: Build synthetic technical test (never uploads)
         id: self_test
-        if: ${{ steps.restore.outcome == 'success' && inputs.task == 'self-test' }}
+        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'self-test' }}
         working-directory: agent
         run: python main.py self-test
 
       - name: Build an evergreen or seasonal video (never uploads)
         id: build_video
-        if: ${{ steps.restore.outcome == 'success' && inputs.task == 'build-evergreen' }}
+        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
         working-directory: agent
         env:
           MIX_HOURS: ${{ env.HOURS }}
@@ -182,7 +182,7 @@ jobs:
           cycle_id: ${{ steps.pdca_start.outputs.cycle_id }}
           result_json: '{"workflow":"private-cloud-agent","task":"${{ env.TASK }}","run_id":"${{ github.run_id }}","job_status":"${{ job.status }}"}'
           checks_json: >-
-            [{"name":"restore_state","passed":${{ steps.restore.outcome == 'success' }}},{"name":"requested_task","passed":${{ (inputs.task == 'self-test' && steps.self_test.outcome == 'success') || (inputs.task == 'build-evergreen' && steps.build_video.outcome == 'success') }}},{"name":"private_drive_persistence","passed":${{ steps.persist_outputs.outcome == 'success' }}},{"name":"no_youtube_publication","passed":true}]
+            [{"name":"restore_state","passed":${{ steps.restore.outcome == 'success' }}},{"name":"requested_task","passed":${{ (env.TASK == 'self-test' && steps.self_test.outcome == 'success') || (env.TASK == 'build-evergreen' && steps.build_video.outcome == 'success') }}},{"name":"private_drive_persistence","passed":${{ steps.persist_outputs.outcome == 'success' }}},{"name":"no_youtube_publication","passed":true}]
           evidence: 'GitHub Actions run ${{ github.run_id }}; requested task outputs and private Drive inventory'
           drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
 
