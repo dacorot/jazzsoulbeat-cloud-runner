@@ -77,22 +77,22 @@ def _make_motion_frames(folder: Path, *, width: int = 640, height: int = 360,
         panes = ((300, 0, 382, 205), (392, 0, 474, 205),
                  (484, 0, 566, 205), (576, 0, 640, 205))
     elif rain_mode == "masked_window":
-        # Conservative clean-window-v2 mask: stop above furniture until a
-        # depth matte exists, so rain can never cross interior objects.
-        panes = ((314, 0, 365, 225), (368, 0, 421, 225),
-                 (424, 0, 476, 225), (480, 0, 531, 225),
-                 (536, 0, 588, 225), (594, 0, 640, 225))
+        # Very conservative clean-window-v2 mask: use only the upper-right
+        # glass panes and stop well above furniture and pendant lamps until a
+        # true depth matte exists. Rain must never cross interior objects.
+        panes = ((400, 0, 452, 170), (456, 0, 508, 170),
+                 (512, 0, 564, 170), (568, 0, 640, 170))
     else:
         panes = ((452, 0, 492, 108), (500, 0, 640, 108))
     rain = []
     integrated_layers = (_integrated_rain_layers(image_path, width, height)
                          if rain_mode == "integrated_plate" and image_path else [])
     if rain_mode in {"procedural_window", "masked_window"}:
-        for i in range(72):
+        for i in range(48):
             left, top, right, bottom = panes[i % len(panes)]
             rain.append((left + (i * 17) % max(1, right - left),
                          top + (i * 29) % max(1, bottom - top),
-                         7 + (i * 11) % 15, 0.8 + (i % 4) * 0.18,
+                         5 + (i * 11) % 9, 0.8 + (i % 4) * 0.18,
                          (i * 3) % len(panes)))
     for frame in range(frame_count):
         t = frame / fps
@@ -117,7 +117,7 @@ def _make_motion_frames(folder: Path, *, width: int = 640, height: int = 360,
                 left, top, right, bottom = panes[pane_index]
                 y = top + ((y0 - top + t * (24 + (x % 5) * 4)) % (bottom - top))
                 x_now = x + int(2 * __import__("math").sin(t * 0.7 + x))
-                rain_alpha = 115
+                rain_alpha = 72 if rain_mode == "masked_window" else 115
                 draw.line((x_now, y, x_now - 2, min(bottom - 1, y + length)),
                           fill=(190, 221, 244, rain_alpha), width=1)
                 if y < top + 12:
@@ -287,3 +287,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
