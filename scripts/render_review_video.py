@@ -87,7 +87,7 @@ def _make_motion_frames(folder: Path, *, width: int = 640, height: int = 360,
     rain = []
     integrated_layers = (_integrated_rain_layers(image_path, width, height)
                          if rain_mode == "integrated_plate" and image_path else [])
-    if rain_mode == "procedural_window":
+    if rain_mode in {"procedural_window", "masked_window"}:
         for i in range(72):
             left, top, right, bottom = panes[i % len(panes)]
             rain.append((left + (i * 17) % max(1, right - left),
