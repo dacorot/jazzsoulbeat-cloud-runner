@@ -37,3 +37,6 @@ Rights-audit regression trigger 2026-11-17T18:41:34.391Z: reject HTML and stage 
 
 
 - 2026-11-17T20:36:39.131Z: Editorial ACT rerun: stage only the 32 remaining approved tracks; excluded titles stay out of future downloads.
+
+
+- 2026-11-17T20:41:41.982Z: Deming ACT correction: primary staging now consumes only EDITORIAL_APPROVED_TITLES.txt (32 titles).
