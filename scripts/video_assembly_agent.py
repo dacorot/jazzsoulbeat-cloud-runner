@@ -9,6 +9,8 @@ from typing import Any
 MIN_CROSSFADE_SECONDS = 0.8
 MAX_CROSSFADE_SECONDS = 4.0
 DEFAULT_CROSSFADE_SECONDS = 2.0
+MAX_ALLOWED_BOUNDARY_SILENCE_SECONDS = 0.20
+BOUNDARY_SILENCE_TRIM_THRESHOLD_DB = -45
 
 
 def _number(value: Any, default: float = 0.0) -> float:
@@ -57,6 +59,9 @@ def evaluate_crossfade(previous: dict, following: dict) -> dict:
         "formula": "clamp(2.0 + calm_bonus - energy_penalty - tempo_penalty, 0.8, min(4.0, 0.25*shortest_duration))",
         "gap_policy": "forbid_silence",
         "overlap_policy": "continuous_audio",
+        "trim_boundary_silence": True,
+        "boundary_silence_trim_threshold_db": BOUNDARY_SILENCE_TRIM_THRESHOLD_DB,
+        "max_allowed_boundary_silence_seconds": MAX_ALLOWED_BOUNDARY_SILENCE_SECONDS,
     }
 
 
@@ -95,6 +100,9 @@ def plan(
             "crossfade_evaluated_per_boundary": True,
             "silence_allowed_between_tracks": False,
             "default_seconds": DEFAULT_CROSSFADE_SECONDS,
+            "trim_leading_trailing_silence": True,
+            "silence_threshold_db": BOUNDARY_SILENCE_TRIM_THRESHOLD_DB,
+            "max_boundary_silence_seconds": MAX_ALLOWED_BOUNDARY_SILENCE_SECONDS,
         },
         "state": "PLANNED",
         "creative_approval": False,
@@ -110,6 +118,8 @@ def contract() -> dict:
         "requires_approved_visual": True,
         "requires_transition_evaluation": True,
         "no_silence_between_tracks": True,
+        "trim_boundary_silence": True,
+        "max_allowed_boundary_silence_seconds": MAX_ALLOWED_BOUNDARY_SILENCE_SECONDS,
         "publication": "DISABLED",
         "never_publish": True,
     }
