@@ -36,19 +36,19 @@ class Brief:
         )
 
 BRIEFS = {
-    "coffee_time": Brief(
-        "coffee_time", "Rain on the Café Window", 78, "F major",
-        "Expressive warm grand piano, natural upright bass, brushed kit, mellow muted trumpet.",
-        "Eight-bar piano introduction; lyrical 16-bar A theme; answered A variation; contrasting bridge "
-        "with jazz guitar comping; lyrical restrained trumpet improvisation; return to theme; resolved outro.",
-        "Warm intimate coffeehouse studio sound, natural swing, soft touch, gentle groove.",
-    ),
     "work_study": Brief(
         "work_study", "The Last Page of the Night", 72, "C major",
         "Rhodes with acoustic piano touches, upright bass, restrained brushed drums and subtle hollowbody guitar.",
         "Short instrumental intro, memorable spacious theme, subtle development, contrasting middle section, "
         "improvised piano response, final restatement and proper ending.",
         "Focused background listening: musical but low-fatigue, no piercing lead or sudden dynamics.",
+    ),
+    "coffee_time": Brief(
+        "coffee_time", "Rain on the Café Window", 78, "F major",
+        "Expressive warm grand piano, natural upright bass, brushed kit, mellow muted trumpet.",
+        "Eight-bar piano introduction; lyrical 16-bar A theme; answered A variation; contrasting bridge "
+        "with jazz guitar comping; lyrical restrained trumpet improvisation; return to theme; resolved outro.",
+        "Warm intimate coffeehouse studio sound, natural swing, soft touch, gentle groove.",
     ),
     "sleep": Brief(
         "sleep", "When the City Sleeps", 66, "B flat major",
@@ -64,12 +64,14 @@ BRIEFS = {
         "tasteful sax improvisation, resolved chorus return and shaped instrumental outro.",
         "Sophisticated late-night soul jazz, understated pocket and human rhythmic tension.",
     ),
-    "christian_instrumental": Brief(
-        "christian_instrumental", "Grace Before Morning", 70, "G major",
+    "christian_jazz_worship": Brief(
+        "christian_jazz_worship", "Grace Before Morning", 70, "G major",
         "Acoustic grand piano, warm upright bass, subtle gospel-influenced organ pads and brushed drums.",
         "Reverent opening theme, hopeful response, uplifting gospel-jazz harmonic bridge, "
-        "gentle piano solo, resolved theme and peaceful coda. Instrumental only; no invented lyrics.",
-        "Quiet worshipful jazz rooted in consolation, gratitude and hope; elegant, not theatrical.",
+        "gentle piano solo, resolved theme and peaceful coda. Instrumental audition only; lyric production "
+        "requires a separate English-language biblical review path.",
+        "Quiet worshipful jazz rooted in consolation, gratitude and hope; elegant, not theatrical. "
+        "Do not quote or imitate copyrighted worship songs.",
     ),
 }
 
