@@ -25,7 +25,7 @@ jobs:
         include:
           - lane: primary_catalogs
             offset: 0
-            commands: "python main.py discover-ketsa --limit 100 && python main.py discover-incompetech && python main.py audit-incompetech-sources"
+            commands: "python main.py discover-ketsa --limit 100 || true; python main.py discover-incompetech && python main.py audit-incompetech-sources"
           - lane: community_catalogs
             offset: 0
             commands: "python main.py discover-ccmixter --limit 200 && python main.py discover-commons --limit 200"
