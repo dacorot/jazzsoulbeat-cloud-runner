@@ -1,8 +1,10 @@
 name: Jazz Soul Beat - Parallel music discovery lanes
-# Regression trigger: all three lanes must search, deduplicate, and stage review-only audio. Sources are partitioned per lane.
+# Scheduled Deming cycle: all three lanes search, deduplicate, and stage review-only audio. Sources are partitioned per lane.
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * *"
   push:
     paths:
       - "MUSIC_PARALLEL_DISCOVERY_START.md"
