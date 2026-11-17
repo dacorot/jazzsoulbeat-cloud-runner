@@ -152,7 +152,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: dacorot/jazzsoulbeat-agent
-          ref: master
+          ref: 9af501fd8db2d25cf29fbeb92534cef259bbdd2a
           token: \${{ secrets.PRIVATE_REPO_READ_TOKEN }}
           path: agent
           persist-credentials: false
