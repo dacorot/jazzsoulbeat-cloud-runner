@@ -6,7 +6,8 @@
     "Christmas tracks may only be used in christmas_holiday and winter_holiday playlists.",
     "Christmas tracks must not be inserted into coffee_time, chill, sleep, work_study, spring, summer, or autumn playlists.",
     "Each video receives a playlist profile, season, mood, and explicit track allowlist before assembly.",
-    "The assembler must fail closed when a track has no seasonal assignment."
+    "The assembler must fail closed when a track has no seasonal assignment.",
+    "General tracks receive one primary season from source metadata before assembly; they are not left in an unclassified general folder."
   ],
   "seasonal_groups": {
     "christmas": [
@@ -47,16 +48,94 @@
     ]
   },
   "playlist_rules": {
-    "christmas_holiday": ["christmas"],
-    "winter_holiday": ["christmas"],
-    "coffee_time": ["general_jazz_soul"],
-    "chill": ["general_jazz_soul"],
-    "sleep": ["general_jazz_soul"],
-    "work_study": ["general_jazz_soul"],
-    "spring": ["general_jazz_soul"],
-    "summer": ["general_jazz_soul"],
-    "autumn": ["general_jazz_soul"]
+    "christmas_holiday": [
+      "christmas"
+    ],
+    "winter_holiday": [
+      "christmas"
+    ],
+    "coffee_time": [
+      "general_jazz_soul"
+    ],
+    "chill": [
+      "general_jazz_soul"
+    ],
+    "sleep": [
+      "general_jazz_soul"
+    ],
+    "work_study": [
+      "general_jazz_soul"
+    ],
+    "spring": [
+      "general_jazz_soul"
+    ],
+    "summer": [
+      "general_jazz_soul"
+    ],
+    "autumn": [
+      "general_jazz_soul"
+    ],
+    "winter": [
+      "general_jazz_soul"
+    ]
   },
   "review_status": "EDITORIALLY_APPROVED_RIGHTS_REVIEW_REQUIRED",
-  "publication": "DISABLED"
+  "publication": "DISABLED",
+  "seasonal_routing": {
+    "metadata_fields": [
+      "title",
+      "genre",
+      "instruments",
+      "feel"
+    ],
+    "fallback_season": "autumn",
+    "keyword_weights": {
+      "spring": [
+        "spring",
+        "fresh",
+        "light",
+        "bright",
+        "rain",
+        "flute",
+        "vibes",
+        "calming"
+      ],
+      "summer": [
+        "summer",
+        "bossa",
+        "bouncy",
+        "grooving",
+        "upbeat",
+        "positive",
+        "funk",
+        "sunset"
+      ],
+      "autumn": [
+        "autumn",
+        "warm",
+        "lounge",
+        "stroll",
+        "mellow",
+        "relaxed",
+        "coffee",
+        "piano"
+      ],
+      "winter": [
+        "winter",
+        "night",
+        "slow",
+        "soft",
+        "quiet",
+        "smooth",
+        "sleep",
+        "midnight"
+      ]
+    },
+    "tie_break_order": [
+      "autumn",
+      "spring",
+      "summer",
+      "winter"
+    ]
+  }
 }
