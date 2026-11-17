@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Run a bounded readiness audit for every local Jazz Soul Beat agent."""\n# Regression trigger: rerun after dependency-manifest and workflow-YAML fixes.
+"""Run a bounded readiness audit for every local Jazz Soul Beat agent."""
+# Regression trigger: rerun after dependency-manifest and workflow-YAML fixes.
 from __future__ import annotations
 
 import argparse
