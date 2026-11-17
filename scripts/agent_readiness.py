@@ -29,6 +29,7 @@ def audit(root: Path) -> dict:
         check("longform_library_gate", lambda: _library(root, ledger)),
         check("editorial_agent_profiles", lambda: _editorial(root)),
         check("weekly_planner_contract", lambda: _planner()),
+        check("twelve_video_production_queue", lambda: _twelve_video_queue()),
         check("pdca_workflow_contract", lambda: _pdca(root)),
         check("audio_adapters_import", lambda: _imports()),
         check("python_compile", lambda: _compile(root)),
@@ -98,6 +99,16 @@ def _pdca(root):
     if any(token not in finish for token in required_finish):
         raise RuntimeError("pdca_finish_contract_incomplete")
     return {"plan": True, "do": True, "check": True, "act": True}
+
+
+def _twelve_video_queue():
+    from scripts.twelve_video_plan import build_plan
+    import datetime as dt
+    result = build_plan(dt.date(2026, 11, 18))
+    jobs = result.get("jobs", [])
+    if len(jobs) != 12 or any(job.get("visual_profile") != "static_rain_steam_only" for job in jobs):
+        raise RuntimeError("twelve_video_queue_contract_incomplete")
+    return {"jobs": len(jobs), "parallel_music_lanes": result["parallel_music_lanes"]}
 
 
 def _imports():
