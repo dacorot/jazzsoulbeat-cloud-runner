@@ -10,6 +10,8 @@ creative release approval.
 - 029 — "Nouvelle Noel": positive seasonal-jazz reference.
 - 030 — "Deck the Halls A": positive restrained seasonal reference.
 - 033 — "Oh Holy Night": positive calm seasonal reference.
+- 039 — "Silent Night": excellent calm seasonal reference.
+- 040 — "Oh, Little Town of Bethlehem": excellent calm seasonal reference.
 
 ## Target profile
 
