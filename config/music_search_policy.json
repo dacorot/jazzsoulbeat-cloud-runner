@@ -9,5 +9,7 @@
   "reject_terms": ["podcast", "sermon", "lecture", "speech", "audiobook", "interview", "news", "soundtrack", "sample pack", "live concert", "worship", "preaching"],
   "never_auto_approve": true,
   "never_download_audio": true,
-  "never_publish": true
+  "never_publish": true,
+  "dedup_required_before_download": true,
+  "dedup_keys": ["sha256", "source_url", "title_creator_duration"]
 }
