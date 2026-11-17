@@ -27,13 +27,13 @@ jobs:
         include:
           - lane: primary_catalogs
             offset: 0
-            commands: "python main.py discover-ketsa --limit 100 || true; python main.py discover-incompetech && python main.py audit-incompetech-sources && python main.py rights-agent --csv output/incompetech_candidates.csv --report output/parallel-discovery/primary_catalogs/rights-audit.json"
+            commands: "python main.py discover-ketsa --limit 100 || true; python main.py discover-incompetech && python main.py audit-incompetech-sources && python ../scripts/audit_rights_evidence.py --csv output/incompetech_candidates.csv --report output/parallel-discovery/primary_catalogs/rights-audit.json"
           - lane: community_catalogs
             offset: 0
-            commands: "python main.py discover-ccmixter --limit 200 && python main.py discover-commons --limit 200 && python main.py rights-agent --csv output/ccmixter_candidates.csv --report output/parallel-discovery/community_catalogs/rights-audit.json"
+            commands: "python main.py discover-ccmixter --limit 200 && python main.py discover-commons --limit 200 && python ../scripts/audit_rights_evidence.py --csv output/ccmixter_candidates.csv --report output/parallel-discovery/community_catalogs/rights-audit.json"
           - lane: independent_metadata
             offset: 40
-            commands: "python ../scripts/music_agents.py && python main.py discover-ccmixter --limit 200 && python main.py rights-agent --csv output/ccmixter_candidates.csv --report output/parallel-discovery/independent_metadata/rights-audit.json"
+            commands: "python ../scripts/music_agents.py && python main.py discover-ccmixter --limit 200 && python ../scripts/audit_rights_evidence.py --csv output/ccmixter_candidates.csv --report output/parallel-discovery/independent_metadata/rights-audit.json"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
