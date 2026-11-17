@@ -145,7 +145,7 @@ jobs:
   supervise:
     name: "Private autonomous supervisor"
     needs: [discover, aggregate]
-    if: \${{ always() && needs.discover.result == 'success' && needs.aggregate.result == 'success' }}
+    if: ${{ always() && needs.discover.result == 'success' && needs.aggregate.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -153,7 +153,7 @@ jobs:
         with:
           repository: dacorot/jazzsoulbeat-agent
           ref: 9af501fd8db2d25cf29fbeb92534cef259bbdd2a
-          token: \${{ secrets.PRIVATE_REPO_READ_TOKEN }}
+          token: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
           path: agent
           persist-credentials: false
       - uses: actions/download-artifact@v4
@@ -175,7 +175,7 @@ jobs:
       - name: Persist private state when Drive authorization exists
         working-directory: agent
         env:
-          DRIVE_TOKEN_JSON: \${{ secrets.DRIVE_TOKEN_JSON }}
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
         run: |
           if [ -n "$DRIVE_TOKEN_JSON" ]; then
             python main.py persistence-agent --execute
