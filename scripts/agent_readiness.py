@@ -41,6 +41,7 @@ def audit(root: Path) -> dict:
         check("music_dedup_agent", lambda: _operational("scripts.music_dedup_agent", "music_dedup_agent")),
         check("supporting_agent_modules", lambda: _supporting_modules()),
         check("seasonal_visual_matrix", lambda: _seasonal_matrix(root)),
+        check("project_compliance_audit", lambda: _project_compliance(root)),
     ]
     return {
         "agent_readiness_version": 1,
@@ -187,6 +188,16 @@ def _seasonal_matrix(root):
         raise RuntimeError("scene_reuse_policy_incomplete")
     return {"seasons": sorted(seasons), "playlists": len(mapping), "distinct_scene_families_required": 8}
 
+
+
+def _project_compliance(root):
+    from scripts.project_compliance_audit import audit
+    result = audit(root)
+    if result["status"] != "PASS":
+        failed = [name for name, passed in result["checks"].items() if not passed]
+        raise RuntimeError(f"project_compliance_blocked: {failed}")
+    return {"checks": len(result["checks"]), "scene_images": result["scene_library"]["image_count"],
+            "approved_audio_seconds": result["audio"]["approved_seconds"]}
 
 def _compile(root):
     result = subprocess.run([sys.executable, "-m", "compileall", "-q", "scripts"],
