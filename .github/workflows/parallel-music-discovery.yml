@@ -107,7 +107,7 @@ jobs:
           lanes = {}
           errors = []
           for manifest in root.glob("**/review-download-manifest.json"):
-              lane = manifest.parents[1].name
+              lane = manifest.parents[1].name.removeprefix("parallel-discovery-")
               data = json.loads(manifest.read_text(encoding="utf-8"))
               lanes[lane] = {
                   "downloaded_count": data.get("downloaded_count", 0),
