@@ -25,3 +25,6 @@ Rights-audit regression trigger 2026-11-17T18:41:34.391Z: reject HTML and stage 
 
 
 - 2026-11-17T19:28:02.447Z: Deming ACT correction: auditor now falls back to mutagen when ffprobe is unavailable on runner images.
+
+
+- 2026-11-17T19:37:23.880Z: Deming ACT correction: shared-contract test now includes rights_agent (8 active agents).
