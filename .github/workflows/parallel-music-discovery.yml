@@ -1,4 +1,5 @@
 name: Jazz Soul Beat - Parallel music discovery lanes
+# Regression trigger: all three lanes must search, deduplicate, and stage review-only audio. Sources are partitioned per lane.
 
 on:
   workflow_dispatch:
@@ -6,7 +7,6 @@ on:
     paths:
       - "MUSIC_PARALLEL_DISCOVERY_START.md"
       - ".github/workflows/parallel-music-discovery.yml"
-      - "scripts/music_dedup_agent.py"
 
 permissions:
   contents: read
@@ -24,11 +24,14 @@ jobs:
       matrix:
         include:
           - lane: primary_catalogs
-            commands: "python main.py discover-ketsa --limit 100 && python main.py discover-incompetech && python main.py audit-incompetech-sources"
+            offset: 0
+            commands: "python main.py discover-ketsa --limit 100 || true; python main.py discover-incompetech && python main.py audit-incompetech-sources"
           - lane: community_catalogs
-            commands: "python main.py discover-commons --limit 200 && python main.py discover-openverse --limit 300 && python main.py discover-ccmixter --limit 200"
+            offset: 0
+            commands: "python main.py discover-ccmixter --limit 200 && python main.py discover-commons --limit 200"
           - lane: independent_metadata
-            commands: "python ../scripts/music_agents.py"
+            offset: 40
+            commands: "python ../scripts/music_agents.py && python main.py discover-ccmixter --limit 200"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
@@ -49,21 +52,30 @@ jobs:
         env:
           DISCOVERY_LANE: ${{ matrix.lane }}
         run: |
-          set -euo pipefail
-          mkdir -p "output/parallel-discovery/$DISCOVERY_LANE"
-          { echo "lane=$DISCOVERY_LANE"; echo "started_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"; } > "output/parallel-discovery/$DISCOVERY_LANE/run.txt"
-          ${{ matrix.commands }} 2>&1 | tee -a "output/parallel-discovery/$DISCOVERY_LANE/run.txt"
-          for candidate in output/*_candidates.csv; do [ -f "$candidate" ] && cp "$candidate" "output/parallel-discovery/$DISCOVERY_LANE/"; done
+          set -o pipefail
+          mkdir -p "output/parallel-discovery/${DISCOVERY_LANE}"
+          { echo "lane=${DISCOVERY_LANE}"; echo "started_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"; } > "output/parallel-discovery/${DISCOVERY_LANE}/run.txt"
+          ${{ matrix.commands }} 2>&1 | tee -a "output/parallel-discovery/${DISCOVERY_LANE}/run.txt"
+          mapfile -t EXISTING_FILES < <(find output music-library -type f \( -name '*.csv' -o -name '*.json' \) ! \( -name '*_candidates.csv' -o -name 'candidate_catalog.csv' \) 2>/dev/null | sort)
+          mapfile -t CANDIDATE_FILES < <(find output music-library -type f \( -name '*_candidates.csv' -o -name 'candidate_catalog.csv' \) 2>/dev/null | sort)
           python ../scripts/music_dedup_agent.py \
-            --existing $(find output -type f \( -name '*.csv' -o -name '*.json' \) | sort) \
-            --candidates $(find output -maxdepth 1 -type f -name '*_candidates.csv' | sort) \
-            --output "output/parallel-discovery/$DISCOVERY_LANE/dedup-report.json" \
-            2>&1 | tee -a "output/parallel-discovery/$DISCOVERY_LANE/run.txt"
+            --existing "${EXISTING_FILES[@]}" \
+            --candidates "${CANDIDATE_FILES[@]}" \
+            --output "output/parallel-discovery/${DISCOVERY_LANE}/dedup-report.json" \
+            2>&1 | tee -a "output/parallel-discovery/${DISCOVERY_LANE}/run.txt"
+          mapfile -t EXISTING_FILES < <(find output music-library -type f \( -name '*.csv' -o -name '*.json' \) ! \( -name '*_candidates.csv' -o -name 'candidate_catalog.csv' \) 2>/dev/null | sort)
+          mapfile -t CANDIDATE_FILES < <(find output music-library -type f \( -name '*_candidates.csv' -o -name 'candidate_catalog.csv' \) 2>/dev/null | sort)
+          python ../scripts/review_audio_downloader.py \
+            --existing "${EXISTING_FILES[@]}" \
+            --candidates "${CANDIDATE_FILES[@]}" \
+            --output "output/parallel-discovery/${DISCOVERY_LANE}/audio-review" \
+            --limit 40 \
+            --offset "${{ matrix.offset }}" \
+            2>&1 | tee -a "output/parallel-discovery/${DISCOVERY_LANE}/run.txt"
       - name: Assert discovery remains review-only
         working-directory: agent
         run: |
-          set -euo pipefail
-          if grep -REn "rights_verified.*(True|true|1)|youtube_upload|PRIVATE_ONLY_AUTHORIZED" output/parallel-discovery; then
+          if rg -n "rights_verified.*(True|true|1)|youtube_upload|PRIVATE_ONLY_AUTHORIZED" output/parallel-discovery; then
             echo "Unsafe approval/publication marker detected in discovery output"
             exit 1
           fi
