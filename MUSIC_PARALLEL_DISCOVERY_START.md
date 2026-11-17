@@ -13,3 +13,6 @@ Regression trigger 2026-11-17T17:02:47.634Z: primary fallback after Ketsa timeou
 
 
 Autonomy regression trigger 2026-11-17T18:16:27.424Z: runtime branch updated after PDCA repair.
+
+
+Rights-audit regression trigger 2026-11-17T18:41:34.391Z: reject HTML and stage only direct audio responses.
