@@ -84,8 +84,8 @@ def _make_motion_frames(folder: Path, *, width: int = 640, height: int = 360,
                  (437, 0, 496, 155), (504, 0, 564, 155),
                  (572, 0, 640, 155),
                  (307, 150, 365, 190), (372, 150, 429, 190),
-                 (437, 150, 496, 205), (504, 150, 564, 230),
-                 (572, 150, 640, 260))
+                 (437, 150, 496, 195), (504, 150, 564, 205),
+                 (572, 150, 640, 220))
     else:
         panes = ((452, 0, 492, 108), (500, 0, 640, 108))
     rain = []
@@ -139,12 +139,14 @@ def _make_motion_frames(folder: Path, *, width: int = 640, height: int = 360,
             for x, y0, length, slope, pane_index in rain:
                 left, top, right, bottom = panes[pane_index]
                 y = top + ((y0 - top + t * (24 + (x % 5) * 4)) % (bottom - top))
-                x_now = x + int(2 * __import__("math").sin(t * 0.7 + x))
+                x_now = x + int(4 * __import__("math").sin(t * 0.7 + x * 0.13))
                 if rain_mode == "masked_window":
                     rain_alpha = 66 + (x % 3) * 12 if pane_index % 2 else 104 + (x % 3) * 12
                 else:
                     rain_alpha = 115
-                dx = max(1, int(slope * 2.2))
+                # A small consistent wind angle makes the streaks read as
+                # falling rain rather than vertical UI marks.
+                dx = max(2, int(slope * 3.6))
                 points = []
                 for step in range(length + 1):
                     px = x_now - int(dx * step / max(1, length))
