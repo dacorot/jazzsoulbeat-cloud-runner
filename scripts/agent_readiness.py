@@ -40,6 +40,7 @@ def audit(root: Path) -> dict:
         check("release_qa_agent", lambda: _operational("scripts.release_qa_agent", "release_qa_agent")),
         check("music_dedup_agent", lambda: _operational("scripts.music_dedup_agent", "music_dedup_agent")),
         check("supporting_agent_modules", lambda: _supporting_modules()),
+        check("seasonal_visual_matrix", lambda: _seasonal_matrix(root)),
     ]
     return {
         "agent_readiness_version": 1,
@@ -174,6 +175,17 @@ def _supporting_modules():
             else:
                 raise
     return {"modules": len(imported), "private_only_modules": private_only, "status": "IMPORTED"}
+
+
+def _seasonal_matrix(root):
+    matrix = json.loads((root / "config/seasonal_visual_matrix.json").read_text(encoding="utf-8"))
+    seasons = set(matrix.get("seasons", {}))
+    mapping = matrix.get("playlist_mapping", {})
+    if seasons != {"spring", "summer", "autumn", "winter"} or len(mapping) != 5:
+        raise RuntimeError("seasonal_visual_matrix_incomplete")
+    if matrix["scene_diversity"]["same_hero_composition_allowed"] is not False:
+        raise RuntimeError("scene_reuse_policy_incomplete")
+    return {"seasons": sorted(seasons), "playlists": len(mapping), "distinct_scene_families_required": 8}
 
 
 def _compile(root):
