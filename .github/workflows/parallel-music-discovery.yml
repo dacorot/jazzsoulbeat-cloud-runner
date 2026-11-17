@@ -64,6 +64,9 @@ jobs:
           if [ -n "$RIGHTS_CSV" ]; then
             python ../scripts/rights_provenance_agent.py               --csv "$RIGHTS_CSV"               --output "output/parallel-discovery/${DISCOVERY_LANE}/rights-provenance.json"               2>&1 | tee -a "output/parallel-discovery/${DISCOVERY_LANE}/run.txt"
           fi
+          if [ "${DISCOVERY_LANE}" = "primary_catalogs" ] && [ -f output/incompetech_candidates.csv ]; then
+            python ../scripts/seasonal_music_router.py --csv output/incompetech_candidates.csv --policy ../config/music_playlist_policy.json --approved-titles-file ../EDITORIAL_APPROVED_TITLES.txt --output "output/parallel-discovery/${DISCOVERY_LANE}/seasonal-routing.json" 2>&1 | tee -a "output/parallel-discovery/${DISCOVERY_LANE}/run.txt"
+          fi
           mapfile -t EXISTING_FILES < <(find output music-library -type f \( -name '*.csv' -o -name '*.json' \) ! \( -name '*_candidates.csv' -o -name 'candidate_catalog.csv' \) 2>/dev/null | sort)
           mapfile -t CANDIDATE_FILES < <(find output music-library -type f \( -name '*_candidates.csv' -o -name 'candidate_catalog.csv' \) 2>/dev/null | sort)
           python ../scripts/music_dedup_agent.py \
