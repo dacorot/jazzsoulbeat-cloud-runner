@@ -19,3 +19,6 @@ Rights-audit regression trigger 2026-11-17T18:41:34.391Z: reject HTML and stage 
 
 
 - 2026-11-17T19:08:06.088Z: Deming retry after fixing direct official Incompetech audio URL resolution; review-only, rights and publication gates unchanged.
+
+
+- 2026-11-17T19:11:56.414Z: Deming ACT correction: percent-encode direct catalog MP3 filenames before rerun.
