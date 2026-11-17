@@ -35,15 +35,23 @@ def safe_name(value: str) -> str:
     return result.strip("._")[:100] or "candidate"
 
 
+def download_url(row: dict) -> str:
+    for key in ("download_url", "file_url", "audio_url", "download", "url", "source_url"):
+        value = str(row.get(key) or "").strip()
+        if value.startswith(("http://", "https://")):
+            return value
+    return ""
+
+
 def download_unique(existing: list[dict], candidates: list[dict], output: Path, limit: int = 40) -> dict:
     dedup = compare(existing, candidates)
     output.mkdir(parents=True, exist_ok=True)
     manifest = []
     skipped = []
     for index, row in enumerate(dedup["unique"][:limit], 1):
-        url = str(row.get("download_url") or row.get("source_url") or "").strip()
+        url = download_url(row)
         parsed = urlparse(url)
-        if parsed.scheme not in {"http", "https"} or not row.get("download_url"):
+        if parsed.scheme not in {"http", "https"}:
             skipped.append({"candidate": row, "reason": "download_url_missing_or_invalid"})
             continue
         target = output / f"{index:03d}-{safe_name(row.get('title'))}{Path(parsed.path).suffix.lower()}"
