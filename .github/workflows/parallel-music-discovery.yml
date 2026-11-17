@@ -86,3 +86,57 @@ jobs:
           name: parallel-discovery-${{ matrix.lane }}
           path: agent/output/parallel-discovery/${{ matrix.lane }}
           if-no-files-found: error
+
+
+  aggregate:
+    name: "Deming aggregate and handoff audit"
+    needs: discover
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: parallel-discovery-*
+          path: aggregated
+          merge-multiple: false
+      - name: Build central handoff ledger
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path("aggregated")
+          lanes = {}
+          errors = []
+          for manifest in root.glob("**/review-download-manifest.json"):
+              lane = manifest.parents[1].name
+              data = json.loads(manifest.read_text(encoding="utf-8"))
+              lanes[lane] = {
+                  "downloaded_count": data.get("downloaded_count", 0),
+                  "skipped_count": data.get("skipped_count", 0),
+                  "rights_verified": data.get("rights_verified", False),
+                  "publication": data.get("publication", "UNKNOWN"),
+              }
+              if data.get("rights_verified") or data.get("publication") != "DISABLED":
+                  errors.append(f"unsafe_state:{lane}")
+          expected = {"primary_catalogs", "community_catalogs", "independent_metadata"}
+          missing = sorted(expected - set(lanes))
+          errors.extend(f"missing_lane:{lane}" for lane in missing)
+          total = sum(item["downloaded_count"] for item in lanes.values())
+          report = {
+              "cycle": "PLAN->DO->CHECK->ACT",
+              "status": "READY" if not errors else "REVIEW_REQUIRED",
+              "lanes": lanes,
+              "missing_lanes": missing,
+              "total_downloaded_for_review": total,
+              "errors": errors,
+              "publication": "DISABLED",
+          }
+          Path("deming-ledger.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+          print(json.dumps(report, indent=2))
+          if errors:
+              raise SystemExit(1)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deming-central-ledger
+          path: deming-ledger.json
+          if-no-files-found: error
