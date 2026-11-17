@@ -67,12 +67,17 @@ jobs:
             2>&1 | tee -a "output/parallel-discovery/${DISCOVERY_LANE}/run.txt"
           mapfile -t EXISTING_FILES < <(find output music-library -type f \( -name '*.csv' -o -name '*.json' \) ! \( -name '*_candidates.csv' -o -name 'candidate_catalog.csv' \) 2>/dev/null | sort)
           mapfile -t CANDIDATE_FILES < <(find output music-library -type f \( -name '*_candidates.csv' -o -name 'candidate_catalog.csv' \) 2>/dev/null | sort)
+          APPROVED_TITLES_ARGS=()
+          if [ "${DISCOVERY_LANE}" = "primary_catalogs" ]; then
+            APPROVED_TITLES_ARGS=(--approved-titles-file ../EDITORIAL_APPROVED_TITLES.txt)
+          fi
           python ../scripts/review_audio_downloader.py \
             --existing "${EXISTING_FILES[@]}" \
             --candidates "${CANDIDATE_FILES[@]}" \
             --output "output/parallel-discovery/${DISCOVERY_LANE}/audio-review" \
             --limit 40 \
             --offset "${{ matrix.offset }}" \
+            "${APPROVED_TITLES_ARGS[@]}" \
             2>&1 | tee -a "output/parallel-discovery/${DISCOVERY_LANE}/run.txt"
           python ../scripts/audit_review_audio.py \
             --manifest "output/parallel-discovery/${DISCOVERY_LANE}/audio-review/review-download-manifest.json" \
