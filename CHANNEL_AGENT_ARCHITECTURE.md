@@ -1,13 +1,14 @@
 # Jazz Soul Beat — Category Agent Architecture
 
 ## Decision
-Jazz Soul Beat is organized as four specialized creative agents, not one generic music producer. Each agent owns its playlist identity, musical direction, composition brief, arrangement rules and category-specific quality review. They share a single production scheduler, engine router, quality system and private catalog.
+Jazz Soul Beat is organized as five editorial playlist profiles, not one generic music producer. Each profile owns its playlist identity, musical direction, composition brief, arrangement rules and category-specific quality review. They share a single production scheduler, engine router, quality system and private catalog. The original four-agent taxonomy remains only as a legacy compatibility map.
 
 ## Category agents
-1. **Midnight Jazz & Soul** — mature, intimate, cinematic late-night jazz-soul; piano, warm tenor sax, upright bass and brushed drums.
-2. **Coffee & Smooth Jazz** — relaxed, bright smooth jazz and bossa nova; nylon guitar, piano/Rhodes, light percussion and mellow winds.
-3. **Soulful Blues** — expressive blues and soul; electric guitar, Rhodes/piano, Hammond organ and live-feel rhythm section.
-4. **Christian Jazz & Gospel** — original English lyrics and spiritually coherent jazz/gospel, rooted in Psalms and Proverbs, with Scripture references and translation-rights checks.
+1. **Work & Study** — focused, low-fatigue jazz for concentration and reading.
+2. **Coffee Time** — warm, sophisticated café jazz with an organic pulse.
+3. **Sleep** — delicate, quiet jazz with controlled dynamics and gentle resolution.
+4. **Chill** — elegant late-night jazz/soul with atmospheric but human-feeling phrasing.
+5. **Christian Jazz & Worship** — original English lyrics or instrumental worship jazz with separate lyric and rights review.
 
 The machine-readable profiles live in `config/channel_agents.json`. They are the source of truth for each agent's identity and constraints.
 
@@ -40,4 +41,4 @@ The planning target is 12 approved songs per month, approximately one per day. T
 - Christian lyric content must be original, coherent and in English. Record Psalm/Proverb references; verify any quoted Bible translation before commercial release.
 
 ## Current implementation status
-This file and the category profiles define the architecture and musical policies. The four agents are not yet independently deployed or proven to generate audio. The ACE-Step generation workflow remains an unverified first engine integration. Permanent private storage and the shared quota-aware scheduler still need implementation and end-to-end tests.
+This file and the category profiles define the architecture and musical policies. The five editorial profiles are operationally represented and covered by readiness checks; generation, rights approval, permanent private storage and publication remain deliberately gated. The ACE-Step generation workflow remains an unverified first engine integration, while approved audio is still insufficient for the one-hour target.
