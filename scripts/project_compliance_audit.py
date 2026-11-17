@@ -79,3 +79,5 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+# Deming gate: private-only state is explicitly supported.
