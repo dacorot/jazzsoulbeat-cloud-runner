@@ -39,7 +39,7 @@ def build_plan(start: dt.date, count: int = 12) -> dict:
         "agent_id": "production_coordinator",
         "created_at": dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat(),
         "target_videos": count,
-        "parallel_music_lanes": ["primary_catalogs", "community_catalogs"],
+        "parallel_music_lanes": ["primary_catalogs", "community_catalogs", "independent_metadata"],
         "no_track_repetition": True,
         "jobs": jobs,
     }

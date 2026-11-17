@@ -39,6 +39,7 @@ def audit(root: Path) -> dict:
         check("video_assembly_agent", lambda: _operational("scripts.video_assembly_agent", "video_assembly_agent")),
         check("release_qa_agent", lambda: _operational("scripts.release_qa_agent", "release_qa_agent")),
         check("music_dedup_agent", lambda: _operational("scripts.music_dedup_agent", "music_dedup_agent")),
+        check("supporting_agent_modules", lambda: _supporting_modules()),
     ]
     return {
         "agent_readiness_version": 1,
@@ -152,6 +153,19 @@ def _operational(module_name, expected_id):
     if result.get("id") != expected_id or result.get("never_publish") is not True:
         raise RuntimeError(f"{expected_id}_contract_incomplete")
     return result
+
+
+def _supporting_modules():
+    modules = (
+        "scripts.music_agents", "scripts.delivery_coordinator",
+        "scripts.approval_gate", "scripts.production_gate",
+        "scripts.telegram_approval", "scripts.export_video_approval",
+        "scripts.weekly_planner", "scripts.longform_library_agent",
+        "scripts.visual_motion_agent",
+    )
+    for module in modules:
+        importlib.import_module(module)
+    return {"modules": len(modules), "status": "IMPORTED"}
 
 
 def _compile(root):

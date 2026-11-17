@@ -15,8 +15,6 @@ from urllib.request import Request, urlopen
 
 OUT = Path("music-library")
 EVIDENCE = OUT / "evidence"
-OUT.mkdir(parents=True, exist_ok=True)
-EVIDENCE.mkdir(parents=True, exist_ok=True)
 
 SEARCH_POLICY = json.loads(
     (Path(__file__).resolve().parents[1] / "config/music_search_policy.json").read_text(encoding="utf-8")
@@ -214,6 +212,8 @@ def guardian(item):
 
 
 def main():
+    OUT.mkdir(parents=True, exist_ok=True)
+    EVIDENCE.mkdir(parents=True, exist_ok=True)
     items = hunter()
     leads, rejected = [], []
     seen = set()
@@ -301,6 +301,11 @@ def main():
         json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8"
     )
     print(json.dumps(summary, ensure_ascii=False, indent=2))
+
+
+def contract():
+    return {"id": "music_search_agent", "mode": "read_only",
+            "never_download": True, "never_auto_approve": True, "never_publish": True}
 
 
 if __name__ == "__main__":
