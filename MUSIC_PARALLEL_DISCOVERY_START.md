@@ -40,3 +40,6 @@ Rights-audit regression trigger 2026-11-17T18:41:34.391Z: reject HTML and stage 
 
 
 - 2026-11-17T20:41:41.982Z: Deming ACT correction: primary staging now consumes only EDITORIAL_APPROVED_TITLES.txt (32 titles).
+
+
+- 2026-11-17T21:08:00Z: Deming ACT correction: seasonal and playlist routing enforced; Christmas remains isolated from general jazz/soul.
