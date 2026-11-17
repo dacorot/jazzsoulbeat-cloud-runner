@@ -36,7 +36,7 @@ def safe_name(value: str) -> str:
 
 
 def download_url(row: dict) -> str:
-    for key in ("download_url", "file_url", "audio_url", "download", "url", "source_url"):
+    for key in ("download_url", "file_url", "audio_url", "download", "url"):
         value = str(row.get(key) or "").strip()
         if value.startswith(("http://", "https://")):
             return value
@@ -62,15 +62,19 @@ def download_unique(existing: list[dict], candidates: list[dict], output: Path, 
         total = 0
         try:
             with urllib.request.urlopen(request, timeout=60) as response, target.open("wb") as handle:
-                while True:
-                    chunk = response.read(1024 * 1024)
-                    if not chunk:
-                        break
+                content_type = str(response.headers.get("Content-Type") or "").lower()
+                first_chunk = response.read(1024 * 1024)
+                magic_ok = first_chunk.startswith((b"ID3", b"OggS", b"fLaC", b"RIFF"))
+                if not magic_ok and not content_type.startswith("audio/") and "octet-stream" not in content_type:
+                    raise ValueError("response_is_not_audio")
+                chunk = first_chunk
+                while chunk:
                     total += len(chunk)
                     if total > MAX_BYTES:
                         raise ValueError("audio_candidate_exceeds_30MB")
                     digest.update(chunk)
                     handle.write(chunk)
+                    chunk = response.read(1024 * 1024)
             manifest.append({"title": row.get("title", ""), "creator": row.get("creator") or row.get("artist", ""),
                              "source_url": row.get("source_url", ""), "download_url": url,
                              "file": str(target), "bytes": total, "sha256": digest.hexdigest(),
