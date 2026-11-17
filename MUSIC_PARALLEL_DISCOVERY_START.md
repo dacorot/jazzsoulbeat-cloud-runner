@@ -43,3 +43,6 @@ Rights-audit regression trigger 2026-11-17T18:41:34.391Z: reject HTML and stage 
 
 
 - 2026-11-17T21:08:00Z: Deming ACT correction: seasonal and playlist routing enforced; Christmas remains isolated from general jazz/soul.
+
+
+- 2026-11-17T21:14:00Z: Deming ACT correction: general music now routed by metadata to spring/summer/autumn/winter and nested playlist folders; unknown classifications fail closed.
