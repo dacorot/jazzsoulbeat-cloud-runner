@@ -98,3 +98,25 @@ def contract() -> dict:
         "never_auto_approve": True,
         "never_publish": True,
     }
+
+
+
+if __name__ == "__main__":
+    import argparse
+    import json
+
+    parser = argparse.ArgumentParser(description="Audit rights evidence without approving publication.")
+    parser.add_argument("--csv", required=True, type=Path)
+    parser.add_argument("--output", required=True, type=Path)
+    args = parser.parse_args()
+    report = audit_catalog(args.csv)
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print(json.dumps({
+        "status": report["status"],
+        "rows": report["rows"],
+        "compliance_ready": report["compliance_ready"],
+        "needs_human_confirmation": report["needs_human_confirmation"],
+        "rights_verified": report["rights_verified"],
+        "publication": report["publication"],
+    }, ensure_ascii=False))
