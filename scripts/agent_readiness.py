@@ -34,6 +34,10 @@ def audit(root: Path) -> dict:
         check("pdca_workflow_contract", lambda: _pdca(root)),
         check("audio_adapters_import", lambda: _imports()),
         check("python_compile", lambda: _compile(root)),
+        check("rights_provenance_agent", lambda: _operational("scripts.rights_provenance_agent", "rights_provenance_agent")),
+        check("scene_library_agent", lambda: _operational("scripts.scene_library_agent", "scene_library_agent")),
+        check("video_assembly_agent", lambda: _operational("scripts.video_assembly_agent", "video_assembly_agent")),
+        check("release_qa_agent", lambda: _operational("scripts.release_qa_agent", "release_qa_agent")),
     ]
     return {
         "agent_readiness_version": 1,
@@ -124,6 +128,14 @@ def _imports():
                    "scripts.music_producer_agent"):
         importlib.import_module(module)
     return {"modules": 6}
+
+
+def _operational(module_name, expected_id):
+    module = importlib.import_module(module_name)
+    result = module.contract()
+    if result.get("id") != expected_id or result.get("never_publish") is not True:
+        raise RuntimeError(f"{expected_id}_contract_incomplete")
+    return result
 
 
 def _compile(root):
