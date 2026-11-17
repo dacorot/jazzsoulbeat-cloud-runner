@@ -12,3 +12,5 @@ The project has 13 technical readiness controls. Four additional dedicated agent
 Existing controls cover category briefs, scheduling, music discovery, audio production, visual motion, long-form library gating, approval handling, delivery coordination and PDCA/preflight.
 
 The suite does not claim that the project is production-ready while approved audio, approved scene assets or human review are missing. A technical READY result means the agents can run and enforce those gates.
+
+The music_dedup_agent is mandatory for every search lane. It compares SHA-256, source URL and normalized title/creator/duration against existing catalogs before any download; it never approves rights.
