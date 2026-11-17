@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "agent_id": "music_search_agent",
+  "mission": "Find candidate recordings that match Jazz Soul Beat's approved editorial direction without granting rights approval.",
+  "target_genres": ["jazz", "soul", "blues", "bossa", "lofi"],
+  "minimum_candidate_duration_seconds": 180,
+  "allowed_license_claims": ["CC0 1.0", "CC BY 1.0", "CC BY 2.0", "CC BY 2.5", "CC BY 3.0", "CC BY 4.0"],
+  "required_rights_states": ["pending_primary_source_and_rights_review"],
+  "reject_terms": ["podcast", "sermon", "lecture", "speech", "audiobook", "interview", "news", "soundtrack", "sample pack", "live concert", "worship", "preaching"],
+  "never_auto_approve": true,
+  "never_download_audio": true,
+  "never_publish": true
+}
