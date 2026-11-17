@@ -28,3 +28,6 @@ Rights-audit regression trigger 2026-11-17T18:41:34.391Z: reject HTML and stage 
 
 
 - 2026-11-17T19:37:23.880Z: Deming ACT correction: shared-contract test now includes rights_agent (8 active agents).
+
+
+- 2026-11-17T20:02:27.640Z: Deming continuation: rights_agent now audits evidence for every discovery lane before handoff.
