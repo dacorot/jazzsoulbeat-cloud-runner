@@ -77,22 +77,45 @@ def _make_motion_frames(folder: Path, *, width: int = 640, height: int = 360,
         panes = ((300, 0, 382, 205), (392, 0, 474, 205),
                  (484, 0, 566, 205), (576, 0, 640, 205))
     elif rain_mode == "masked_window":
-        # Very conservative clean-window-v2 mask: use only the upper-right
-        # glass panes and stop well above furniture and pendant lamps until a
-        # true depth matte exists. Rain must never cross interior objects.
-        panes = ((400, 0, 452, 170), (456, 0, 508, 170),
-                 (512, 0, 564, 170), (568, 0, 640, 170))
+        # Clean-window-v2 has five exterior panes. Use the full upper glass
+        # plus explicit road bands; these are the areas where the exterior is
+        # visible without painting over the café's furniture.
+        panes = ((307, 0, 365, 155), (372, 0, 429, 155),
+                 (437, 0, 496, 155), (504, 0, 564, 155),
+                 (572, 0, 640, 155),
+                 (307, 150, 365, 190), (372, 150, 429, 190),
+                 (437, 150, 496, 205), (504, 150, 564, 230),
+                 (572, 150, 640, 260))
     else:
         panes = ((452, 0, 492, 108), (500, 0, 640, 108))
     rain = []
+    base_rgb = (Image.open(image_path).convert("RGB").resize((width, height), Image.Resampling.LANCZOS)
+                if rain_mode == "masked_window" and image_path else None)
+    exterior_px = None
+    if base_rgb is not None:
+        # Precompute the exterior/room matte once. Re-evaluating PIL pixels for
+        # every streak on every frame makes long reviews needlessly slow.
+        exterior = Image.new("1", (width, height), 0)
+        source_px = base_rgb.load()
+        matte_px = exterior.load()
+        for py in range(height):
+            for px in range(width):
+                r, g, b = source_px[px, py]
+                cool_sky = b >= r * 0.92 and b >= g * 0.82
+                dark_exterior = max(r, g, b) < 48 and py < 175
+                cool_road = py >= 145 and b >= r * 0.55 and b >= g * 0.65
+                matte_px[px, py] = 1 if (cool_sky or dark_exterior or cool_road) else 0
+        exterior_px = exterior.load()
     integrated_layers = (_integrated_rain_layers(image_path, width, height)
                          if rain_mode == "integrated_plate" and image_path else [])
     if rain_mode in {"procedural_window", "masked_window"}:
-        for i in range(48):
+        # Two depth layers make the exterior rainfall read as continuous,
+        # while the hard upper-pane boundary keeps it away from room objects.
+        for i in range(140):
             left, top, right, bottom = panes[i % len(panes)]
             rain.append((left + (i * 17) % max(1, right - left),
                          top + (i * 29) % max(1, bottom - top),
-                         5 + (i * 11) % 9, 0.8 + (i % 4) * 0.18,
+                         8 + (i * 11) % 15, 0.7 + (i % 5) * 0.16,
                          (i * 3) % len(panes)))
     for frame in range(frame_count):
         t = frame / fps
@@ -117,12 +140,28 @@ def _make_motion_frames(folder: Path, *, width: int = 640, height: int = 360,
                 left, top, right, bottom = panes[pane_index]
                 y = top + ((y0 - top + t * (24 + (x % 5) * 4)) % (bottom - top))
                 x_now = x + int(2 * __import__("math").sin(t * 0.7 + x))
-                rain_alpha = 72 if rain_mode == "masked_window" else 115
-                draw.line((x_now, y, x_now - 2, min(bottom - 1, y + length)),
-                          fill=(190, 221, 244, rain_alpha), width=1)
-                if y < top + 12:
-                    drop_alpha = 70 if rain_mode == "masked_window" else 60
-                    draw.ellipse((x_now - 2, y, x_now + 3, y + 5), fill=(220, 235, 248, drop_alpha))
+                if rain_mode == "masked_window":
+                    rain_alpha = 66 + (x % 3) * 12 if pane_index % 2 else 104 + (x % 3) * 12
+                else:
+                    rain_alpha = 115
+                dx = max(1, int(slope * 2.2))
+                points = []
+                for step in range(length + 1):
+                    px = x_now - int(dx * step / max(1, length))
+                    py = min(bottom - 1, y + step)
+                    visible = True
+                    if exterior_px is not None:
+                        visible = bool(exterior_px[max(0, min(width - 1, px)), py])
+                    if visible:
+                        points.append((px, py))
+                    elif len(points) > 1:
+                        draw.line(points, fill=(190, 221, 244, rain_alpha), width=1)
+                        points = []
+                if len(points) > 1:
+                    draw.line(points, fill=(190, 221, 244, rain_alpha), width=1)
+                # Avoid round head-drops: at QHD they read as artificial
+                # diamonds. The moving tapered streak is the only foreground
+                # rain primitive in the masked scene.
 
         # Steam is built from soft, deforming translucent vapor pockets rather
         # than bright strokes.  This gives it a diffuse, rising shape and
