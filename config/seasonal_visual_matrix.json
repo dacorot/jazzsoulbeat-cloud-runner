@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "style": "original_sophisticated_adult_japanese_cinematic_anime_seinen",
+  "rule": "Each playlist wave must rotate seasonal scene families; never reuse the same hero composition or grand piano as the focal object in every scene.",
+  "seasons": {
+    "spring": {"palette": ["fresh green", "soft rain blue", "warm cream"], "environments": ["rainy cafe", "blossoming reading room", "quiet riverside terrace"], "motion": ["rain on glass", "moving leaves", "steam"]},
+    "summer": {"palette": ["deep blue", "golden dusk", "leaf green"], "environments": ["open-air cafe terrace", "rooftop at sunset", "lantern-lit garden room"], "motion": ["curtains", "moving leaves", "warm light shimmer"]},
+    "autumn": {"palette": ["amber", "rust", "deep brown"], "environments": ["library cafe", "rainy study", "autumn park pavilion"], "motion": ["falling leaves", "rain on glass", "candle flicker"]},
+    "winter": {"palette": ["midnight blue", "snow white", "amber"], "environments": ["snowy reading room", "fireplace lounge", "winter city window"], "motion": ["falling snow", "fireplace glow", "steam"]}
+  },
+  "playlist_mapping": {
+    "work_study": ["autumn", "winter", "spring"],
+    "coffee_time": ["spring", "summer", "autumn"],
+    "sleep": ["winter", "autumn", "spring"],
+    "chill": ["summer", "autumn", "spring"],
+    "christian_jazz_worship": ["winter", "spring", "autumn", "summer"]
+  },
+  "scene_diversity": {
+    "minimum_unique_scene_families": 8,
+    "same_hero_composition_allowed": false,
+    "same_focal_instrument_in_every_scene_allowed": false,
+    "photorealistic_allowed": false,
+    "real_people_allowed": false
+  }
+}
