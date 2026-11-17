@@ -22,3 +22,6 @@ Rights-audit regression trigger 2026-11-17T18:41:34.391Z: reject HTML and stage 
 
 
 - 2026-11-17T19:11:56.414Z: Deming ACT correction: percent-encode direct catalog MP3 filenames before rerun.
+
+
+- 2026-11-17T19:28:02.447Z: Deming ACT correction: auditor now falls back to mutagen when ffprobe is unavailable on runner images.
