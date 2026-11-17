@@ -27,6 +27,9 @@ def audit(root: Path) -> dict:
         check("visual_motion_agent_contract", lambda: _visual(root, image)),
         check("music_search_policy", lambda: _search(root)),
         check("longform_library_gate", lambda: _library(root, ledger)),
+        check("editorial_agent_profiles", lambda: _editorial(root)),
+        check("weekly_planner_contract", lambda: _planner()),
+        check("pdca_workflow_contract", lambda: _pdca(root)),
         check("audio_adapters_import", lambda: _imports()),
         check("python_compile", lambda: _compile(root)),
     ]
@@ -62,11 +65,47 @@ def _library(root, ledger):
             "missing_seconds": result["missing_seconds"]}
 
 
+def _editorial(root):
+    config = json.loads((root / "config/channel_agents.json").read_text(encoding="utf-8"))
+    from scripts.music_briefs import BRIEFS
+    categories = config.get("editorial_categories", [])
+    ids = [item.get("id") for item in categories]
+    missing = [item_id for item_id in ids if item_id not in BRIEFS]
+    if len(categories) != 5 or missing:
+        raise RuntimeError(f"editorial_profile_mismatch: expected 5 profiles, missing={missing}")
+    if any(not item.get("mission") or not item.get("display_name") for item in categories):
+        raise RuntimeError("editorial_profile_missing_required_fields")
+    return {"profiles": ids, "briefs": len(BRIEFS)}
+
+
+def _planner():
+    from scripts.weekly_planner import plan_week
+    import datetime as dt
+    plan = plan_week(dt.date(2026, 11, 16))
+    jobs = plan.get("jobs", [])
+    if len(jobs) != 3 or any(job.get("state") != "PLANNED" for job in jobs):
+        raise RuntimeError("weekly_planner_did_not_create_three_planned_jobs")
+    return {"jobs": len(jobs), "states": sorted({job["state"] for job in jobs})}
+
+
+def _pdca(root):
+    start = (root / ".github/actions/pdca-start/action.yml").read_text(encoding="utf-8")
+    finish = (root / ".github/actions/pdca-finish/action.yml").read_text(encoding="utf-8")
+    required_start = ("pdca-start", "drive-pull-state")
+    required_finish = ("pdca-do", "pdca-check", "pdca-act", "drive-push-state")
+    if any(token not in start for token in required_start):
+        raise RuntimeError("pdca_start_contract_incomplete")
+    if any(token not in finish for token in required_finish):
+        raise RuntimeError("pdca_finish_contract_incomplete")
+    return {"plan": True, "do": True, "check": True, "act": True}
+
+
 def _imports():
     for module in ("scripts.stable_audio3_producer", "scripts.diffrhythm2_producer",
-                   "scripts.music_audio_qc", "scripts.approval_gate", "scripts.production_gate"):
+                   "scripts.music_audio_qc", "scripts.approval_gate", "scripts.production_gate",
+                   "scripts.music_producer_agent"):
         importlib.import_module(module)
-    return {"modules": 5}
+    return {"modules": 6}
 
 
 def _compile(root):
