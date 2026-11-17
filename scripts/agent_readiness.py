@@ -163,9 +163,17 @@ def _supporting_modules():
         "scripts.weekly_planner", "scripts.longform_library_agent",
         "scripts.visual_motion_agent",
     )
+    imported, private_only = [], []
     for module in modules:
-        importlib.import_module(module)
-    return {"modules": len(modules), "status": "IMPORTED"}
+        try:
+            importlib.import_module(module)
+            imported.append(module)
+        except ModuleNotFoundError as error:
+            if error.name == module:
+                private_only.append(module)
+            else:
+                raise
+    return {"modules": len(imported), "private_only_modules": private_only, "status": "IMPORTED"}
 
 
 def _compile(root):
