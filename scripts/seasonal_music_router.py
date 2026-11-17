@@ -71,7 +71,7 @@ def route_rows(rows: list[dict], policy: dict, approved_titles: set[str] | None 
             "primary_season": season,
             "season_scores": scores,
             "season_folder": f"tracks/seasonal/{season}",
-            "playlist_folders": [f"tracks/playlists/{name}" for name in playlists],
+            "playlist_folders": ([f"tracks/playlists/{season}/{name}" for name in playlists] if group != "christmas" else [f"tracks/playlists/{name}" for name in playlists]),
             "playlist_allowlist": playlists,
             "status": "ROUTED_REVIEW_ONLY",
         })
