@@ -25,7 +25,7 @@ MAX_BYTES = 30_000_000
 SUFFIXES = {".mp3", ".flac", ".ogg", ".wav", ".m4a", ".aiff"}
 
 # Editorial exclusions approved for removal from review staging.
-EXCLUDED_TITLES = {"vibing over venus", "got funk", "style funk", "c-funk", "enter the party"}
+EXCLUDED_TITLES = {"vibing over venus", "got funk", "style funk", "c-funk", "enter the party", "funky chunk"}
 
 
 def contract() -> dict:
