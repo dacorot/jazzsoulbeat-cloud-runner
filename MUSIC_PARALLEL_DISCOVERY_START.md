@@ -34,3 +34,6 @@ Rights-audit regression trigger 2026-11-17T18:41:34.391Z: reject HTML and stage 
 
 
 - 2026-11-17T20:04:33.308Z: Deming ACT correction: discovery lanes now use the portable review-only rights evidence auditor; no private-branch CLI dependency.
+
+
+- 2026-11-17T20:36:39.131Z: Editorial ACT rerun: stage only the 32 remaining approved tracks; excluded titles stay out of future downloads.
