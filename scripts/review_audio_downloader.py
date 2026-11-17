@@ -46,7 +46,9 @@ def download_url(row: dict) -> str:
     return ""
 
 
-def download_unique(existing: list[dict], candidates: list[dict], output: Path, limit: int = 40, offset: int = 0) -> dict:
+def download_unique(existing: list[dict], candidates: list[dict], output: Path, limit: int = 40, offset: int = 0, approved_titles: set[str] | None = None) -> dict:
+    if approved_titles is not None:
+        candidates = [row for row in candidates if str(row.get("title") or "").strip().casefold() in approved_titles]
     excluded = [row for row in candidates if str(row.get("title") or "").strip().casefold() in EXCLUDED_TITLES]
     candidates = [row for row in candidates if str(row.get("title") or "").strip().casefold() not in EXCLUDED_TITLES]
     dedup = compare(existing, candidates)
@@ -107,8 +109,19 @@ def main() -> int:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--limit", type=int, default=40)
     parser.add_argument("--offset", type=int, default=0)
+    parser.add_argument("--approved-titles-file", type=Path, default=None)
     args = parser.parse_args()
-    report = download_unique(load_rows(args.existing), load_rows(args.candidates), args.output, args.limit, args.offset)
+    approved_titles = None
+    if args.approved_titles_file:
+        approved_titles = {
+            line.strip().casefold()
+            for line in args.approved_titles_file.read_text(encoding="utf-8").splitlines()
+            if line.strip() and not line.lstrip().startswith("#")
+        }
+    report = download_unique(
+        load_rows(args.existing), load_rows(args.candidates), args.output,
+        args.limit, args.offset, approved_titles
+    )
     print(json.dumps({k: report[k] for k in ("status", "downloaded_count", "skipped_count", "approval_mutated", "rights_verified", "publication")}, indent=2))
     return 0
 
