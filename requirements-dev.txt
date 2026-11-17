@@ -2,3 +2,4 @@
 # FFmpeg and ffprobe remain system dependencies and are checked by the
 # workflows before any render is attempted.
 Pillow==13.0.0
+pytest==8.4.2
