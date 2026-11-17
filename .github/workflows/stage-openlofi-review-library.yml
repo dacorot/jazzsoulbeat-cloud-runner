@@ -1,4 +1,5 @@
 name: Stage 40 AI-generated Open Lo-Fi candidates
+# Owner-requested review-only audio staging trigger; rights and publication remain blocked.
 on:
   push:
     branches: [main]
