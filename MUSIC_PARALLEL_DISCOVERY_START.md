@@ -7,3 +7,6 @@ Regression trigger 2026-11-17T16:55:03.462Z: source partition + pre-download ded
 
 
 Regression trigger 2026-11-17T16:59:30.810Z: independent CCmixter offset 40; all lanes must download.
+
+
+Regression trigger 2026-11-17T17:02:47.634Z: primary fallback after Ketsa timeout.
