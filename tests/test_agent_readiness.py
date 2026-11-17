@@ -10,7 +10,7 @@ class AgentReadinessTests(unittest.TestCase):
         root = Path(__file__).resolve().parents[1]
         result = audit(root)
         self.assertEqual(result["technical_status"], "READY")
-        self.assertEqual(len(result["checks"]), 17)
+        self.assertEqual(len(result["checks"]), 18)
         self.assertTrue(all(item["status"] == "PASS" for item in result["checks"]))
 
 
