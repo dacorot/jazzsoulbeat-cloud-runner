@@ -28,21 +28,34 @@ def sha256(path: Path) -> str:
 
 
 def ffprobe(path: Path) -> dict:
+    """Use ffprobe when available, with a mutagen fallback for CI runners."""
     command = [
         "ffprobe", "-v", "error",
         "-show_entries", "format=format_name,duration",
         "-of", "json", str(path),
     ]
-    result = subprocess.run(command, capture_output=True, text=True, check=False)
-    if result.returncode != 0:
-        return {"error": result.stderr.strip()[:240] or "ffprobe_failed"}
     try:
-        data = json.loads(result.stdout)
-        fmt = data.get("format", {})
-        duration = float(fmt.get("duration", 0) or 0)
-        return {"format_name": str(fmt.get("format_name", "")), "duration_seconds": duration}
-    except (ValueError, TypeError, json.JSONDecodeError):
-        return {"error": "ffprobe_invalid_json"}
+        result = subprocess.run(command, capture_output=True, text=True, check=False)
+    except FileNotFoundError:
+        result = None
+    if result is not None and result.returncode == 0:
+        try:
+            data = json.loads(result.stdout)
+            fmt = data.get("format", {})
+            duration = float(fmt.get("duration", 0) or 0)
+            return {"format_name": str(fmt.get("format_name", "")), "duration_seconds": duration, "probe": "ffprobe"}
+        except (ValueError, TypeError, json.JSONDecodeError):
+            pass
+    try:
+        from mutagen import File as MFile
+        audio = MFile(path)
+        info = getattr(audio, "info", None)
+        duration = float(getattr(info, "length", 0) or 0)
+        if audio is not None and duration > 0:
+            return {"format_name": path.suffix.lstrip(".").lower(), "duration_seconds": duration, "probe": "mutagen"}
+    except Exception:
+        pass
+    return {"error": "unreadable_audio"}
 
 
 def audit(manifest_path: Path, output_dir: Path, require_nonzero: bool = False) -> dict:
