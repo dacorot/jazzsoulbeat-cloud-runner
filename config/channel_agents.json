@@ -1,6 +1,18 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "channel": "Jazz Soul Beat",
+  "editorial_categories": [
+    {"id": "work_study", "display_name": "Work & Study", "mode": "instrumental", "mission": "Focused, low-fatigue jazz for concentration and reading."},
+    {"id": "coffee_time", "display_name": "Coffee Time", "mode": "instrumental", "mission": "Warm, sophisticated café jazz with an organic pulse."},
+    {"id": "sleep", "display_name": "Sleep", "mode": "instrumental", "mission": "Delicate, quiet jazz with controlled dynamics and gentle resolution."},
+    {"id": "chill", "display_name": "Chill", "mode": "instrumental", "mission": "Elegant late-night jazz/soul with atmospheric but human-feeling phrasing."},
+    {"id": "christian_jazz_worship", "display_name": "Christian Jazz & Worship", "mode": "original_english_vocals_or_instrumental", "mission": "Biblically grounded Christian jazz with a separate lyric and rights review path."}
+  ],
+  "legacy_agents": {
+    "status": "legacy_only",
+    "reason": "The original four-agent taxonomy is retained for compatibility; new production must use editorial_categories.",
+    "ids": ["midnight_jazz_soul", "coffee_smooth_jazz", "soulful_blues", "christian_jazz_gospel"]
+  },
   "production_target": {
     "songs_per_month": 12,
     "planning_pace": "approximately one approved song per day until the monthly target is met",
