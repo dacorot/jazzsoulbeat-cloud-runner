@@ -16,3 +16,6 @@ Autonomy regression trigger 2026-11-17T18:16:27.424Z: runtime branch updated aft
 
 
 Rights-audit regression trigger 2026-11-17T18:41:34.391Z: reject HTML and stage only direct audio responses.
+
+
+- 2026-11-17T19:08:06.088Z: Deming retry after fixing direct official Incompetech audio URL resolution; review-only, rights and publication gates unchanged.
