@@ -38,6 +38,7 @@ def audit(root: Path) -> dict:
         check("scene_library_agent", lambda: _operational("scripts.scene_library_agent", "scene_library_agent")),
         check("video_assembly_agent", lambda: _operational("scripts.video_assembly_agent", "video_assembly_agent")),
         check("release_qa_agent", lambda: _operational("scripts.release_qa_agent", "release_qa_agent")),
+        check("music_dedup_agent", lambda: _operational("scripts.music_dedup_agent", "music_dedup_agent")),
     ]
     return {
         "agent_readiness_version": 1,
@@ -66,6 +67,8 @@ def _search(root):
     policy = json.loads((root / "config/music_search_policy.json").read_text(encoding="utf-8"))
     assert policy["never_auto_approve"] is True
     assert policy["never_publish"] is True
+    assert policy["dedup_required_before_download"] is True
+    assert policy["dedup_keys"]
     assert policy["target_genres"]
     return {"target_genres": policy["target_genres"], "minimum_seconds": policy["minimum_candidate_duration_seconds"]}
 
