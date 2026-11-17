@@ -21,7 +21,7 @@
     "free_services_only": true
   },
   "orchestration": {
-    "model": "four category-specific creative agents, one shared production scheduler",
+    "model": "five editorial playlist profiles, one shared production scheduler",
     "run_one_gpu_generation_at_a_time": true,
     "fallback_only_after_preflight": true,
     "do_not_spend_gpu_quota_on_api_discovery": true,
