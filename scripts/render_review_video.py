@@ -94,6 +94,7 @@ def _make_motion_frames(folder: Path, *, width: int = 640, height: int = 360,
     else:
         panes = ((452, 0, 492, 108), (500, 0, 640, 108))
     rain = []
+    droplets = []
     base_rgb = (Image.open(image_path).convert("RGB").resize((width, height), Image.Resampling.LANCZOS)
                 if rain_mode == "masked_window" and image_path else None)
     exterior_px = None
@@ -114,14 +115,20 @@ def _make_motion_frames(folder: Path, *, width: int = 640, height: int = 360,
     integrated_layers = (_integrated_rain_layers(image_path, width, height)
                          if rain_mode == "integrated_plate" and image_path else [])
     if rain_mode in {"procedural_window", "masked_window"}:
-        # Two depth layers make the exterior rainfall read as continuous,
-        # while the hard upper-pane boundary keeps it away from room objects.
-        for i in range(140):
+        # Dense multi-scale rainfall: long soft streaks plus small beads that
+        # slide on the glass. Both are deterministic so the 20-second loop is
+        # exactly repeatable.
+        for i in range(240):
             left, top, right, bottom = panes[i % len(panes)]
             rain.append((left + (i * 17) % max(1, right - left),
                          top + (i * 29) % max(1, bottom - top),
-                         8 + (i * 11) % 15, 0.7 + (i % 5) * 0.16,
+                         5 + (i * 11) % 20, 0.7 + (i % 5) * 0.16,
                          (i * 3) % len(panes)))
+            droplets.append((left + (i * 23 + 7) % max(1, right - left),
+                             top + (i * 31 + 11) % max(1, bottom - top),
+                             0.18 + (i % 3) * 0.12,
+                             0.55 + (i % 5) * 0.12,
+                             (i * 5 + 2) % len(panes)))
     for frame in range(frame_count):
         t = frame / fps
         phase = frame / frame_count
@@ -169,9 +176,22 @@ def _make_motion_frames(folder: Path, *, width: int = 640, height: int = 360,
                         points = []
                 if len(points) > 1:
                     draw.line(points, fill=(190, 221, 244, rain_alpha), width=1)
-                # Avoid round head-drops: at QHD they read as artificial
-                # diamonds. The moving tapered streak is the only foreground
-                # rain primitive in the masked scene.
+
+            for x, y0, radius, speed, pane_index in droplets:
+                left, top, right, bottom = panes[pane_index]
+                y = top + int((y0 - top + phase * (bottom - top) * speed) % (bottom - top))
+                x_now = x + int(2 * math.sin(2 * math.pi * phase + x * 0.09))
+                if exterior_px is not None:
+                    if not exterior_px[max(0, min(width - 1, x_now)), y]:
+                        continue
+                if any(left <= x_now < right for left, right in mullions):
+                    continue
+                if y <= top + 12:
+                    continue
+                alpha = 25 + int(25 * (0.5 + 0.5 * math.sin(2 * math.pi * phase + x)))
+                drop_len = max(1, int(radius * 2.5))
+                draw.line((x_now, y, x_now - 1, y + drop_len),
+                          fill=(205, 230, 245, alpha), width=1)
 
         # Steam is built from soft, deforming translucent vapor pockets rather
         # than bright strokes.  This gives it a diffuse, rising shape and
