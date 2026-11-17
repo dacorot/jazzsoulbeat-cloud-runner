@@ -6,7 +6,7 @@ on:
     paths:
       - "scripts/**"
       - "config/**"
-      - "tests/**"
+      - "tests/**"\n      - "requirements-dev.txt"
 
 permissions:
   contents: read
