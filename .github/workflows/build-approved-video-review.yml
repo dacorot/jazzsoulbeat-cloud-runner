@@ -90,6 +90,10 @@ jobs:
           PYTHONPATH: ..
         run: |
           OUTPUT="output/original-music/video-review-${{ github.run_id }}/video-review-qhd.mp4"
+          python ../scripts/visual_motion_agent.py \
+            --image "${{ steps.locate.outputs.scene }}" \
+            --output-json "visual-motion-plan.json" \
+            --duration 240 --fps 30 --width 1920 --height 1080
           python ../scripts/build_video_review.py \
             --ledger "${{ steps.locate.outputs.ledger }}" \
             --audio-request-id "${{ inputs.audio_request_id }}" \
