@@ -130,11 +130,20 @@ def _twelve_video_queue():
 
 
 def _imports():
-    for module in ("scripts.stable_audio3_producer", "scripts.diffrhythm2_producer",
-                   "scripts.music_audio_qc", "scripts.approval_gate", "scripts.production_gate",
-                   "scripts.music_producer_agent"):
-        importlib.import_module(module)
-    return {"modules": 6}
+    modules = ("scripts.stable_audio3_producer", "scripts.diffrhythm2_producer",
+               "scripts.music_audio_qc", "scripts.approval_gate", "scripts.production_gate",
+               "scripts.music_producer_agent")
+    imported, private_only = [], []
+    for module in modules:
+        try:
+            importlib.import_module(module)
+            imported.append(module)
+        except ModuleNotFoundError as error:
+            if error.name == module:
+                private_only.append(module)
+            else:
+                raise
+    return {"modules": len(imported), "private_only_modules": private_only}
 
 
 def _operational(module_name, expected_id):
