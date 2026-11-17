@@ -13,7 +13,7 @@ class ReviewAudioDownloaderTests(unittest.TestCase):
             output = Path(directory)
             candidates = [
                 {"title": "Rain", "creator": "A", "source_url": "https://example/rain", "download_url": "https://example/rain.mp3", "duration_seconds": 180},
-                {"title": "Blue", "creator": "B", "source_url": "https://example/blue", "download_url": "https://example/blue.mp3", "duration_seconds": 200},
+                {"title": "Blue", "creator": "B", "source_url": "https://example/blue", "file_url": "https://example/blue.mp3", "duration_seconds": 200},
             ]
             with patch("scripts.review_audio_downloader.urllib.request.urlopen") as opener:
                 response = opener.return_value.__enter__.return_value
