@@ -78,7 +78,7 @@ def _make_motion_frames(folder: Path, *, width: int = 640, height: int = 360,
     if rain_mode == "integrated_plate":
         panes = ((300, 0, 382, 205), (392, 0, 474, 205),
                  (484, 0, 566, 205), (576, 0, 640, 205))
-    elif rain_mode == "masked_window":
+    elif rain_mode in {"masked_window", "static_window"}:
         # Clean-window-v2 has five exterior panes. Use the full upper glass
         # plus explicit road bands; these are the areas where the exterior is
         # visible without painting over the café's furniture.
@@ -96,7 +96,7 @@ def _make_motion_frames(folder: Path, *, width: int = 640, height: int = 360,
     rain = []
     droplets = []
     base_rgb = (Image.open(image_path).convert("RGB").resize((width, height), Image.Resampling.LANCZOS)
-                if rain_mode == "masked_window" and image_path else None)
+                if rain_mode in {"masked_window", "static_window"} and image_path else None)
     exterior_px = None
     if base_rgb is not None:
         # Precompute the exterior/room matte once. Re-evaluating PIL pixels for
@@ -132,7 +132,7 @@ def _make_motion_frames(folder: Path, *, width: int = 640, height: int = 360,
                          for group in groups)
     integrated_layers = (_integrated_rain_layers(image_path, width, height)
                          if rain_mode == "integrated_plate" and image_path else [])
-    if rain_mode in {"procedural_window", "masked_window"}:
+    if rain_mode in {"procedural_window", "masked_window", "static_window"}:
         # Dense multi-scale rainfall: long soft streaks plus small beads that
         # slide on the glass. Both are deterministic so the 20-second loop is
         # exactly repeatable.
@@ -165,13 +165,15 @@ def _make_motion_frames(folder: Path, *, width: int = 640, height: int = 360,
                 pane_full.paste(pane, (left, top), pane)
                 layer = Image.alpha_composite(layer, pane_full)
 
-        if rain_mode in {"procedural_window", "masked_window"}:
+        if rain_mode in {"procedural_window", "masked_window", "static_window"}:
             # Rain remains behind the window frame area rather than covering the room.
             for x, y0, length, slope, pane_index in rain:
                 left, top, right, bottom = panes[pane_index]
-                y = top + int((y0 - top + phase * (bottom - top)) % (bottom - top))
-                x_now = x + int(4 * math.sin(2 * math.pi * phase + x * 0.13))
-                if rain_mode == "masked_window":
+                y = (top + int((y0 - top + phase * (bottom - top)) % (bottom - top))
+                     if rain_mode != "static_window" else y0)
+                x_now = (x + int(4 * math.sin(2 * math.pi * phase + x * 0.13))
+                          if rain_mode != "static_window" else x)
+                if rain_mode in {"masked_window", "static_window"}:
                     rain_alpha = 72 + (x % 3) * 12 if pane_index % 2 else 112 + (x % 3) * 12
                 else:
                     rain_alpha = 115
@@ -197,8 +199,10 @@ def _make_motion_frames(folder: Path, *, width: int = 640, height: int = 360,
 
             for x, y0, radius, speed, pane_index in droplets:
                 left, top, right, bottom = panes[pane_index]
-                y = top + int((y0 - top + phase * (bottom - top) * speed) % (bottom - top))
-                x_now = x + int(2 * math.sin(2 * math.pi * phase + x * 0.09))
+                y = (top + int((y0 - top + phase * (bottom - top) * speed) % (bottom - top))
+                     if rain_mode != "static_window" else y0)
+                x_now = (x + int(2 * math.sin(2 * math.pi * phase + x * 0.09))
+                          if rain_mode != "static_window" else x)
                 if exterior_px is not None:
                     if not exterior_px[max(0, min(width - 1, x_now)), y]:
                         continue
@@ -206,7 +210,11 @@ def _make_motion_frames(folder: Path, *, width: int = 640, height: int = 360,
                     continue
                 if y <= top + 12:
                     continue
-                alpha = 25 + int(25 * (0.5 + 0.5 * math.sin(2 * math.pi * phase + x)))
+                # In static-window mode the exterior plate must be genuinely
+                # static; only the coffee steam is allowed to animate.
+                alpha = (32 + (x + y0) % 14
+                         if rain_mode == "static_window" else
+                         25 + int(25 * (0.5 + 0.5 * math.sin(2 * math.pi * phase + x))))
                 drop_len = max(1, int(radius * 2.5))
                 draw.line((x_now, y, x_now - 1, y + drop_len),
                           fill=(205, 230, 245, alpha), width=1)
@@ -219,8 +227,8 @@ def _make_motion_frames(folder: Path, *, width: int = 640, height: int = 360,
         # Motion geometry is scene-specific.  The integrated rain plate has
         # the cup in the lower centre; the legacy library plate has it lower
         # left.  Never reuse one scene's coordinates for another image.
-        steam_bases = (288, 298, 308) if rain_mode in {"integrated_plate", "masked_window"} else (139, 149, 159)
-        steam_rim = 270 if rain_mode in {"integrated_plate", "masked_window"} else 234
+        steam_bases = (288, 298, 308) if rain_mode in {"integrated_plate", "masked_window", "static_window"} else (139, 149, 159)
+        steam_rim = 270 if rain_mode in {"integrated_plate", "masked_window", "static_window"} else 234
         for index, x_base in enumerate(steam_bases):
             phase_offset = index * 1.9
             for puff in range(9):
@@ -246,18 +254,18 @@ def _make_motion_frames(folder: Path, *, width: int = 640, height: int = 360,
                 y = steam_rim - rise - step * 1.9
                 x = x_base + 4.5 * math.sin(2 * math.pi * phase + step * 0.33 + index)
                 points.append((x, y))
-            core_alpha = 140 if rain_mode in {"integrated_plate", "masked_window"} else 92
+            core_alpha = 140 if rain_mode in {"integrated_plate", "masked_window", "static_window"} else 92
             core_draw.line(points, fill=(255, 246, 230, core_alpha), width=2)
-        core_blur = 1.6 if rain_mode in {"integrated_plate", "masked_window"} else 2.5
+        core_blur = 1.6 if rain_mode in {"integrated_plate", "masked_window", "static_window"} else 2.5
         layer = Image.alpha_composite(layer, steam_core.filter(ImageFilter.GaussianBlur(core_blur)))
 
         # Slow, broad warm reflections from the lamps and candles.  They are
         # blurred and confined to the room/table, so the scene visibly breathes
         # without adding floating dots or lighting the rain itself.
-        glow = int(10 + 13 * (0.5 + 0.5 * math.sin(2 * math.pi * phase)))
+        glow = 16 if rain_mode == "static_window" else int(10 + 13 * (0.5 + 0.5 * math.sin(2 * math.pi * phase)))
         reflections = Image.new("RGBA", (width, height), (0, 0, 0, 0))
         reflection_draw = ImageDraw.Draw(reflections, "RGBA")
-        if rain_mode in {"integrated_plate", "masked_window"}:
+        if rain_mode in {"integrated_plate", "masked_window", "static_window"}:
             reflection_draw.ellipse((35, 245, 210, 390), fill=(255, 151, 66, glow))
             reflection_draw.ellipse((250, 275, 430, 380), fill=(255, 188, 96, max(5, glow - 3)))
             reflection_draw.rectangle((80, 325, 500, 358), fill=(255, 166, 70, max(4, glow // 2)))
@@ -278,7 +286,7 @@ def render(audio: Path, image: Path, output: Path, duration: int,
         raise FileNotFoundError("Audio e imagen deben existir")
     if not 20 <= duration <= 360:
         raise ValueError("La audición debe durar entre 20 y 360 segundos")
-    if rain_mode not in {"procedural_window", "integrated_plate", "masked_window"}:
+    if rain_mode not in {"procedural_window", "integrated_plate", "masked_window", "static_window"}:
         raise ValueError("rain_mode inválido")
     ffmpeg = shutil.which("ffmpeg")
     ffprobe = shutil.which("ffprobe")
@@ -344,10 +352,14 @@ def render(audio: Path, image: Path, output: Path, duration: int,
                            if rain_mode == "integrated_plate" else
                            "masked-window-exterior-rain-steam-reflections"
                            if rain_mode == "masked_window" else
+                           "static-window-rain-steam-only"
+                           if rain_mode == "static_window" else
                            f"{rain_mode}-steam-reflections"),
         "motion_cycle_seconds": cycle_seconds,
         "ambient_motion": (["exterior rain confined to upper window panes", "clean animated coffee steam", "subtle warm reflections"]
                             if rain_mode == "masked_window" else
+                            ["static exterior rain texture", "animated coffee steam"]
+                            if rain_mode == "static_window" else
                             ["integrated exterior rain", "clean animated coffee steam", "subtle warm reflections"]
                             if rain_mode == "integrated_plate" else
                             ["rain confined to window panes", "clean animated coffee steam", "subtle warm reflections"]),
@@ -368,8 +380,8 @@ def main() -> int:
     parser.add_argument("--width", type=int, default=1920)
     parser.add_argument("--height", type=int, default=1080)
     parser.add_argument("--cycle-seconds", type=int, default=20)
-    parser.add_argument("--rain-mode", choices=("procedural_window", "integrated_plate", "masked_window"),
-                        default="procedural_window")
+    parser.add_argument("--rain-mode", choices=("procedural_window", "integrated_plate", "masked_window", "static_window"),
+                        default="static_window")
     args = parser.parse_args()
     report = render(args.audio, args.image, args.output, args.duration, args.rain_mode,
                     fps=args.fps, output_width=args.width, output_height=args.height,
@@ -382,4 +394,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
