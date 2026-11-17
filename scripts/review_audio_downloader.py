@@ -14,7 +14,12 @@ import urllib.request
 from pathlib import Path
 from urllib.parse import urlparse
 
-from scripts.music_dedup_agent import compare, load_rows
+try:
+    from scripts.music_dedup_agent import compare, load_rows
+except ModuleNotFoundError as exc:  # direct execution from the workflow
+    if exc.name != "scripts":
+        raise
+    from music_dedup_agent import compare, load_rows
 
 MAX_BYTES = 30_000_000
 SUFFIXES = {".mp3", ".flac", ".ogg", ".wav", ".m4a", ".aiff"}
