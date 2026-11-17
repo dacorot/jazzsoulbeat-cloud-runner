@@ -24,6 +24,9 @@ except ModuleNotFoundError as exc:  # direct execution from the workflow
 MAX_BYTES = 30_000_000
 SUFFIXES = {".mp3", ".flac", ".ogg", ".wav", ".m4a", ".aiff"}
 
+# Editorial exclusions approved for removal from review staging.
+EXCLUDED_TITLES = {"vibing over venus", "got funk", "style funk", "c-funk", "enter the party"}
+
 
 def contract() -> dict:
     return {"id": "review_audio_downloader", "compare_before_download": True,
@@ -44,6 +47,8 @@ def download_url(row: dict) -> str:
 
 
 def download_unique(existing: list[dict], candidates: list[dict], output: Path, limit: int = 40, offset: int = 0) -> dict:
+    excluded = [row for row in candidates if str(row.get("title") or "").strip().casefold() in EXCLUDED_TITLES]
+    candidates = [row for row in candidates if str(row.get("title") or "").strip().casefold() not in EXCLUDED_TITLES]
     dedup = compare(existing, candidates)
     output.mkdir(parents=True, exist_ok=True)
     manifest = []
@@ -86,6 +91,7 @@ def download_unique(existing: list[dict], candidates: list[dict], output: Path, 
                 target.unlink()
             skipped.append({"candidate": row, "reason": str(error)[:200]})
     report = {"status": "REVIEW_ONLY_DOWNLOADED", "dedup": dedup,
+              "excluded_count": len(excluded), "excluded_titles": sorted({row.get("title", "") for row in excluded}),
               "downloaded_count": len(manifest), "skipped_count": len(skipped),
               "downloaded": manifest, "skipped": skipped,
               "approval_mutated": False, "rights_verified": False,
