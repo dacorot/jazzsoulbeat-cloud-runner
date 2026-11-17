@@ -10,3 +10,6 @@ Regression trigger 2026-11-17T16:59:30.810Z: independent CCmixter offset 40; all
 
 
 Regression trigger 2026-11-17T17:02:47.634Z: primary fallback after Ketsa timeout.
+
+
+Autonomy regression trigger 2026-11-17T18:16:27.424Z: runtime branch updated after PDCA repair.
