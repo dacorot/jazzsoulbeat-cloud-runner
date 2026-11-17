@@ -25,3 +25,11 @@ listening without aggressive funk, driving grooves, or excessive energy.
 These references remain in review staging until source, license, composition,
 performance, master, synchronization, attribution, and publication rights are
 verified. No agent may auto-approve or publish them.
+
+## Current editorial decision
+
+The owner approved the remaining 32 tracks in the private staging set after
+excluding 004, 008, 018, 019, 020, 021, and 024. Track 034 was not downloaded
+because it exceeded the technical size limit. This is creative/editorial
+approval only; rights verification, synchronization permission, and publication
+remain blocked pending the rights gate.
