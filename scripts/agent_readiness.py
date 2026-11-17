@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """Run a bounded readiness audit for every local Jazz Soul Beat agent."""
-# Regression trigger: rerun after dependency-manifest and workflow-YAML fixes.
 from __future__ import annotations
 
 import argparse
@@ -40,7 +39,8 @@ def audit(root: Path) -> dict:
         check("release_qa_agent", lambda: _operational("scripts.release_qa_agent", "release_qa_agent")),
         check("music_dedup_agent", lambda: _operational("scripts.music_dedup_agent", "music_dedup_agent")),
         check("supporting_agent_modules", lambda: _supporting_modules()),
-        check("seasonal_visual_matrix", lambda: _seasonal_matrix(root)),
+        check("seasonal_visual_matrix", lambda: _seasonal_matrix(root)),\n        check("project_compliance_audit", lambda: _project_compliance(root)),
+        check("project_compliance_audit", lambda: _project_compliance(root)),
     ]
     return {
         "agent_readiness_version": 1,
@@ -53,12 +53,6 @@ def audit(root: Path) -> dict:
 
 def _visual(root, image):
     from scripts.visual_motion_agent import create_plan
-    if not image.exists():
-        # The approved base image is intentionally private; validate the
-        # renderer contract without copying the source asset into the public repo.
-        from scripts.visual_motion_agent import PROFILE
-        assert PROFILE == "static_rain_steam_only"
-        return {"profile": PROFILE, "base_image_sha256": "private_asset_not_present"}
     plan = create_plan(image)
     assert plan["animated_layers"] == ["coffee_steam"]
     assert plan["camera"] == "locked"
@@ -77,10 +71,6 @@ def _search(root):
 
 def _library(root, ledger):
     from scripts.longform_library_agent import plan
-    if not ledger.exists():
-        # The approval ledger is private and must remain outside the public controller.
-        return {"status": "PRIVATE_LEDGER_NOT_PRESENT", "approved_seconds": 0.0,
-                "missing_seconds": 3600.0}
     result = plan(json.loads(ledger.read_text(encoding="utf-8")))
     return {"status": result["status"], "approved_seconds": result["approved_seconds"],
             "missing_seconds": result["missing_seconds"]}
@@ -132,20 +122,11 @@ def _twelve_video_queue():
 
 
 def _imports():
-    modules = ("scripts.stable_audio3_producer", "scripts.diffrhythm2_producer",
-               "scripts.music_audio_qc", "scripts.approval_gate", "scripts.production_gate",
-               "scripts.music_producer_agent")
-    imported, private_only = [], []
-    for module in modules:
-        try:
-            importlib.import_module(module)
-            imported.append(module)
-        except ModuleNotFoundError as error:
-            if error.name == module:
-                private_only.append(module)
-            else:
-                raise
-    return {"modules": len(imported), "private_only_modules": private_only}
+    for module in ("scripts.stable_audio3_producer", "scripts.diffrhythm2_producer",
+                   "scripts.music_audio_qc", "scripts.approval_gate", "scripts.production_gate",
+                   "scripts.music_producer_agent"):
+        importlib.import_module(module)
+    return {"modules": 6}
 
 
 def _operational(module_name, expected_id):
@@ -194,6 +175,16 @@ def _compile(root):
     if result.returncode:
         raise RuntimeError(result.stderr.strip() or "compileall failed")
     return {"directory": "scripts"}
+
+
+def _project_compliance(root):
+    from scripts.project_compliance_audit import audit
+    result = audit(root)
+    if result["status"] != "PASS":
+        failed = [name for name, passed in result["checks"].items() if not passed]
+        raise RuntimeError(f"project_compliance_blocked: {failed}")
+    return {"checks": len(result["checks"]), "scene_images": result["scene_library"]["image_count"],
+            "approved_audio_seconds": result["audio"]["approved_seconds"]}
 
 
 def main() -> int:
