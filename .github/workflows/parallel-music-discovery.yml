@@ -58,6 +58,12 @@ jobs:
           mkdir -p "output/parallel-discovery/${DISCOVERY_LANE}"
           { echo "lane=${DISCOVERY_LANE}"; echo "started_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"; } > "output/parallel-discovery/${DISCOVERY_LANE}/run.txt"
           ${{ matrix.commands }} 2>&1 | tee -a "output/parallel-discovery/${DISCOVERY_LANE}/run.txt"
+          RIGHTS_CSV=""
+          if [ -f output/incompetech_candidates.csv ]; then RIGHTS_CSV="output/incompetech_candidates.csv"; fi
+          if [ -z "$RIGHTS_CSV" ] && [ -f output/ccmixter_candidates.csv ]; then RIGHTS_CSV="output/ccmixter_candidates.csv"; fi
+          if [ -n "$RIGHTS_CSV" ]; then
+            python ../scripts/rights_provenance_agent.py               --csv "$RIGHTS_CSV"               --output "output/parallel-discovery/${DISCOVERY_LANE}/rights-provenance.json"               2>&1 | tee -a "output/parallel-discovery/${DISCOVERY_LANE}/run.txt"
+          fi
           mapfile -t EXISTING_FILES < <(find output music-library -type f \( -name '*.csv' -o -name '*.json' \) ! \( -name '*_candidates.csv' -o -name 'candidate_catalog.csv' \) 2>/dev/null | sort)
           mapfile -t CANDIDATE_FILES < <(find output music-library -type f \( -name '*_candidates.csv' -o -name 'candidate_catalog.csv' \) 2>/dev/null | sort)
           python ../scripts/music_dedup_agent.py \
