@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "purpose": "Prevent mixing seasonal music into incompatible playlists.",
+  "rules": [
+    "The 32 approved tracks are an inventory, not a single playlist.",
+    "Christmas tracks may only be used in christmas_holiday and winter_holiday playlists.",
+    "Christmas tracks must not be inserted into coffee_time, chill, sleep, work_study, spring, summer, or autumn playlists.",
+    "Each video receives a playlist profile, season, mood, and explicit track allowlist before assembly.",
+    "The assembler must fail closed when a track has no seasonal assignment."
+  ],
+  "seasonal_groups": {
+    "christmas": [
+      "Nouvelle Noel",
+      "Deck the Halls A",
+      "Deck the Halls B",
+      "It Came Upon a Midnight Clear",
+      "Oh Holy Night",
+      "Jingle Bells (Calm)",
+      "We Wish you a Merry Christmas",
+      "Oh, Christmas Tree",
+      "Up on a Housetop",
+      "Silent Night",
+      "Oh, Little Town of Bethlehem"
+    ],
+    "general_jazz_soul": [
+      "Airport Lounge",
+      "Jazz Brunch",
+      "George Street Shuffle",
+      "Apero Hour",
+      "Sidewalk Shade",
+      "Smooth Lovin",
+      "Backbay Lounge",
+      "Night in Venice",
+      "Just As Soon",
+      "Long Stroll",
+      "Space Jazz",
+      "Study And Relax",
+      "Backed Vibes (clean)",
+      "Walking Along",
+      "Shades of Spring",
+      "Flutey Funk",
+      "Bossa Antigua",
+      "Intractable",
+      "DD Groove",
+      "Joey's Formal Waltz - Unscented",
+      "Sidewalk Shade - slower"
+    ]
+  },
+  "playlist_rules": {
+    "christmas_holiday": ["christmas"],
+    "winter_holiday": ["christmas"],
+    "coffee_time": ["general_jazz_soul"],
+    "chill": ["general_jazz_soul"],
+    "sleep": ["general_jazz_soul"],
+    "work_study": ["general_jazz_soul"],
+    "spring": ["general_jazz_soul"],
+    "summer": ["general_jazz_soul"],
+    "autumn": ["general_jazz_soul"]
+  },
+  "review_status": "EDITORIALLY_APPROVED_RIGHTS_REVIEW_REQUIRED",
+  "publication": "DISABLED"
+}
