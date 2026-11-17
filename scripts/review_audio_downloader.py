@@ -43,12 +43,12 @@ def download_url(row: dict) -> str:
     return ""
 
 
-def download_unique(existing: list[dict], candidates: list[dict], output: Path, limit: int = 40) -> dict:
+def download_unique(existing: list[dict], candidates: list[dict], output: Path, limit: int = 40, offset: int = 0) -> dict:
     dedup = compare(existing, candidates)
     output.mkdir(parents=True, exist_ok=True)
     manifest = []
     skipped = []
-    for index, row in enumerate(dedup["unique"][:limit], 1):
+    for index, row in enumerate(dedup["unique"][offset:offset + limit], 1):
         url = download_url(row)
         parsed = urlparse(url)
         if parsed.scheme not in {"http", "https"}:
@@ -96,8 +96,9 @@ def main() -> int:
     parser.add_argument("--candidates", nargs="*", type=Path, default=[])
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--limit", type=int, default=40)
+    parser.add_argument("--offset", type=int, default=0)
     args = parser.parse_args()
-    report = download_unique(load_rows(args.existing), load_rows(args.candidates), args.output, args.limit)
+    report = download_unique(load_rows(args.existing), load_rows(args.candidates), args.output, args.limit, args.offset)
     print(json.dumps({k: report[k] for k in ("status", "downloaded_count", "skipped_count", "approval_mutated", "rights_verified", "publication")}, indent=2))
     return 0
 
