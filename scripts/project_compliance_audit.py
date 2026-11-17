@@ -19,6 +19,7 @@ def audit(root: Path) -> dict:
     channel = json.loads((root / "config/channel_agents.json").read_text(encoding="utf-8"))
     seasonal = json.loads((root / "config/seasonal_visual_matrix.json").read_text(encoding="utf-8"))
     policy = json.loads((root / "config/music_search_policy.json").read_text(encoding="utf-8"))
+    music_playlist = json.loads((root / "config/music_playlist_policy.json").read_text(encoding="utf-8"))
     visual = json.loads((root / "config/visual_motion_agent.json").read_text(encoding="utf-8"))
     from scripts.scene_library_agent import inspect
     from scripts.longform_library_agent import plan as library_plan
@@ -30,6 +31,12 @@ def audit(root: Path) -> dict:
     ledger_path = root / "music-production/approval_ledger.json"
     seasons = set(seasonal.get("seasons", {}))
     mapping = seasonal.get("playlist_mapping", {})
+    music_groups = music_playlist.get("seasonal_groups", {})
+    christmas_tracks = set(music_groups.get("christmas", []))
+    general_tracks = set(music_groups.get("general_jazz_soul", []))
+    playlist_rules = music_playlist.get("playlist_rules", {})
+    music_inventory_ok = len(christmas_tracks) == 11 and len(general_tracks) == 21 and not christmas_tracks & general_tracks
+    seasonal_playlist_rules_ok = all("christmas" in allowed for name, allowed in playlist_rules.items() if name in {"christmas_holiday", "winter_holiday"}) and all("christmas" not in allowed for name, allowed in playlist_rules.items() if name not in {"christmas_holiday", "winter_holiday"})
     queue = build_plan(dt.date(2026, 11, 18))
     scene_folder = root / "music-production/visual-review"
     scene = inspect(scene_folder) if scene_folder.exists() else {
@@ -50,6 +57,7 @@ def audit(root: Path) -> dict:
         "queue": len(queue.get("jobs", [])) == 12 and len(queue.get("parallel_music_lanes", [])) == 3,
         "visual_contract": visual.get("allowed_profile") == "static_rain_steam_only" and visual.get("motion_contract", {}).get("camera") == "locked",
         "music_policy": policy.get("dedup_required_before_download") is True and policy.get("never_auto_approve") is True,
+        "music_playlist_policy": music_inventory_ok and seasonal_playlist_rules_ok and music_playlist.get("publication") == "DISABLED",
         "publication_disabled": all(job.get("publication") == "DISABLED" for job in queue.get("jobs", [])),
     }
     return {
@@ -61,6 +69,7 @@ def audit(root: Path) -> dict:
                    "missing_seconds": library["missing_seconds"], "status": library["status"]},
         "queue": {"videos": len(queue.get("jobs", [])),
                   "parallel_music_lanes": queue.get("parallel_music_lanes")},
+        "music_playlist": {"christmas_tracks": len(christmas_tracks), "general_tracks": len(general_tracks), "seasonal_rules_ok": seasonal_playlist_rules_ok},
         "publication": "DISABLED",
     }
 
