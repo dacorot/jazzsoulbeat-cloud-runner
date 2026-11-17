@@ -17,7 +17,8 @@ class ReviewAudioDownloaderTests(unittest.TestCase):
             ]
             with patch("scripts.review_audio_downloader.urllib.request.urlopen") as opener:
                 response = opener.return_value.__enter__.return_value
-                response.read.side_effect = [b"audio", b""]
+                response.headers = {"Content-Type": "audio/mpeg"}
+                response.read.side_effect = [b"ID3-test-audio", b""]
                 report = download_unique([candidates[0]], candidates, output)
             self.assertEqual(report["dedup"]["duplicate_count"], 1)
             self.assertEqual(report["downloaded_count"], 1)
