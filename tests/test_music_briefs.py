@@ -7,7 +7,7 @@ from scripts.music_briefs import BRIEFS, choose_brief
 class MusicBriefTests(unittest.TestCase):
     def test_five_editorial_channel_categories_have_distinct_arrangements(self):
         self.assertEqual(set(BRIEFS), {
-            "coffee_time", "work_study", "sleep", "chill", "christian_instrumental"
+            "work_study", "coffee_time", "sleep", "chill", "christian_jazz_worship"
         })
         self.assertEqual(len({b.title for b in BRIEFS.values()}), len(BRIEFS))
         self.assertEqual(len({b.arrangement for b in BRIEFS.values()}), len(BRIEFS))
@@ -31,7 +31,7 @@ class MusicBriefTests(unittest.TestCase):
             self.assertIn("360-second original", brief.prompt(360))
 
     def test_invalid_category_is_not_silently_replaced(self):
-        for value in ("", "coffee", "../chill", "christian", None, 1):
+        for value in ("", "coffee", "../chill", "christian", "christian_instrumental", None, 1):
             with self.subTest(value=value), self.assertRaises(ValueError):
                 choose_brief(value)
 
