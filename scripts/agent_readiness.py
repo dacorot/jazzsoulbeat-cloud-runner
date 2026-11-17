@@ -72,6 +72,10 @@ def _search(root):
 
 def _library(root, ledger):
     from scripts.longform_library_agent import plan
+    if not ledger.exists():
+        # The approval ledger is private and must remain outside the public controller.
+        return {"status": "PRIVATE_LEDGER_NOT_PRESENT", "approved_seconds": 0.0,
+                "missing_seconds": 3600.0}
     result = plan(json.loads(ledger.read_text(encoding="utf-8")))
     return {"status": result["status"], "approved_seconds": result["approved_seconds"],
             "missing_seconds": result["missing_seconds"]}
