@@ -19,7 +19,7 @@ ALLOWED_LICENSES = {
     "CC BY 4.0",
 }
 COMMERCIAL_LICENSES = {"CC0 1.0", "CC BY 1.0", "CC BY 2.0", "CC BY 2.5", "CC BY 3.0", "CC BY 4.0"}
-LICENSE_URLS = {
+PUBLICATION_REQUIREMENTS = {\n    "CC BY": {\n        "credit_creator": True,\n        "credit_title": True,\n        "source_link": True,\n        "license_link": True,\n        "modifications_notice": True,\n        "no_endorsement_claim": True,\n        "if_attribution_is_impossible": "obtain a separate standard license",\n    },\n    "CC0": {\n        "credit_creator": False,\n        "credit_title": False,\n        "source_link": False,\n        "license_link": False,\n        "modifications_notice": False,\n        "no_endorsement_claim": True,\n        "if_attribution_is_impossible": "no attribution condition from CC0",\n    },\n}\nLICENSE_URLS = {
     "CC BY 4.0": "https://creativecommons.org/licenses/by/4.0/",
     "CC0 1.0": "https://creativecommons.org/publicdomain/zero/1.0/",
 }
