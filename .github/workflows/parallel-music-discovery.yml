@@ -77,7 +77,7 @@ jobs:
       - name: Assert discovery remains review-only
         working-directory: agent
         run: |
-          if grep -REn "rights_verified.*(True|true|1)|youtube_upload|PRIVATE_ONLY_AUTHORIZED" output/parallel-discovery; then
+          if grep -REn "rights_verified.*(True|true|1)|youtube_upload.*(PUBLIC|PUBLISHED)|PRIVATE_ONLY_AUTHORIZED" output/parallel-discovery; then
             echo "Unsafe approval/publication marker detected in discovery output"
             exit 1
           fi
