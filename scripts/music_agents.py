@@ -18,18 +18,14 @@ EVIDENCE = OUT / "evidence"
 OUT.mkdir(parents=True, exist_ok=True)
 EVIDENCE.mkdir(parents=True, exist_ok=True)
 
+SEARCH_POLICY = json.loads(
+    (Path(__file__).resolve().parents[1] / "config/music_search_policy.json").read_text(encoding="utf-8")
+)
+
 MAX_METADATA_CHECKS = 80
 MAX_AUDIO_FILE_BYTES = 30000000
-GENRES = ("jazz", "soul", "blues", "bossa", "lofi", "gospel")
-REJECT_TERMS = (
-    "podcast", "episode", "sermon", "bible", "scripture", "lecture", "speech",
-    "audiobook", "spoken word", "interview", "radio show", "radio program",
-    "news", "cyberspace", "reading", "documentary", "soundtrack", "anime",
-    "sample pack", "pastor", "psalm", "church", "gospel hall", "worship",
-    "devotional", "preaching", "preacher", "homily", "testimony",
-    "righteousness", "question", "answers", "live concert", "concert recording",
-    "live performance",
-)
+GENRES = tuple(SEARCH_POLICY["target_genres"])
+REJECT_TERMS = tuple(SEARCH_POLICY["reject_terms"])
 
 
 def get_json(url):
@@ -170,6 +166,8 @@ def guardian(item):
             duration_seconds = round(float(raw_duration), 2) if raw_duration else None
         except (TypeError, ValueError):
             duration_seconds = None
+        if duration_seconds is None or duration_seconds < SEARCH_POLICY["minimum_candidate_duration_seconds"]:
+            return None, "Candidate is shorter than the approved search-policy minimum"
 
         record = {
             "identifier": identifier,
