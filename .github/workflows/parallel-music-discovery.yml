@@ -1,5 +1,5 @@
 name: Jazz Soul Beat - Parallel music discovery lanes
-# Regression trigger: all three lanes must complete review-only audio staging. URL normalization included.
+# Regression trigger: all three lanes must search, deduplicate, and stage review-only audio. Sources are partitioned per lane.
 
 on:
   workflow_dispatch:
@@ -26,9 +26,9 @@ jobs:
           - lane: primary_catalogs
             commands: "python main.py discover-ketsa --limit 100 && python main.py discover-incompetech && python main.py audit-incompetech-sources"
           - lane: community_catalogs
-            commands: "python main.py discover-commons --limit 200 && python main.py discover-openverse --limit 300 && python main.py discover-ccmixter --limit 200"
+            commands: "python main.py discover-ccmixter --limit 200 && python main.py discover-commons --limit 200"
           - lane: independent_metadata
-            commands: "python ../scripts/music_agents.py"
+            commands: "python ../scripts/music_agents.py && python main.py discover-openverse --limit 200"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
@@ -53,9 +53,11 @@ jobs:
           mkdir -p "output/parallel-discovery/${DISCOVERY_LANE}"
           { echo "lane=${DISCOVERY_LANE}"; echo "started_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"; } > "output/parallel-discovery/${DISCOVERY_LANE}/run.txt"
           ${{ matrix.commands }} 2>&1 | tee -a "output/parallel-discovery/${DISCOVERY_LANE}/run.txt"
+          mapfile -t EXISTING_FILES < <(find output music-library -type f \( -name '*.csv' -o -name '*.json' \) ! \( -name '*_candidates.csv' -o -name 'candidate_catalog.csv' \) 2>/dev/null | sort)
+          mapfile -t CANDIDATE_FILES < <(find output music-library -type f \( -name '*_candidates.csv' -o -name 'candidate_catalog.csv' \) 2>/dev/null | sort)
           python ../scripts/music_dedup_agent.py \
-            --existing $(find output -type f \( -name '*.csv' -o -name '*.json' \) | sort) \
-            --candidates $(find output -maxdepth 1 -type f -name '*_candidates.csv' | sort) \
+            --existing "${EXISTING_FILES[@]}" \
+            --candidates "${CANDIDATE_FILES[@]}" \
             --output "output/parallel-discovery/${DISCOVERY_LANE}/dedup-report.json" \
             2>&1 | tee -a "output/parallel-discovery/${DISCOVERY_LANE}/run.txt"
           mapfile -t EXISTING_FILES < <(find output music-library -type f \( -name '*.csv' -o -name '*.json' \) ! \( -name '*_candidates.csv' -o -name 'candidate_catalog.csv' \) 2>/dev/null | sort)
