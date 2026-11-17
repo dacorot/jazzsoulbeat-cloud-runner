@@ -36,6 +36,8 @@ def audit(root: Path) -> dict:
         "status": "PRIVATE_SCENE_LIBRARY_NOT_PRESENT", "image_count": 0,
         "minimum_required": 8, "creative_approval": False, "generated_replacement": False,
     }
+    if scene["image_count"] == 0:
+        scene["status"] = "PRIVATE_SCENE_LIBRARY_NOT_PRESENT"
     library = library_plan(json.loads(ledger_path.read_text(encoding="utf-8"))) if ledger_path.exists() else {
         "status": "PRIVATE_LEDGER_NOT_PRESENT", "approved_seconds": 0.0, "missing_seconds": target_seconds,
     }
@@ -79,5 +81,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
-# Deming gate: private-only state is explicitly supported.
