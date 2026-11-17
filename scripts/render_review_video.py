@@ -107,22 +107,40 @@ def _make_motion_frames(folder: Path, *, width: int = 640, height: int = 360,
         for py in range(height):
             for px in range(width):
                 r, g, b = source_px[px, py]
-                cool_sky = b >= r * 0.92 and b >= g * 0.82
-                dark_exterior = max(r, g, b) < 48 and py < 175
-                cool_road = py >= 145 and b >= r * 0.55 and b >= g * 0.65
-                matte_px[px, py] = 1 if (cool_sky or dark_exterior or cool_road) else 0
+                cool_sky = b >= r * 0.75 and b >= g * 0.75
+                cool_road = (py >= 145 and b >= r * 0.55 and b >= g * 0.65)
+                matte_px[px, py] = 1 if (cool_sky or cool_road) else 0
         exterior_px = exterior.load()
+        # Detect every dark, continuous window mullion in the locked plate;
+        # the composition contains more intermediate posts than a fixed list
+        # can safely describe. Expand each detected column by one pixel.
+        dark_columns = []
+        for px in range(270, min(width, 640)):
+            dark_fraction = sum(
+                1 for py in range(0, min(height, 210))
+                if max(source_px[px, py]) < 25
+            ) / min(height, 210)
+            if dark_fraction > 0.72:
+                dark_columns.append(px)
+        groups = []
+        for px in dark_columns:
+            if not groups or px > groups[-1][-1] + 1:
+                groups.append([px])
+            else:
+                groups[-1].append(px)
+        mullions = tuple((max(0, group[0] - 1), min(width, group[-1] + 2))
+                         for group in groups)
     integrated_layers = (_integrated_rain_layers(image_path, width, height)
                          if rain_mode == "integrated_plate" and image_path else [])
     if rain_mode in {"procedural_window", "masked_window"}:
         # Dense multi-scale rainfall: long soft streaks plus small beads that
         # slide on the glass. Both are deterministic so the 20-second loop is
         # exactly repeatable.
-        for i in range(240):
+        for i in range(500):
             left, top, right, bottom = panes[i % len(panes)]
             rain.append((left + (i * 17) % max(1, right - left),
                          top + (i * 29) % max(1, bottom - top),
-                         5 + (i * 11) % 20, 0.7 + (i % 5) * 0.16,
+                         4 + (i * 11) % 18, 0.7 + (i % 5) * 0.16,
                          (i * 3) % len(panes)))
             droplets.append((left + (i * 23 + 7) % max(1, right - left),
                              top + (i * 31 + 11) % max(1, bottom - top),
@@ -154,7 +172,7 @@ def _make_motion_frames(folder: Path, *, width: int = 640, height: int = 360,
                 y = top + int((y0 - top + phase * (bottom - top)) % (bottom - top))
                 x_now = x + int(4 * math.sin(2 * math.pi * phase + x * 0.13))
                 if rain_mode == "masked_window":
-                    rain_alpha = 66 + (x % 3) * 12 if pane_index % 2 else 104 + (x % 3) * 12
+                    rain_alpha = 72 + (x % 3) * 12 if pane_index % 2 else 112 + (x % 3) * 12
                 else:
                     rain_alpha = 115
                 # A small consistent wind angle makes the streaks read as
