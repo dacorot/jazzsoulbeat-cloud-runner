@@ -24,11 +24,14 @@ jobs:
       matrix:
         include:
           - lane: primary_catalogs
+            offset: 0
             commands: "python main.py discover-ketsa --limit 100 && python main.py discover-incompetech && python main.py audit-incompetech-sources"
           - lane: community_catalogs
+            offset: 0
             commands: "python main.py discover-ccmixter --limit 200 && python main.py discover-commons --limit 200"
           - lane: independent_metadata
-            commands: "python ../scripts/music_agents.py && python main.py discover-openverse --limit 200"
+            offset: 40
+            commands: "python ../scripts/music_agents.py && python main.py discover-ccmixter --limit 200"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
@@ -67,6 +70,7 @@ jobs:
             --candidates "${CANDIDATE_FILES[@]}" \
             --output "output/parallel-discovery/${DISCOVERY_LANE}/audio-review" \
             --limit 40 \
+            --offset "${{ matrix.offset }}" \
             2>&1 | tee -a "output/parallel-discovery/${DISCOVERY_LANE}/run.txt"
       - name: Assert discovery remains review-only
         working-directory: agent
