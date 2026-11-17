@@ -1,5 +1,5 @@
 name: Jazz Soul Beat - Parallel music discovery lanes
-# Regression trigger: all three lanes must complete review-only audio staging.
+# Regression trigger: all three lanes must complete review-only audio staging. URL normalization included.
 
 on:
   workflow_dispatch:
