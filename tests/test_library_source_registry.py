@@ -23,11 +23,12 @@ class LibrarySourceRegistryTests(unittest.TestCase):
 
     def test_heartbeat_reports_active_fallback_cycle(self):
         data = json.loads(self.registry.read_text(encoding="utf-8"))
-        outcomes = {row["id"]: "failure" for row in data["sources"]}
+        outcomes = {row["id"]: "failure" for row in data["sources"] if row["id"] != "original_auditions"}
         outcomes["openverse"] = "success"
         result = source_heartbeat(self.registry, outcomes)
-        self.assertEqual(result["heartbeat"], "ACTIVE")
+        self.assertEqual(result["heartbeat"], "DEGRADED")
         self.assertEqual(result["sources_succeeded"], ["openverse"])
+        self.assertIn("original_auditions", result["sources_missing_heartbeat"])
 
 
 if __name__ == "__main__":
