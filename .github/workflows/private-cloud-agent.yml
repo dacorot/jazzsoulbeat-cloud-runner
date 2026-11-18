@@ -122,6 +122,7 @@ jobs:
         run: |
           if [[ "${{ env.TASK }}" == "build-evergreen" ]]; then
             python main.py drive-pull-library
+            python main.py migrate-manifests
             python main.py scan
           else
             python main.py drive-pull-state
