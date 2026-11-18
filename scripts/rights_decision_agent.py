@@ -10,7 +10,8 @@ REQUIRED = ("title", "artist", "source_url", "license_name", "license_evidence_u
 def contract() -> dict:
     return {"id": "rights_decision_agent", "pdca": True,
             "auto_accept_only_complete_evidence": True,
-            "auto_reject_ambiguous": True, "never_publish": True}
+            "auto_reject_ambiguous": True, "human_rights_review_required": False,
+            "on_ambiguity": "REJECT_AND_CONTINUE_SEARCH", "never_publish": True}
 
 
 def decide(candidate: dict) -> dict:
