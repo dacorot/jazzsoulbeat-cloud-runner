@@ -145,6 +145,12 @@ jobs:
           index_path = root / "AUDITION_INDEX.json"
           rights_path = root / "STABLE_AUDIO3_RIGHTS_REVIEW.json"
           candidates = []
+          external_path = Path("output/library-promotion/eligible-external.json")
+          if external_path.is_file():
+              external = json.loads(external_path.read_text(encoding="utf-8"))
+              if isinstance(external, list):
+                  candidates.extend(external)
+                  print(f"Loaded {len(external)} autonomous external candidates.")
           if index_path.is_file() and rights_path.is_file():
               index = json.loads(index_path.read_text(encoding="utf-8"))
               rights = json.loads(rights_path.read_text(encoding="utf-8"))
