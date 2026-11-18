@@ -123,11 +123,19 @@ jobs:
           if [[ "${{ env.TASK }}" == "build-evergreen" ]]; then
             python main.py drive-pull-library
             python main.py migrate-manifests
-            python main.py scan
           else
             python main.py drive-pull-state
           fi
           python main.py drive-status
+
+      - name: Produce original music until two-hour target
+        id: produce_original_library
+        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        working-directory: agent
+        run: |
+          set -euo pipefail
+          python main.py produce-original-library
+          python main.py scan
 
       - name: Show approved library status
         if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
