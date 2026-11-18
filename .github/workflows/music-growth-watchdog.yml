@@ -1,6 +1,9 @@
 name: Jazz Soul Beat music growth watchdog
 
 on:
+  push:
+    paths:
+      - ".github/workflows/music-growth-watchdog.yml"
   schedule:
     - cron: "*/5 * * * *"
   workflow_dispatch:
