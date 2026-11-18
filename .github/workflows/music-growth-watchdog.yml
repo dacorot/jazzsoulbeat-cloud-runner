@@ -1,6 +1,7 @@
 name: Jazz Soul Beat music growth watchdog
 # Intake policy updated in private agent 70961af683fa3c1a1f105e86cbf2133bfdd5794b
 # Private agent review path normalization fixed in af1a789e24f5e2fea7fc268a445b9ae0f66fe808
+# Each research stage now has an explicit timeout to prevent silent stalls.
 
 on:
   push:
@@ -59,13 +60,13 @@ jobs:
         working-directory: agent
         run: |
           set -euo pipefail
-          python main.py discover-incompetech
-          python main.py download-incompetech
-          python main.py inspect-incompetech
-          python main.py audit-incompetech-sources
-          python main.py audit-incompetech-track-pages
-          python -c "import rights_audit; rights_audit.audit_incompetech()"
-          python main.py intake-library-growth
+          timeout 90s python main.py discover-incompetech
+          timeout 180s python main.py download-incompetech
+          timeout 120s python main.py inspect-incompetech
+          timeout 120s python main.py audit-incompetech-sources
+          timeout 120s python main.py audit-incompetech-track-pages
+          timeout 120s python -c "import rights_audit; rights_audit.audit_incompetech()"
+          timeout 60s python main.py intake-library-growth
 
       - name: Promote only the eligible evidence-bound batch
         id: promote
