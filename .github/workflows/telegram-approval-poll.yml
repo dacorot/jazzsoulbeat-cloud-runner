@@ -69,4 +69,6 @@ jobs:
         working-directory: agent
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
-        run: python main.py drive-push-state
+        run: |
+          python main.py drive-push-state
+          python main.py drive-push-original-music
