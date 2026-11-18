@@ -23,10 +23,10 @@ class Lane:
 
 
 LANES = (
-    Lane("official_creator_catalogs", "Ketsa and other creator-owned catalogues", 1, True),
-    Lane("open_license_primary_pages", "CC0/CC BY sources with primary item pages", 2, True),
-    Lane("community_catalogs", "Commons, ccMixter and Openverse leads", 3, True),
-    Lane("original_auditions", "Original jazz/soul auditions for listening review", 4, True),
+    Lane("official_creator_catalogs", "Ketsa and other creator-owned catalogues", 1, False),
+    Lane("open_license_primary_pages", "CC0/CC BY sources with primary item pages", 2, False),
+    Lane("community_catalogs", "Commons, ccMixter and Openverse leads", 3, False),
+    Lane("original_auditions", "Original jazz/soul auditions screened by agents", 4, False),
 )
 
 
@@ -55,9 +55,10 @@ def plan(approved_seconds: float, promoted_seconds: float = 0.0) -> dict:
         "missing_seconds": round(missing, 2),
         "status": "READY_FOR_LONGFORM_ASSEMBLY" if missing == 0 else "GROWTH_REQUIRED",
         "next_lanes": [lane.id for lane in sorted(LANES, key=lambda item: item.priority)],
-        "human_review_required": True,
+        "human_review_required": False,
+        "final_human_gate": "video_artifact_approval_only",
         "publication": "DISABLED",
-        "pdca_next_action": "Run discovery, audit primary evidence, decide rights, then promote only eligible hashes.",
+        "pdca_next_action": "Run discovery, audit primary evidence, reject ambiguity, then promote only eligible hashes.",
     }
 
 
