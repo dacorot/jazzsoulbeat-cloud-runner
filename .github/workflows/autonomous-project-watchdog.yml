@@ -25,7 +25,7 @@ jobs:
         with:
           repository: dacorot/jazzsoulbeat-agent
           ref: fix/real-music-and-cinematic-motion
-          token: \${{ secrets.PRIVATE_REPO_READ_TOKEN }}
+          token: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
           path: agent
 
       - name: Set up Python
@@ -33,7 +33,7 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install agent dependencies
+      - name: Install dependencies
         working-directory: agent
         run: |
           set -euo pipefail
@@ -43,12 +43,10 @@ jobs:
         id: restore
         working-directory: agent
         env:
-          DRIVE_TOKEN_JSON: \${{ secrets.DRIVE_TOKEN_JSON }}
-        run: |
-          set -euo pipefail
-          python main.py drive-pull
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: python main.py drive-pull
 
-      - name: Run music and asset inventory
+      - name: Inventory and music audit
         id: inventory
         working-directory: agent
         run: |
@@ -57,95 +55,91 @@ jobs:
           python main.py inventory-assets
           python main.py library-status
 
-      - name: Audit visual contract and motion requirements
+      - name: Audit visual contract
         id: visual_audit
         working-directory: agent
+        env:
+          RUN_ID: ${{ github.run_id }}
         run: |
           set -euo pipefail
           python - <<'PY'
-          import hashlib
-          import json
-          import subprocess
+          import hashlib, json, subprocess, os
           from pathlib import Path
-
           root = Path("assets/visual-agents/midnight_jazz_soul")
-          manifest_path = root / "manifest.json"
           report_path = Path("output/qa/autonomous-visual-audit.json")
           report_path.parent.mkdir(parents=True, exist_ok=True)
-          report = {"status": "FAIL", "checks": [], "run_id": "\${{ github.run_id }}"}
-
+          report = {"status": "PASS", "run_id": os.environ["RUN_ID"], "checks": []}
           def check(name, passed, detail):
               report["checks"].append({"name": name, "passed": bool(passed), "detail": detail})
               if not passed:
                   report["status"] = "FAIL"
-
+          manifest_path = root / "manifest.json"
           if not manifest_path.is_file():
-              check("manifest_exists", False, "Missing visual manifest")
+              check("manifest_exists", False, "Missing manifest")
           else:
-              manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-              rules = manifest.get("visual_rules", {})
-              motion_rules = manifest.get("motion", {})
+              m = json.loads(manifest_path.read_text(encoding="utf-8"))
+              rules, motion = m.get("visual_rules", {}), m.get("motion", {})
               check("anime_style", "anime" in rules.get("style", "").lower(), rules.get("style"))
               check("no_real_people", rules.get("real_people") is False, rules.get("real_people"))
-              check("48_scene_target", manifest.get("season_or_category_target") == 48, manifest.get("season_or_category_target"))
-              check("atmospheric_motion_required", motion_rules.get("effect") == "layered atmospheric animation", motion_rules.get("effect"))
-              check("zoom_only_rejected", motion_rules.get("status") != "current_zoom_only_loops_invalid_for_production", motion_rules.get("status"))
-
+              check("48_scene_target", m.get("season_or_category_target") == 48, m.get("season_or_category_target"))
+              check("atmospheric_motion", motion.get("effect") == "layered atmospheric animation", motion.get("effect"))
+              check("not_zoom_only", motion.get("status") != "current_zoom_only_loops_invalid_for_production", motion.get("status"))
           bases = sorted((root / "bases").glob("*.png")) if (root / "bases").is_dir() else []
           motion = sorted((root / "motion").glob("*.mp4")) if (root / "motion").is_dir() else []
           hashes = [hashlib.sha256(p.read_bytes()).hexdigest() for p in bases]
-          check("active_scene_batch", len(bases) == 12, f"{len(bases)} active base images")
-          check("motion_pairing", len(motion) == len(bases) == 12, f"{len(bases)} bases / {len(motion)} motion files")
-          check("no_duplicate_bases", len(set(hashes)) == len(hashes), f"{len(set(hashes))}/{len(hashes)} unique hashes")
-
-          invalid_motion = []
-          for path in motion:
+          check("active_batch", len(bases) == 12, len(bases))
+          check("paired_motion", len(motion) == len(bases) == 12, f"{len(bases)} bases/{len(motion)} motion")
+          check("unique_bases", len(set(hashes)) == len(hashes), f"{len(set(hashes))}/{len(hashes)}")
+          invalid = []
+          for p in motion:
               try:
-                  raw = subprocess.check_output(
-                      ["ffprobe", "-v", "error", "-show_entries", "format=duration",
-                       "-of", "default=noprint_wrappers=1:nokey=1", str(path)],
-                      text=True
-                  ).strip()
-                  if float(raw) <= 0:
-                      invalid_motion.append(path.name)
+                  d = subprocess.check_output(["ffprobe","-v","error","-show_entries","format=duration","-of","default=noprint_wrappers=1:nokey=1",str(p)], text=True).strip()
+                  if float(d) <= 0: invalid.append(p.name)
               except Exception:
-                  invalid_motion.append(path.name)
-          check("motion_files_readable", not invalid_motion, invalid_motion)
-
-          report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\\n", encoding="utf-8")
+                  invalid.append(p.name)
+          check("readable_motion", not invalid, invalid)
+          report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
           print(json.dumps(report, ensure_ascii=False, indent=2))
           if report["status"] != "PASS":
-              raise SystemExit("Visual contract failed; no production asset may advance.")
+              raise SystemExit("Visual contract failed; no asset may advance.")
           PY
 
-      - name: Persist audit evidence and heartbeat
+      - name: Persist evidence and heartbeat
         if: always() && steps.restore.outcome == 'success'
         working-directory: agent
         env:
-          DRIVE_TOKEN_JSON: \${{ secrets.DRIVE_TOKEN_JSON }}
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+          RUN_ID: ${{ github.run_id }}
+          JOB_STATUS: ${{ job.status }}
+          RESTORE_STATUS: ${{ steps.restore.outcome }}
+          INVENTORY_STATUS: ${{ steps.inventory.outcome }}
+          VISUAL_STATUS: ${{ steps.visual_audit.outcome }}
         run: |
           set -euo pipefail
-          mkdir -p output/qa
           python - <<'PY'
-          import json
+          import json, os
           from pathlib import Path
           p = Path("output/qa/autonomous-watchdog-heartbeat.json")
           p.write_text(json.dumps({
               "workflow": "autonomous-project-watchdog",
-              "run_id": "\${{ github.run_id }}",
-              "job_status": "\${{ job.status }}",
-              "restore": "\${{ steps.restore.outcome }}",
-              "inventory": "\${{ steps.inventory.outcome }}",
-              "visual_audit": "\${{ steps.visual_audit.outcome }}"
-          }, indent=2) + "\\n", encoding="utf-8")
+              "run_id": os.environ["RUN_ID"],
+              "job_status": os.environ["JOB_STATUS"],
+              "restore": os.environ["RESTORE_STATUS"],
+              "inventory": os.environ["INVENTORY_STATUS"],
+              "visual_audit": os.environ["VISUAL_STATUS"]
+          }, indent=2) + "\n", encoding="utf-8")
           PY
           python main.py drive-push-qa
           python main.py drive-push-state
           python main.py drive-status
 
-      - name: Fail visibly when any audit failed
+      - name: Fail visibly when an audit failed
         if: always()
+        env:
+          RESTORE_STATUS: ${{ steps.restore.outcome }}
+          INVENTORY_STATUS: ${{ steps.inventory.outcome }}
+          VISUAL_STATUS: ${{ steps.visual_audit.outcome }}
         run: |
-          test "\${{ steps.restore.outcome }}" = success
-          test "\${{ steps.inventory.outcome }}" = success
-          test "\${{ steps.visual_audit.outcome }}" = success
+          test "$RESTORE_STATUS" = success
+          test "$INVENTORY_STATUS" = success
+          test "$VISUAL_STATUS" = success
