@@ -145,6 +145,7 @@ jobs:
 
       - name: Run autonomous external music growth agents
         id: external_music_growth
+        continue-on-error: true
         if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
         working-directory: agent
         run: |
