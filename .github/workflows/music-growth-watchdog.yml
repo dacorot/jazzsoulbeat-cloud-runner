@@ -7,15 +7,15 @@ on:
 
 concurrency:
   group: jazz-soul-beat-music-growth-watchdog
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
   contents: read
 
 jobs:
-  watch-and-intervene:
+  grow-and-persist:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - name: Check out private agent
         uses: actions/checkout@v4
@@ -34,38 +34,72 @@ jobs:
       - name: Install dependencies
         working-directory: agent
         run: |
+          set -euo pipefail
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
-      - name: Restore growth state
-        working-directory: agent
-        env:
-          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
-        run: python main.py drive-pull-growth-batch
-
-      - name: Check progress and intervene when idle
+      - name: Restore complete persistent state
+        id: restore
         working-directory: agent
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
         run: |
           set -euo pipefail
-          before=$(find tracks/review -type f \( -iname '*.mp3' -o -iname '*.wav' -o -iname '*.flac' -o -iname '*.ogg' \) | wc -l)
-          latest=$(find tracks/review output -type f \( -iname '*receipt*.json' -o -iname '*candidate*.csv' -o -iname '*.mp3' \) -printf '%T@ %p\n' 2>/dev/null | sort -nr | head -1 || true)
-          echo "WATCHDOG_BEFORE_AUDIO=$before"
-          echo "WATCHDOG_LATEST=$latest"
+          python main.py drive-pull
+          python main.py library-status
 
+      - name: Discover, download and audit candidates
+        id: research
+        working-directory: agent
+        run: |
+          set -euo pipefail
           python main.py discover-incompetech
           python main.py download-incompetech
           python main.py inspect-incompetech
           python main.py audit-incompetech-sources
           python main.py audit-incompetech-track-pages
           python main.py intake-library-growth
-          python main.py drive-push-growth-research
 
-          after=$(find tracks/review -type f \( -iname '*.mp3' -o -iname '*.wav' -o -iname '*.flac' -o -iname '*.ogg' \) | wc -l)
-          echo "WATCHDOG_AFTER_AUDIO=$after"
-          if [ "$after" -le "$before" ]; then
-            echo "::warning::No new review audio appeared during this watchdog cycle; agent intervention completed but progress remains zero."
-          else
-            echo "Watchdog confirmed new review audio: $((after-before)) file(s)."
-          fi
+      - name: Promote only the eligible evidence-bound batch
+        id: promote
+        working-directory: agent
+        run: |
+          set -euo pipefail
+          mkdir -p output/library-promotion
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          src = Path("output/library-promotion/eligible-external.json")
+          dst = Path("output/library-promotion/eligible.json")
+          if not src.is_file():
+              dst.write_text("[]\n", encoding="utf-8")
+              print("No eligible external batch was produced.")
+          else:
+              rows = json.loads(src.read_text(encoding="utf-8"))
+              if not isinstance(rows, list):
+                  raise SystemExit("eligible-external.json is not a list")
+              dst.write_text(json.dumps(rows, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+              print(f"Eligible evidence-bound candidates: {len(rows)}")
+          PY
+          python main.py promote-library --candidates output/library-promotion/eligible.json --report output/library-promotion/import-report.json
+          python main.py reconcile-music
+          python main.py scan
+          python main.py library-status
+
+      - name: Persist growth, library and audit evidence
+        if: always() && steps.restore.outcome == 'success'
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: |
+          set -euo pipefail
+          python main.py drive-push-growth-research
+          python main.py drive-push
+          python main.py drive-status
+
+      - name: Leave an explicit failure when growth did not execute
+        if: always()
+        run: |
+          test "${{ steps.restore.outcome }}" = success
+          test "${{ steps.research.outcome }}" = success
+          test "${{ steps.promote.outcome }}" = success
