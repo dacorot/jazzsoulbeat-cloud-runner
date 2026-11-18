@@ -64,6 +64,7 @@ jobs:
           python main.py inspect-incompetech
           python main.py audit-incompetech-sources
           python main.py audit-incompetech-track-pages
+          python -c "import rights_audit; rights_audit.audit_incompetech()"
           python main.py intake-library-growth
 
       - name: Promote only the eligible evidence-bound batch
