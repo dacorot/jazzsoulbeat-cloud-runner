@@ -48,7 +48,8 @@ jobs:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
         run: |
           set -euo pipefail
-          python main.py drive-pull
+          python main.py drive-pull-music-library
+          python main.py drive-pull-growth-batch
           python main.py library-status
 
       - name: Discover, download and audit candidates
