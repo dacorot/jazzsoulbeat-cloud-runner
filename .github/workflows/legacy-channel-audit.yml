@@ -23,7 +23,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Skip safely when YouTube access is not configured
         if: ${{ env.YOUTUBE_CONFIGURED != 'true' }}
-        run: echo "Legacy audit skipped: YOUTUBE_TOKEN_JSON, DRIVE_TOKEN_JSON or PRIVATE_REPO_READ_TOKEN is missing."
+        run: |
+          echo "Legacy audit skipped: required secrets are missing."
       - uses: actions/checkout@v4
         if: ${{ env.YOUTUBE_CONFIGURED == 'true' }}
         with:
