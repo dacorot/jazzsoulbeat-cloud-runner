@@ -71,3 +71,5 @@ Fail-visible external growth correction marker: 2026-11-18T21:30:00Z
 Production trigger marker: 2026-11-18T18:30:00Z — start one private evergreen review video today; do not publish.
 
 Retry marker after decoupling optional music growth: 2026-11-18T23:26:00Z.
+
+Second flow audit marker: 2026-11-18T23:31:00Z — all production Drive operations now bounded.
