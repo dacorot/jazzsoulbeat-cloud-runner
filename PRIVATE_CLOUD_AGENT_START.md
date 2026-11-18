@@ -60,3 +60,5 @@ WAV auditor fix and verified local result marker: 2026-11-18T19:10:00Z
 Procedural generation permanently disabled after quality rejection: 2026-11-18T19:20:00Z
 
 External music growth and resumable receipt fix marker: 2026-11-18T20:00:00Z
+
+Music promotion deduplication fix and 155-minute verified local batch: 2026-11-18T20:30:00Z
