@@ -79,6 +79,7 @@ def source_heartbeat(registry_path: Path, outcomes: dict[str, str]) -> dict:
     unknown = sorted(set(outcomes) - known)
     succeeded = sorted(source_id for source_id in known if outcomes.get(source_id) == "success")
     failed = sorted(source_id for source_id in known if outcomes.get(source_id) == "failure")
+    missing = sorted(source_id for source_id in known if source_id not in outcomes)
     if not succeeded:
         raise RuntimeError("all_library_sources_failed")
     return {
@@ -86,8 +87,9 @@ def source_heartbeat(registry_path: Path, outcomes: dict[str, str]) -> dict:
         "sources_configured": len(sources),
         "sources_succeeded": succeeded,
         "sources_failed": failed,
+        "sources_missing_heartbeat": missing,
         "unknown_outcomes": unknown,
-        "heartbeat": "ACTIVE",
+        "heartbeat": "ACTIVE" if not missing else "DEGRADED",
         "publication": "DISABLED",
         "pdca_next_action": "Audit successful source outputs and send eligible hashes to the rights gate.",
     }
