@@ -1,0 +1,97 @@
+name: Jazz Soul Beat weekly copyright watch
+
+on:
+  schedule:
+    # Monday 08:17 Colombia (UTC-5).
+    - cron: "17 13 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: jazz-soul-beat-shared-private-drive-state
+  cancel-in-progress: false
+
+jobs:
+  copyright-watch:
+    name: Detect license and source changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Check out cloud controller
+        uses: actions/checkout@v4
+        with:
+          path: controller
+
+      - name: Check out private Jazz Soul Beat agent
+        uses: actions/checkout@v4
+        with:
+          repository: dacorot/jazzsoulbeat-agent
+          ref: fix/real-music-and-cinematic-motion
+          token: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
+          path: agent
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install private agent dependencies
+        working-directory: agent
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Restore private rights and provenance material
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: python main.py drive-pull
+
+      - name: Start weekly PDCA rights watch
+        id: pdca_start
+        uses: ./controller/.github/actions/pdca-start
+        with:
+          task: weekly-copyright-watch
+          objective: Detect changes in copyright and license evidence across private project material without auto-approving or deleting anything
+          drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
+
+      - name: Run read-only copyright and license watch
+        id: audit
+        working-directory: agent
+        run: |
+          python ../controller/scripts/copyright_watch_agent.py \
+            --root tracks \
+            --root output \
+            --root assets \
+            --state output/copyright-watch/state.json \
+            --report output/copyright-watch/report.json
+          test -s output/copyright-watch/state.json
+          test -s output/copyright-watch/report.json
+
+      - name: Persist report and evidence privately
+        id: persist
+        if: ${{ always() && steps.audit.outcome == 'success' }}
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: |
+          python main.py drive-push
+          python main.py drive-status
+
+      - name: Verify and close PDCA cycle
+        if: ${{ always() && steps.pdca_start.outcome == 'success' }}
+        uses: ./controller/.github/actions/pdca-finish
+        with:
+          cycle_id: ${{ steps.pdca_start.outputs.cycle_id }}
+          result_json: '{"workflow":"copyright-weekly-audit","run_id":"${{ github.run_id }}","job_status":"${{ job.status }}"}'
+          checks_json: >-
+            [{"name":"copyright_watch_report","passed":${{ steps.audit.outcome == 'success' }}},{"name":"private_persistence","passed":${{ steps.persist.outcome == 'success' }}},{"name":"no_auto_deletion_or_approval","passed":true}]
+          evidence: 'GitHub Actions run ${{ github.run_id }}; private copyright-watch report and state'
+          drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
+
+      - name: Confirm safety policy
+        if: always()
+        run: echo "Read-only copyright watch complete. No rights approval, deletion, upload or publication was performed."
