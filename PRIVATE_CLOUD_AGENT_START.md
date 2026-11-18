@@ -44,3 +44,5 @@ Procedural music syntax fix marker: 2026-11-18T17:26:49.892Z
 FFmpeg timeout recovery marker: 2026-11-18T17:30:00Z
 
 Persist generated library marker: 2026-11-18T17:40:00Z
+
+Project-original rights declaration marker: 2026-11-18T17:50:00Z
