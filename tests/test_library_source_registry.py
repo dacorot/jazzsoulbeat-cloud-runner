@@ -28,7 +28,8 @@ class LibrarySourceRegistryTests(unittest.TestCase):
         result = source_heartbeat(self.registry, outcomes)
         self.assertEqual(result["heartbeat"], "DEGRADED")
         self.assertEqual(result["sources_succeeded"], ["openverse"])
-        self.assertIn("original_auditions", result["sources_missing_heartbeat"])
+        self.assertEqual(result["sources_missing_heartbeat"], [])
+        self.assertIn("original_auditions", result["sources_disabled_or_delegated"])
 
 
 if __name__ == "__main__":
