@@ -53,9 +53,11 @@
     },
     {
       "id": "original_auditions",
+      "enabled": false,
       "lane": "original_auditions",
       "kind": "original_generation_review",
       "owner_evidence": "model_terms_and_human_similarity_review",
+      "delegated_to": "private-cloud-agent original-music workflow",
       "command": "manual_or_scheduled_free_model_audition_workflow",
       "fallback_priority": 7
     }
