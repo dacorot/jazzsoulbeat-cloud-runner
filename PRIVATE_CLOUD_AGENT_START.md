@@ -73,3 +73,5 @@ Production trigger marker: 2026-11-18T18:30:00Z — start one private evergreen 
 Retry marker after decoupling optional music growth: 2026-11-18T23:26:00Z.
 
 Second flow audit marker: 2026-11-18T23:31:00Z — all production Drive operations now bounded.
+
+Render-contract repair marker: 2026-11-18T23:40:00Z — rerun with provenance and multi-scene output fixes.
