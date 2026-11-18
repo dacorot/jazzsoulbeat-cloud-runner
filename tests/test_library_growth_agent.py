@@ -14,6 +14,8 @@ class LibraryGrowthTests(unittest.TestCase):
         result = plan(690)
         self.assertEqual(result["status"], "GROWTH_REQUIRED")
         self.assertEqual(result["missing_seconds"], 6510.0)
+        self.assertFalse(result["human_review_required"])
+        self.assertEqual(result["final_human_gate"], "video_artifact_approval_only")
 
     def test_counts_only_promoted_report_rows(self):
         result = summarize_promotion({
