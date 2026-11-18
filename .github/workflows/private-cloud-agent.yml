@@ -136,6 +136,18 @@ jobs:
           set -euo pipefail
           python main.py produce-original-library
           python main.py scan
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          summary = json.loads(Path('output/original-music/production-summary.json').read_text(encoding='utf-8'))
+          print(json.dumps(summary, ensure_ascii=False, indent=2))
+          assert summary['status'] == 'TARGET_REACHED', summary
+          assert summary['approved_seconds'] >= summary['target_seconds'], summary
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as out:
+              out.write('## Original music production\\n\\n')
+              out.write(json.dumps(summary, ensure_ascii=False, indent=2) + '\\n')
+          PY
 
       - name: Persist generated two-hour music library privately
         id: persist_original_music
