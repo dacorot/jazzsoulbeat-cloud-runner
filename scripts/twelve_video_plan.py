@@ -29,7 +29,7 @@ def build_plan(start: dt.date, count: int = 12) -> dict:
             "image_status": "PLAN_READY_BASE_IMAGE_REQUIRED",
             "motion_status": "CONTRACT_READY",
             "music_status": "SEARCH_AND_APPROVAL_REQUIRED",
-            "target_duration_seconds": 3600,
+            "target_duration_seconds": 7200 + (int(digest[16:20], 16) % 13) * 300,
             "human_gates": ["music_creative_approval", "music_rights_verification", "video_creative_approval", "private_upload_approval"],
             "publication": "DISABLED",
             "deterministic_seed": digest[:16],
