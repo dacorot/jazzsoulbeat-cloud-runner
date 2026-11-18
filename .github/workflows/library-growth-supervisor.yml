@@ -2,6 +2,10 @@ name: Jazz Soul Beat - Restricted library growth supervisor
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - "LIBRARY_GROWTH_START.md"
+      - ".github/workflows/library-growth-supervisor.yml"
   schedule:
     - cron: "0 */12 * * *"
 
