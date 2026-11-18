@@ -117,6 +117,21 @@ jobs:
         run: |
           set -euo pipefail
           python -m pytest -q tests/test_visual_contract.py tests/test_visual_directors.py tests/test_scene_factory.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from visual_contract import validate_batch_manifest
+          root = Path("assets/visual-agents") / "${{ env.CATEGORY }}" / "scenes"
+          manifest_path = root / "SCENE_MANIFEST.json"
+          if not manifest_path.is_file():
+              raise SystemExit(f"Generated visual manifest missing: {manifest_path}")
+          report = validate_batch_manifest(
+              json.loads(manifest_path.read_text(encoding="utf-8")),
+              scene_root=root,
+              minimum_scenes=1,
+          )
+          print(json.dumps(report, ensure_ascii=False, indent=2))
+          PY
 
       - name: Persist visual batch privately
         working-directory: agent
