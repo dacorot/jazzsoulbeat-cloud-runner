@@ -137,6 +137,17 @@ jobs:
           python main.py produce-original-library
           python main.py scan
 
+      - name: Persist generated two-hour music library privately
+        id: persist_original_music
+        if: ${{ steps.produce_original_library.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: |
+          set -euo pipefail
+          python main.py drive-push-original-music
+          python main.py drive-status
+
       - name: Show approved library status
         if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
         working-directory: agent
