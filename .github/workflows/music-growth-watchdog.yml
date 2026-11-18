@@ -10,7 +10,7 @@ on:
 
 concurrency:
   group: jazz-soul-beat-remote-operator
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 permissions:
   contents: read
