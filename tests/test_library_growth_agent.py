@@ -1,6 +1,7 @@
 import unittest
+import json
 
-from scripts.library_growth_agent import contract, plan, summarize_promotion
+from scripts.library_growth_agent import contract, plan, source_heartbeat, summarize_promotion
 
 
 class LibraryGrowthTests(unittest.TestCase):
@@ -25,6 +26,24 @@ class LibraryGrowthTests(unittest.TestCase):
         self.assertEqual(result["promoted_tracks"], 2)
         self.assertEqual(result["promoted_seconds"], 420)
         self.assertEqual(result["rejected_tracks"], 1)
+
+    def test_delegated_source_does_not_create_false_missing_heartbeat(self):
+        registry = self._registry_path()
+        result = source_heartbeat(registry, {"catalog": "success"})
+        self.assertEqual(result["sources_missing_heartbeat"], [])
+        self.assertEqual(result["sources_disabled_or_delegated"], ["delegated"])
+        self.assertEqual(result["heartbeat"], "ACTIVE")
+
+    @staticmethod
+    def _registry_path():
+        import tempfile
+        from pathlib import Path
+        path = Path(tempfile.mkdtemp()) / "registry.json"
+        path.write_text(json.dumps({"sources": [
+            {"id": "catalog", "enabled": True},
+            {"id": "delegated", "enabled": False},
+        ]}), encoding="utf-8")
+        return path
 
 
 if __name__ == "__main__":
