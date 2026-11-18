@@ -50,6 +50,7 @@ def audit(root: Path) -> dict:
         "queue": len(queue.get("jobs", [])) == 12 and len(queue.get("parallel_music_lanes", [])) == 3,
         "visual_contract": visual.get("allowed_profile") == "static_rain_steam_only" and visual.get("motion_contract", {}).get("camera") == "locked",
         "music_policy": policy.get("dedup_required_before_download") is True and policy.get("never_auto_approve") is True,
+        "audio_capacity": approved_seconds >= target_seconds,
         "publication_disabled": all(job.get("publication") == "DISABLED" for job in queue.get("jobs", [])),
     }
     return {
