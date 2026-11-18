@@ -29,3 +29,5 @@ Regression trigger 2026-11-17: execute end-to-end private-agent preflight after 
 Validation trigger: publication idempotency ledger and hash-bound scheduling integration.
 
 Validation trigger: metadata gates, release coordinator and idempotent YouTube boundary.
+
+2026-11-18 safe QA request: validate agent commit 0d3f850477d0c745c7cc073eab63990557486531, especially category-scoped seed recovery with malformed unrelated manifest rows; no music generation, render, rights approval, or upload.
