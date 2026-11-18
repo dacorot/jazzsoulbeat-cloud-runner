@@ -90,8 +90,15 @@ jobs:
 
       - name: Ensure FFmpeg
         run: |
-          command -v ffmpeg >/dev/null 2>&1 || { echo "FFmpeg is required on the hosted runner"; exit 1; }
-          command -v ffprobe >/dev/null 2>&1 || { echo "FFprobe is required on the hosted runner"; exit 1; }
+          if ! command -v ffmpeg >/dev/null 2>&1 || ! command -v ffprobe >/dev/null 2>&1; then
+            export DEBIAN_FRONTEND=noninteractive
+            timeout 180s sudo apt-get update -qq
+            timeout 180s sudo apt-get install --yes --no-install-recommends ffmpeg
+          else
+            echo "FFmpeg already available on the runner; skipping apt install."
+          fi
+          command -v ffmpeg >/dev/null 2>&1 || { echo "FFmpeg installation did not provide ffmpeg"; exit 1; }
+          command -v ffprobe >/dev/null 2>&1 || { echo "FFmpeg installation did not provide ffprobe"; exit 1; }
           ffmpeg -version
           ffprobe -version
 
