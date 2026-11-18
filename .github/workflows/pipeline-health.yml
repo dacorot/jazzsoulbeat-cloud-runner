@@ -1,0 +1,65 @@
+name: Jazz Soul Beat pipeline health and exception alert
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: jazz-soul-beat-shared-private-drive-state
+  cancel-in-progress: false
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out cloud controller
+        uses: actions/checkout@v4
+        with:
+          path: controller
+      - name: Check out private agent
+        uses: actions/checkout@v4
+        with:
+          repository: dacorot/jazzsoulbeat-agent
+          ref: fix/real-music-and-cinematic-motion
+          token: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
+          path: agent
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install private agent dependencies
+        working-directory: agent
+        run: python -m pip install -r requirements.txt
+      - name: Restore private state
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: python main.py drive-pull-state
+      - name: Audit checkpoints and heartbeats
+        working-directory: agent
+        run: |
+          python ../controller/scripts/pipeline_health_agent.py \
+            --root output \
+            --report output/pipeline-health/report.json
+          test -s output/pipeline-health/report.json
+      - name: Send one alert for each new exception
+        working-directory: agent
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          JAZZ_SOUL_BEAT_TELEGRAM_CHAT_ID: ${{ secrets.JAZZ_SOUL_BEAT_TELEGRAM_CHAT_ID }}
+        run: |
+          python ../controller/scripts/telegram_alert_agent.py \
+            --report output/pipeline-health/report.json \
+            --state output/pipeline-health/alert-state.json
+      - name: Persist health state privately
+        if: always()
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: python main.py drive-push-state
