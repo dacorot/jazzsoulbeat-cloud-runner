@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check whether the approved audio library can support a one-hour video."""
+"""Check whether the approved audio library can support a 2–3 hour video."""
 from __future__ import annotations
 
 import argparse
@@ -8,7 +8,8 @@ import subprocess
 from pathlib import Path
 
 
-TARGET_SECONDS = 3600
+TARGET_SECONDS = 7200
+MAX_TARGET_SECONDS = 10800
 
 
 def media_duration(path: str) -> float:
@@ -24,6 +25,8 @@ def media_duration(path: str) -> float:
 
 
 def plan(ledger: dict, target_seconds: int = TARGET_SECONDS) -> dict:
+    if not 7200 <= target_seconds <= MAX_TARGET_SECONDS:
+        raise ValueError("longform_target_must_be_between_2_and_3_hours")
     approved = []
     seen = set()
     for request_id, request in ledger.get("requests", {}).items():
@@ -54,7 +57,7 @@ def plan(ledger: dict, target_seconds: int = TARGET_SECONDS) -> dict:
         "approved_unique_tracks": len(approved),
         "approved_seconds": round(total, 2),
         "missing_seconds": round(missing, 2),
-        "status": "READY_FOR_ONE_HOUR_ASSEMBLY" if missing == 0 else "BLOCKED_NEEDS_MORE_APPROVED_TRACKS",
+        "status": "READY_FOR_LONGFORM_ASSEMBLY" if missing == 0 else "BLOCKED_NEEDS_MORE_APPROVED_TRACKS",
         "tracks": approved,
         "no_track_repetition": True,
         "publication": "DISABLED"
@@ -65,13 +68,14 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--ledger", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--target-seconds", type=int, default=TARGET_SECONDS)
+    parser.add_argument("--target-seconds", type=int, default=TARGET_SECONDS,
+                        help="Long-form target in the 2–3 hour range (7200–10800 seconds).")
     args = parser.parse_args()
     result = plan(json.loads(args.ledger.read_text(encoding="utf-8")), args.target_seconds)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(result, ensure_ascii=False))
-    return 0 if result["status"] == "READY_FOR_ONE_HOUR_ASSEMBLY" else 2
+    return 0 if result["status"] == "READY_FOR_LONGFORM_ASSEMBLY" else 2
 
 
 if __name__ == "__main__":
