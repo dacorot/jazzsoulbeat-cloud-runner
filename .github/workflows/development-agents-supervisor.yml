@@ -1,6 +1,6 @@
 name: Jazz Soul Beat development agents supervisor
 # Private scope fix: 5453ff7b9ff77bfc349d4f3efce42397df0b0464
-# Visual contract gate: require 48 independent atmospheric anime scenes\n# Brand guardian: enforce channel identity across every category
+# Visual contract gate: require 48 independent atmospheric anime scenes\n# Brand guardian: enforce channel identity across every category\n# Production delivery: require a real, persisted, reviewable artifact per cycle
 
 on:
   workflow_dispatch:
@@ -42,6 +42,8 @@ jobs:
             tests: "tests/test_drive_auth.py tests/test_drive_storage.py tests/test_rights_audit.py tests/test_licenses.py"
           - role: integration
             tests: "tests"
+          - role: production-delivery
+            tests: "tests/test_release_coordinator.py tests/test_publication_idempotency.py tests/test_multi_scene_video.py tests/test_visual_contract.py tests/test_drive_storage.py tests/test_autonomy.py"
 
     steps:
       - name: Check out private agent
