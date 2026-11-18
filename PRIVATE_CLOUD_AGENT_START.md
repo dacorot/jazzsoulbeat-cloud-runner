@@ -27,3 +27,5 @@ Regression trigger 2026-11-14: validate cloud production workflow after adding p
 Regression trigger 2026-11-14: parse and validate the latest production workflow including the explicit visual-library persistence PDCA acceptance check; expected result remains a safe no-render gate while approved audio is absent.
 
 Promotion trigger: import rights-verified original-music package into private library.
+
+2026-11-18: Triggered after repairing the private-agent preflight and copyright quarantine bridge.
