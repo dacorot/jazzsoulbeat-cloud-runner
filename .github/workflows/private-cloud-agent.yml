@@ -319,6 +319,14 @@ jobs:
               output.write(f"run_dir={folder.as_posix()}\n")
           PY
 
+      - name: Write hash-bound production artifact manifest
+        if: ${{ steps.capture_render.outcome == 'success' }}
+        working-directory: agent
+        run: |
+          python ../scripts/artifact_manifest_agent.py \
+            --run-dir "${{ steps.capture_render.outputs.run_dir }}" \
+            --output "${{ steps.capture_render.outputs.run_dir }}/ARTIFACT_MANIFEST.json"
+          test -s "${{ steps.capture_render.outputs.run_dir }}/ARTIFACT_MANIFEST.json"
       - name: Persist generated visual scene library privately
         id: persist_visual_assets
         if: ${{ always() && steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' && steps.build_video.outcome != 'skipped' }}
