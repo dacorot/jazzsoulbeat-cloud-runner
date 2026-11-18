@@ -126,6 +126,33 @@ jobs:
         working-directory: agent
         run: python main.py library-status
 
+      - name: Initialize or resume the sequential orchestrator checkpoint
+        id: orchestrator_checkpoint
+        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        working-directory: agent
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          ORCHESTRATOR_VIDEO_ID: video-02
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          from scripts.orchestrator_agent import new_checkpoint, save_checkpoint
+          video_id = os.environ.get("ORCHESTRATOR_VIDEO_ID") or "video-02"
+          path = Path("output/orchestrator") / f"{video_id}.checkpoint.json"
+          if path.exists():
+              checkpoint = json.loads(path.read_text(encoding="utf-8"))
+              print(f"Resumed orchestrator: {video_id} at {checkpoint.get('stage')}")
+          else:
+              checkpoint = new_checkpoint(video_id)
+              save_checkpoint(path, checkpoint)
+              print(f"Initialized orchestrator: {video_id} at {checkpoint['stage']}")
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write(f"stage={checkpoint.get('stage')}\n")
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
+              summary.write(f"## Orchestrator checkpoint\n\nVideo: `{video_id}`\nStage: `{checkpoint.get('stage')}`\n")
+          PY
+
       - name: Check whether the approved library can satisfy the requested video
         id: production_gate
         if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
