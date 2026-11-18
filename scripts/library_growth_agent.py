@@ -76,7 +76,9 @@ def summarize_promotion(report: dict) -> dict:
 def source_heartbeat(registry_path: Path, outcomes: dict[str, str]) -> dict:
     registry = json.loads(registry_path.read_text(encoding="utf-8"))
     sources = registry.get("sources", [])
-    known = {str(row.get("id")) for row in sources}
+    active_sources = [row for row in sources if row.get("enabled", True) is not False]
+    known = {str(row.get("id")) for row in active_sources}
+    disabled = sorted(str(row.get("id")) for row in sources if row.get("enabled", True) is False)
     unknown = sorted(set(outcomes) - known)
     succeeded = sorted(source_id for source_id in known if outcomes.get(source_id) == "success")
     failed = sorted(source_id for source_id in known if outcomes.get(source_id) == "failure")
@@ -86,6 +88,8 @@ def source_heartbeat(registry_path: Path, outcomes: dict[str, str]) -> dict:
     return {
         "agent_id": "library_growth_agent",
         "sources_configured": len(sources),
+        "sources_active": len(active_sources),
+        "sources_disabled_or_delegated": disabled,
         "sources_succeeded": succeeded,
         "sources_failed": failed,
         "sources_missing_heartbeat": missing,
