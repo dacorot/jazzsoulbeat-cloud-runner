@@ -51,6 +51,7 @@ jobs:
           set -euo pipefail
           timeout 180s python main.py drive-pull-music-library
           python main.py library-status
+          python main.py migrate-manifests
 
       - name: Discover, download and audit candidates
         id: research
