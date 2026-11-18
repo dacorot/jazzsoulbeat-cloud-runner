@@ -51,6 +51,20 @@ jobs:
         run: |
           if python main.py discover-ketsa --limit 100; then echo success > output/library-growth/source-status/ketsa_official; else echo failure > output/library-growth/source-status/ketsa_official; fi
           if python main.py discover-incompetech; then echo success > output/library-growth/source-status/incompetech_official; else echo failure > output/library-growth/source-status/incompetech_official; fi
+      - name: Download and audit official catalogues
+        working-directory: agent
+        run: |
+          if python main.py download-ketsa --limit 100; then echo success > output/library-growth/source-status/ketsa_download; else echo failure > output/library-growth/source-status/ketsa_download; fi
+          if python main.py download-incompetech; then echo success > output/library-growth/source-status/incompetech_download; else echo failure > output/library-growth/source-status/incompetech_download; fi
+          if python -c 'import rights_audit; rights_audit.audit_ketsa()'; then echo success > output/library-growth/source-status/ketsa_rights_audit; else echo failure > output/library-growth/source-status/ketsa_rights_audit; fi
+          if python main.py audit-incompetech-sources && python main.py audit-incompetech-track-pages && python -c 'import rights_audit; rights_audit.audit_incompetech()'; then echo success > output/library-growth/source-status/incompetech_rights_audit; else echo failure > output/library-growth/source-status/incompetech_rights_audit; fi
+      - name: Make autonomous rights decisions and promotion batch
+        working-directory: agent
+        run: |
+          python main.py intake-library-growth
+          test -s output/library-promotion/eligible-external.json
+          test -s output/library-promotion/external-intake-report.json
+
       - name: Discover open and community catalogues
         working-directory: agent
         env:
