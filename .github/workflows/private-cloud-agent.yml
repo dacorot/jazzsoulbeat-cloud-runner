@@ -126,6 +126,13 @@ jobs:
         working-directory: agent
         run: python main.py library-status
 
+      - name: Restore autonomous library-growth batch for promotion
+        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: python main.py drive-pull-growth-batch
+
       - name: Restore approved original-music package for promotion
         if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
         working-directory: agent
