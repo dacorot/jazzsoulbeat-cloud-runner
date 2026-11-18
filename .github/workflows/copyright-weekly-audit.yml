@@ -71,6 +71,15 @@ jobs:
           test -s output/copyright-watch/state.json
           test -s output/copyright-watch/report.json
 
+      - name: Build fail-closed active catalog view
+        id: quarantine
+        working-directory: agent
+        run: |
+          python ../controller/scripts/copyright_quarantine_agent.py \
+            --report output/copyright-watch/report.json \
+            --output output/copyright-watch/quarantine.json
+          test -s output/copyright-watch/quarantine.json
+
       - name: Persist report and evidence privately
         id: persist
         if: ${{ always() && steps.audit.outcome == 'success' }}
@@ -88,7 +97,7 @@ jobs:
           cycle_id: ${{ steps.pdca_start.outputs.cycle_id }}
           result_json: '{"workflow":"copyright-weekly-audit","run_id":"${{ github.run_id }}","job_status":"${{ job.status }}"}'
           checks_json: >-
-            [{"name":"copyright_watch_report","passed":${{ steps.audit.outcome == 'success' }}},{"name":"private_persistence","passed":${{ steps.persist.outcome == 'success' }}},{"name":"no_auto_deletion_or_approval","passed":true}]
+            [{"name":"copyright_watch_report","passed":${{ steps.audit.outcome == 'success' }}},{"name":"copyright_quarantine_view","passed":${{ steps.quarantine.outcome == 'success' }}},{"name":"private_persistence","passed":${{ steps.persist.outcome == 'success' }}},{"name":"no_auto_deletion_or_approval","passed":true}]
           evidence: 'GitHub Actions run ${{ github.run_id }}; private copyright-watch report and state'
           drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
 
