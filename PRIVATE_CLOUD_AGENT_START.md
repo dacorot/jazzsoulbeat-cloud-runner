@@ -37,3 +37,4 @@ Retry FFmpeg install marker: 2026-11-18T14:11:29.255Z
 Scene validator formatting fix marker: 2026-11-18T14:13:03.727Z
 Final CI remediation marker: 2026-11-18T14:15:36.622Z
 Manifest migration marker: 2026-11-18T14:18:19.600Z
+Original import schema fix marker: 2026-11-18T14:36:15.582Z
