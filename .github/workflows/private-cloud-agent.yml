@@ -126,6 +126,23 @@ jobs:
         working-directory: agent
         run: python main.py library-status
 
+      - name: Import rights-eligible library candidates
+        id: library_promotion
+        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        working-directory: agent
+        run: |
+          set -euo pipefail
+          candidates="output/library-promotion/eligible.json"
+          report="output/library-promotion/import-report.json"
+          mkdir -p "$(dirname "$report")"
+          if [[ -s "$candidates" ]]; then
+            python main.py promote-library --candidates "$candidates" --report "$report"
+            python main.py library-status
+          else
+            printf '{"approved": [], "rejected": [], "approved_seconds": 0, "publication": "DISABLED", "status": "NO_ELIGIBLE_BATCH"}\n' > "$report"
+            echo "No hay lote elegible de derechos; el proceso continúa buscando fuentes."
+          fi
+
       - name: Initialize or resume the sequential orchestrator checkpoint
         id: orchestrator_checkpoint
         if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
