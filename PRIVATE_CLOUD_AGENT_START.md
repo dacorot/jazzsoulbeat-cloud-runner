@@ -35,3 +35,4 @@ Audit closure marker: final three-pass remediation run 2026-11-18T14:07:09Z
 Closure retry marker: 2026-11-18T14:10:14.426Z
 Retry FFmpeg install marker: 2026-11-18T14:11:29.255Z
 Scene validator formatting fix marker: 2026-11-18T14:13:03.727Z
+Final CI remediation marker: 2026-11-18T14:15:36.622Z
