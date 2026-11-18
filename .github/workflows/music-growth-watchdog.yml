@@ -1,6 +1,6 @@
 name: Jazz Soul Beat music growth watchdog
 # Intake policy updated in private agent 70961af683fa3c1a1f105e86cbf2133bfdd5794b
-# Private agent intake evidence merge fixed in 694b10951fec99c07dab7dc07d1df545fd3c2deb
+# Private agent rights artifact path fixed in 09af2e3537ba82d43c7e093c94cfbc93553b4a54
 
 on:
   push:
