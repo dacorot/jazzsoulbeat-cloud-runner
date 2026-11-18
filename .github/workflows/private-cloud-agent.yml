@@ -195,6 +195,15 @@ jobs:
           Path("output/library-promotion/eligible.json").write_text(json.dumps(candidates, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
           print(f"Prepared {len(candidates)} hash-bound original candidates.")
           PY
+      - name: Integrate approved original masters
+        id: original_promotion
+        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        working-directory: agent
+        run: |
+          set -euo pipefail
+          python main.py prepare-original-promotion
+          python main.py reconcile-music
+
       - name: Import rights-eligible library candidates
         id: library_promotion
         if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
