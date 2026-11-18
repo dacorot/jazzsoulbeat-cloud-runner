@@ -27,3 +27,5 @@ Security preflight: reject any future use of the exact owner-rejected 512-bar au
 Regression trigger 2026-11-17: execute end-to-end private-agent preflight after public controller readiness expansion; verify compile, tests, self-test FFmpeg, Drive state boundaries and no publication.
 
 Validation trigger: publication idempotency ledger and hash-bound scheduling integration.
+
+Validation trigger: metadata gates, release coordinator and idempotent YouTube boundary.
