@@ -45,6 +45,8 @@ def audit(root: Path) -> dict:
         check("orchestrator_agent", lambda: _operational("scripts.orchestrator_agent", "orchestrator_agent")),
         check("rights_decision_agent", lambda: _operational("scripts.rights_decision_agent", "rights_decision_agent")),
         check("library_promotion_agent", lambda: _operational("scripts.library_promotion_agent", "library_promotion_agent")),
+        check("library_growth_agent", lambda: _operational("scripts.library_growth_agent", "library_growth_agent")),
+        check("library_source_registry", lambda: _source_registry(root)),
         check("analytics_timing_agent", lambda: _operational("scripts.analytics_timing_agent", "analytics_timing_agent")),
         check("project_compliance_audit", lambda: _project_compliance(root)),
     ]
@@ -195,6 +197,16 @@ def _project_compliance(root):
         raise RuntimeError(f"project_compliance_blocked: {failed}")
     return {"checks": len(result["checks"]), "scene_images": result["scene_library"]["image_count"],
             "approved_audio_seconds": result["audio"]["approved_seconds"]}
+
+
+def _source_registry(root):
+    registry = json.loads((root / "config/library_source_registry.json").read_text(encoding="utf-8"))
+    sources = registry.get("sources", [])
+    if len(sources) < 6 or registry.get("free_only") is not True:
+        raise RuntimeError("library_source_registry_incomplete")
+    if registry.get("never_auto_approve") is not True or registry.get("never_publish") is not True:
+        raise RuntimeError("library_source_registry_safety_contract_incomplete")
+    return {"sources": len(sources), "free_only": True, "fallbacks": len(sources) - 1}
 
 
 def main() -> int:
