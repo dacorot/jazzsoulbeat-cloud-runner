@@ -143,6 +143,21 @@ jobs:
         working-directory: agent
         run: python main.py library-status
 
+      - name: Run autonomous external music growth agents
+        id: external_music_growth
+        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        working-directory: agent
+        continue-on-error: true
+        run: |
+          set -u
+          python main.py discover-incompetech || echo "Incompetech discovery did not complete; preserving previous evidence."
+          python main.py download-incompetech || echo "Incompetech download did not complete; preserving resumable receipt."
+          python main.py inspect-incompetech || echo "Incompetech inspection did not complete."
+          python main.py audit-incompetech-sources || echo "Incompetech source audit did not complete."
+          python main.py audit-incompetech-track-pages || echo "Incompetech page audit did not complete."
+          python main.py intake-library-growth || echo "Growth intake deferred until all evidence is complete."
+          python main.py drive-push-growth-research || echo "Growth evidence persistence deferred; next cycle will resume."
+
       - name: Restore autonomous library-growth batch for promotion
         if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
         working-directory: agent
