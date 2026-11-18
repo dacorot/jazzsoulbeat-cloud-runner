@@ -12,7 +12,10 @@ class AgentReadinessTests(unittest.TestCase):
         self.assertEqual(result["technical_status"], "BLOCKED")
         self.assertEqual(len(result["checks"]), 25)
         failures = [item for item in result["checks"] if item["status"] != "PASS"]
-        self.assertEqual([item["name"] for item in failures], ["longform_library_gate"])
+        self.assertEqual(
+            [item["name"] for item in failures],
+            ["longform_library_gate", "project_compliance_audit"],
+        )
 
 
 if __name__ == "__main__":
