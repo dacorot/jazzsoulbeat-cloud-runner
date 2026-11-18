@@ -50,7 +50,6 @@ jobs:
         run: |
           set -euo pipefail
           timeout 180s python main.py drive-pull-music-library
-          timeout 120s python main.py drive-pull-growth-batch
           python main.py library-status
 
       - name: Discover, download and audit candidates
