@@ -70,7 +70,14 @@ jobs:
         working-directory: agent
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
-        run: python main.py drive-pull
+        run: |
+          set +e
+          timeout 300s python main.py drive-pull
+          code=$?
+          if [ "$code" -ne 0 ]; then
+            echo "::warning::Drive restore did not finish; continuing with a clean visual workspace."
+          fi
+          exit 0
 
       - name: Produce original visual batch
         working-directory: agent
@@ -117,9 +124,9 @@ jobs:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
         run: |
           set -euo pipefail
-          python main.py drive-push-visual-assets
-          python main.py drive-push-qa
-          python main.py drive-status
+          timeout 300s python main.py drive-push-visual-assets
+          timeout 300s python main.py drive-push-qa
+          timeout 120s python main.py drive-status
 
       - name: Upload production evidence
         if: always()
