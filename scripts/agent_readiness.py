@@ -44,6 +44,7 @@ def audit(root: Path) -> dict:
         check("seasonal_music_agent", lambda: _operational("scripts.seasonal_music_agent", "seasonal_music_agent")),
         check("orchestrator_agent", lambda: _operational("scripts.orchestrator_agent", "orchestrator_agent")),
         check("rights_decision_agent", lambda: _operational("scripts.rights_decision_agent", "rights_decision_agent")),
+        check("library_promotion_agent", lambda: _operational("scripts.library_promotion_agent", "library_promotion_agent")),
         check("analytics_timing_agent", lambda: _operational("scripts.analytics_timing_agent", "analytics_timing_agent")),
         check("project_compliance_audit", lambda: _project_compliance(root)),
     ]
