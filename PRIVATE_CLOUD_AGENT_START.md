@@ -1,7 +1,7 @@
 # Jazz Soul Beat — private cloud build request
 
 task: build-evergreen
-hours: 2
+hours: 3
 collection: evergreen
 season: none
 agent_ref: fix/real-music-and-cinematic-motion
@@ -62,3 +62,5 @@ Procedural generation permanently disabled after quality rejection: 2026-11-18T1
 External music growth and resumable receipt fix marker: 2026-11-18T20:00:00Z
 
 Music promotion deduplication fix and 155-minute verified local batch: 2026-11-18T20:30:00Z
+
+Three-hour library growth loop marker: 2026-11-18T21:00:00Z
