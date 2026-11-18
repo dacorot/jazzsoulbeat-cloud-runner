@@ -100,7 +100,7 @@ def audit(root: Path) -> dict:
         "candidate_count": len(candidates), "candidates": candidates,
         "qhd_review_count": len(qhd_reviews), "qhd_reviews": qhd_reviews,
         "approval_request_count": len(requests),
-        "publication": "DISABLED", "note": "This audit reports evidence; it never approves, uploads or publishes.",
+        "publication": "HUMAN_GATED", "note": "This audit reports evidence; it never approves, uploads or publishes. Public scheduling and publication require separate explicit human approval bound to the exact artifact SHA-256.",
     }
 
 
