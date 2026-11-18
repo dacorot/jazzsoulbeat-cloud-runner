@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: jazz-soul-beat-music-growth-watchdog
+  group: jazz-soul-beat-remote-operator
   cancel-in-progress: false
 
 permissions:
