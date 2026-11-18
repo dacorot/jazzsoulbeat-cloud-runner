@@ -126,6 +126,62 @@ jobs:
         working-directory: agent
         run: python main.py library-status
 
+      - name: Restore approved original-music package for promotion
+        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: python main.py drive-pull-original-music
+
+      - name: Prepare hash-bound candidates from approved original music
+        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        working-directory: agent
+        run: |
+          mkdir -p output/library-promotion
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path("output/original-music/approved-stable-audio3-20261116")
+          index_path = root / "AUDITION_INDEX.json"
+          rights_path = root / "STABLE_AUDIO3_RIGHTS_REVIEW.json"
+          candidates = []
+          if index_path.is_file() and rights_path.is_file():
+              index = json.loads(index_path.read_text(encoding="utf-8"))
+              rights = json.loads(rights_path.read_text(encoding="utf-8"))
+              evidence_url = "https://stability.ai/community-license-agreement"
+              source_url = "https://huggingface.co/stabilityai/stable-audio-3-medium"
+              for item in index.get("candidates", []):
+                  if item.get("creative_approval") is not True or item.get("rights_verified") is not True:
+                      continue
+                  artifact = Path(item["file"])
+                  if not artifact.is_file():
+                      continue
+                  candidates.append({
+                      "decision": "ELIGIBLE_FOR_LIBRARY",
+                      "rights_verified": True,
+                      "eligible_for_video_assembly": True,
+                      "title": item["title"],
+                      "artist": "Stable Audio 3 / Stability AI",
+                      "artifact": str(artifact),
+                      "artifact_sha256": item["sha256"],
+                      "duration_seconds": item["duration_seconds"],
+                      "license_name": "Stability AI Community License",
+                      "license_url": evidence_url,
+                      "source_url": source_url,
+                      "attribution": "Generated with Stable Audio 3 by Stability AI; used under the Stability AI Community License.",
+                      "rights_evidence_url": evidence_url,
+                      "permission": "yes",
+                      "license_verified": "yes",
+                      "uploader_authority": "yes",
+                      "composition_rights": "yes",
+                      "performance_rights": "yes",
+                      "recording_rights": "yes",
+                      "reviewed_at": rights.get("reviewed_at_utc", "2026-11-14"),
+                      "review_notes": "Exact mastered hash reviewed under the current Stability AI Community License. Commercial registration, revenue threshold, AUP compliance and residual similarity risk remain applicable.",
+                  })
+          Path("output/library-promotion/eligible.json").write_text(json.dumps(candidates, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+          print(f"Prepared {len(candidates)} hash-bound original candidates.")
+          PY
       - name: Import rights-eligible library candidates
         id: library_promotion
         if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
