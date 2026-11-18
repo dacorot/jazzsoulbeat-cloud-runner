@@ -33,3 +33,4 @@ Promotion trigger: import rights-verified original-music package into private li
 
 Audit closure marker: final three-pass remediation run 2026-11-18T14:07:09Z
 Closure retry marker: 2026-11-18T14:10:14.426Z
+Retry FFmpeg install marker: 2026-11-18T14:11:29.255Z
