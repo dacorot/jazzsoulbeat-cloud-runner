@@ -50,3 +50,5 @@ Project-original rights declaration marker: 2026-11-18T17:50:00Z
 Generated-master persistence fix marker: 2026-11-18T18:00:00Z
 
 Music quality gates marker: 2026-11-18T18:15:00Z
+
+Music similarity threshold marker: 2026-11-18T18:25:00Z
