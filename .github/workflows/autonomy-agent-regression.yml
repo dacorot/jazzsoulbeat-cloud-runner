@@ -1,0 +1,29 @@
+name: Jazz Soul Beat - Autonomy agents regression
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 10 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: jazz-soul-beat-autonomy-regression
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install test dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Verify autonomy contracts
+        run: python -m unittest tests.test_autonomy_agents
+      - name: Verify Telegram workflow wiring
+        run: python -m unittest tests.test_workflow_telegram_wiring
