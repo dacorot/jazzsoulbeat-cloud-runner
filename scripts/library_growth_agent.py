@@ -94,7 +94,7 @@ def source_heartbeat(registry_path: Path, outcomes: dict[str, str]) -> dict:
         "sources_failed": failed,
         "sources_missing_heartbeat": missing,
         "unknown_outcomes": unknown,
-        "heartbeat": "ACTIVE" if not missing else "DEGRADED",
+        "heartbeat": "ACTIVE" if not missing and not failed else "DEGRADED",
         "publication": "DISABLED",
         "pdca_next_action": "Audit successful source outputs and send eligible hashes to the rights gate.",
     }
