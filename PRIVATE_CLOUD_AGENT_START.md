@@ -66,3 +66,6 @@ Music promotion deduplication fix and 155-minute verified local batch: 2026-11-1
 Three-hour library growth loop marker: 2026-11-18T21:00:00Z
 
 Fail-visible external growth correction marker: 2026-11-18T21:30:00Z
+
+
+Production trigger marker: 2026-11-18T18:30:00Z — start one private evergreen review video today; do not publish.
