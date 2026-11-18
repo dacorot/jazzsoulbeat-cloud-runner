@@ -77,3 +77,5 @@ Second flow audit marker: 2026-11-18T23:31:00Z — all production Drive operatio
 Render-contract repair marker: 2026-11-18T23:40:00Z — rerun with provenance and multi-scene output fixes.
 
 Visual contract syntax repair marker: 2026-11-18T23:50:00Z — retry with corrected newline encoding.
+
+Batch guard repair marker: 2026-11-18T23:55:00Z — retry after correcting 8/48 validation.
