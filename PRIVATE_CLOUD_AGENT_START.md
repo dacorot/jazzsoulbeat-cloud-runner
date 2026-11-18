@@ -75,3 +75,5 @@ Retry marker after decoupling optional music growth: 2026-11-18T23:26:00Z.
 Second flow audit marker: 2026-11-18T23:31:00Z — all production Drive operations now bounded.
 
 Render-contract repair marker: 2026-11-18T23:40:00Z — rerun with provenance and multi-scene output fixes.
+
+Visual contract syntax repair marker: 2026-11-18T23:50:00Z — retry with corrected newline encoding.
