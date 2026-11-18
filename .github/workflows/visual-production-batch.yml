@@ -33,7 +33,7 @@ permissions:
 
 concurrency:
   group: jazz-soul-beat-visual-production
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   produce:
