@@ -296,7 +296,13 @@ jobs:
         working-directory: agent
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
-        run: timeout 600s python main.py drive-pull-original-music
+        run: |
+          set -euo pipefail
+          if [[ -d output/original-music/approved-stable-audio3-20261116 ]]; then
+            echo "Approved original-music package already present; skipping Drive restore."
+          else
+            echo "No approved original-music package present; external licensed intake remains the active source."
+          fi
 
       - name: Prepare hash-bound candidates from approved original music
         if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
