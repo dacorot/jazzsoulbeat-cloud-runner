@@ -26,7 +26,13 @@ runs:
       working-directory: ${{ inputs.working_directory }}
       env:
         DRIVE_TOKEN_JSON: ${{ inputs.drive_token_json }}
-      run: python main.py drive-pull-state
+      run: |
+        set -euo pipefail
+        if [[ -f data/agent.db ]]; then
+          echo "Local production/state database already exists; preserving this cycle's validated changes."
+        else
+          python main.py drive-pull-state
+        fi
     - name: Create PDCA plan
       id: start
       shell: bash
