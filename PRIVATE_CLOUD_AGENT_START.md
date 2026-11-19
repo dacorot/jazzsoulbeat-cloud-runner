@@ -144,3 +144,6 @@ Repair trigger: retain metadata_source in final quality validation at e072d7e6dd
 
 
 Repair trigger: parallelize bounded Ketsa downloads with ordered durable receipts at 64ccd99b5aa38d6c01fc280283127c4b8fc75d5c.
+
+
+Repair trigger: normalize legacy Ketsa audit rows with metadata provenance at e9a1f96ff9dd8654ca6d3031d57b80d319be35f7.
