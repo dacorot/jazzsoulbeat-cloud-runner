@@ -117,3 +117,6 @@ Repair trigger: make discarded original-music restore non-blocking at 0116731c0f
 
 
 Repair trigger: cancel stale push-triggered correction run while preserving scheduled safety at a9e2b96fc3c8c99677f4a17cd104236179cf36d0.
+
+
+Repair trigger: preserve Ketsa quality metadata and duration during promotion at 53a8837387a7f6d8fced1c67d58515a767d21dc1 and 1bb7b10ef9d77889540225a8448177ab424b4c62.
