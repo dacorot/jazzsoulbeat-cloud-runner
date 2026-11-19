@@ -68,18 +68,6 @@ jobs:
 
           path = Path("visual_contract.py")
           text = path.read_text(encoding="utf-8")
-          old = """    if int(minimum_scenes) < MIN_SCENES_PER_CATEGORY:
-        raise VisualContractError(
-            f"Production minimum cannot be below {MIN_SCENES_PER_CATEGORY} scenes."
-        )
-"""
-          new = """    if int(minimum_scenes) < 1:
-        raise VisualContractError("Visual minimum must be positive.")
-"""
-          if old in text:
-              path.write_text(text.replace(old, new), encoding="utf-8")
-              repairs.append("batch-minimum-contract:visual_contract.py")
-
           Path("autofix-report.txt").write_text(
               "\n".join(repairs) + ("\n" if repairs else "NO_SAFE_REPAIR\n"),
               encoding="utf-8",
