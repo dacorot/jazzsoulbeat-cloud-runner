@@ -91,3 +91,5 @@ Repair trigger: enforce 20 new music files per growth run and enable Ketsa sourc
 Repair trigger: strict 60-minute window with minimum 20 new music files at e8f503f75d7124fa813f74e3456e31ab584a31da.
 
 Repair trigger: pass DRIVE_TOKEN_JSON into growth persistence step at 75fd3e6618cac334ea99e73159aa8c1f88834d5e.
+
+Repair trigger: mandatory preflight before production data access at 1b7dbab7f1ea6bd9f2eb77a2fc15752b416e3260.
