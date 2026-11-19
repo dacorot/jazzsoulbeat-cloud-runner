@@ -283,7 +283,13 @@ jobs:
         working-directory: agent
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
-        run: timeout 600s python main.py drive-pull-growth-batch
+        run: |
+          set -euo pipefail
+          if [[ -s output/library-promotion/eligible-external.json ]]; then
+            echo "Growth artifacts already exist in this run; skipping redundant Drive restore."
+          else
+            timeout 600s python main.py drive-pull-growth-batch
+          fi
 
       - name: Restore approved original-music package for promotion
         if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
