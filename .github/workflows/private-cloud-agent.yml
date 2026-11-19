@@ -485,6 +485,7 @@ jobs:
           SEASON: ${{ env.SEASON }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           if [[ "$COLLECTION" == "evergreen" ]]; then
             SCENE_MANIFEST="assets/visual-agents/midnight_jazz_soul/scenes/SCENE_MANIFEST.json"
