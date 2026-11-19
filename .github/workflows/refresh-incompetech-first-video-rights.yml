@@ -9,7 +9,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: jazz-soul-beat-first-video-visual-preview
+  group: jazz-soul-beat-shared-private-drive-state
   cancel-in-progress: false
 jobs:
   refresh-rights:
