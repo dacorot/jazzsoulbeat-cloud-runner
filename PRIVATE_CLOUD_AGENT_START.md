@@ -160,3 +160,5 @@ Repair trigger: fill empty legacy Ketsa metadata provenance at 805f80abe0db50d0f
 - 2026-11-19: PDCA start no sobreescribe data/agent.db local después de promoción; restaura estado desde Drive solo si el DB no existe.
 
 Visual restore and provider-fallback repair marker: 2026-11-19T00:00:00Z
+
+Playlist security regression repair marker: 2026-11-19T00:10:00Z
