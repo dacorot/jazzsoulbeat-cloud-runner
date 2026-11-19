@@ -89,47 +89,17 @@ jobs:
           python-version: "3.11"
 
       - name: Ensure FFmpeg
-        timeout-minutes: 20
+        timeout-minutes: 6
         run: |
           set -euo pipefail
-
-          # Repair chain: runner image -> apt package -> pinned static downloader.
-          # Each fallback is bounded and diagnostic; a failed attempt must not stop
-          # the next repair path.
-          if command -v ffmpeg >/dev/null 2>&1 && command -v ffprobe >/dev/null 2>&1; then
-            echo "FFmpeg already available on the runner."
-          else
-            echo "FFmpeg missing; attempting the controlled Ubuntu package repair."
-            set +e
-            if command -v sudo >/dev/null 2>&1; then
-              timeout 90s sudo apt-get update -qq
-              timeout 90s sudo apt-get install -y --no-install-recommends ffmpeg
-            else
-              echo "sudo is unavailable; skipping apt repair."
-            fi
-            set -e
-          fi
-
           if ! command -v ffmpeg >/dev/null 2>&1 || ! command -v ffprobe >/dev/null 2>&1; then
-            echo "Apt repair did not provide FFmpeg; attempting the pinned static repair."
-            timeout 180s python -m pip install --disable-pip-version-check ffmpeg-downloader==0.5.3
-            timeout 180s python -m ffmpeg_downloader install @gpl
-            FFMPEG_BIN_DIR="$(python -c 'import ffmpeg_downloader as f; from pathlib import Path; p=Path(f.ffmpeg_path); q=Path(f.ffprobe_path); assert p.is_file(), p; assert q.is_file(), q; print(p.parent)')"
-            echo "$FFMPEG_BIN_DIR" >> "$GITHUB_PATH"
-            export PATH="$FFMPEG_BIN_DIR:$PATH"
+            echo "FFmpeg missing; installing the pinned Ubuntu package."
+            command -v sudo >/dev/null 2>&1 || { echo "::error::sudo unavailable for FFmpeg installation."; exit 1; }
+            timeout 120s sudo apt-get update -qq
+            timeout 180s sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ffmpeg
           fi
-
-          if ! command -v ffmpeg >/dev/null 2>&1 || ! command -v ffprobe >/dev/null 2>&1; then
-            echo "::error::FFmpeg repair exhausted all paths."
-            uname -a || true
-            python --version || true
-            python -m pip --version || true
-            command -v ffmpeg || true
-            command -v ffprobe || true
-            ls -l /usr/bin/ffmpeg /usr/bin/ffprobe 2>/dev/null || true
-            exit 1
-          fi
-
+          command -v ffmpeg >/dev/null 2>&1 || { echo "::error::ffmpeg unavailable after repair."; exit 1; }
+          command -v ffprobe >/dev/null 2>&1 || { echo "::error::ffprobe unavailable after repair."; exit 1; }
           echo "FFmpeg repair verified:"
           command -v ffmpeg
           command -v ffprobe
