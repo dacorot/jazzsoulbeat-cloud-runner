@@ -83,3 +83,5 @@ Batch guard repair marker: 2026-11-18T23:55:00Z — retry after correcting 8/48 
 Optional-growth unblock marker: 2026-11-19T00:15:00Z — retry production without optional enrichment blockers.
 
 FFmpeg fallback repair marker: 2026-11-19T00:35:00Z — retry video with static downloader fallback.
+
+Repair trigger: FFmpeg fallback chain deployed at 00ff9663d451c8fe7b22e2414f1953384b1f307e.
