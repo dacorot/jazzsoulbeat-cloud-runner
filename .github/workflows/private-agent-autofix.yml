@@ -19,13 +19,16 @@ concurrency:
 
 jobs:
   repair:
-    if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'failure' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
       AUTOFIX_TOKEN: ${{ secrets.PRIVATE_REPO_AUTOFIX_TOKEN }}
       AGENT_BRANCH: fix/real-music-and-cinematic-motion
     steps:
+      - name: Check whether repair is required
+        if: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.conclusion != 'failure' }}
+        run: echo "Supervisor completed successfully; no auto-fix required."
+
       - name: Check out private agent
         uses: actions/checkout@v4
         with:
