@@ -85,3 +85,5 @@ Optional-growth unblock marker: 2026-11-19T00:15:00Z — retry production withou
 FFmpeg fallback repair marker: 2026-11-19T00:35:00Z — retry video with static downloader fallback.
 
 Repair trigger: FFmpeg fallback chain deployed at 00ff9663d451c8fe7b22e2414f1953384b1f307e.
+
+Repair trigger: enforce 20 new music files per growth run and enable Ketsa source at ec1819f891804e325e5bf43cf0ef2e5addfbfd54.
