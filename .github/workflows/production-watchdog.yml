@@ -69,7 +69,7 @@ jobs:
           echo "No publication, deletion or unrestricted code mutation was attempted." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Optional Telegram notification
-        if: ${{ always() && env.TELEGRAM_BOT_TOKEN != '' && env.TELEGRAM_CHAT_ID != '' }}
+        if: ${{ always() }}
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -78,5 +78,9 @@ jobs:
           CONCLUSION: ${{ steps.inspect.outputs.conclusion }}
         run: |
           set -euo pipefail
+          if [[ -z "$TELEGRAM_BOT_TOKEN" || -z "$TELEGRAM_CHAT_ID" ]]; then
+            echo "Telegram secrets not configured; watchdog report remains in GitHub."
+            exit 0
+          fi
           text="Jazz Soul Beat watchdog: run $RUN_ID | status=$STATUS | conclusion=$CONCLUSION"
           curl --fail --silent --show-error --max-time 20             -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage"             --data-urlencode "chat_id=$TELEGRAM_CHAT_ID"             --data-urlencode "text=$text"
