@@ -147,3 +147,6 @@ Repair trigger: parallelize bounded Ketsa downloads with ordered durable receipt
 
 
 Repair trigger: normalize legacy Ketsa audit rows with metadata provenance at e9a1f96ff9dd8654ca6d3031d57b80d319be35f7.
+
+
+Repair trigger: fill empty legacy Ketsa metadata provenance at 805f80abe0db50d0f9616b680682f0dbac4d450c.
