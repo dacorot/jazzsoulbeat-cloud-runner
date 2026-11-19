@@ -107,7 +107,7 @@ jobs:
             --audio-request-id "${{ inputs.audio_request_id }}" \
             --image "${{ steps.locate.outputs.scene }}" \
             --output "$OUTPUT" \
-            --rain-mode integrated_plate \
+            --rain-mode steam_only \
             --duration 240 > video-review-request.json
           python - <<'PY' >> "$GITHUB_OUTPUT"
           import json
