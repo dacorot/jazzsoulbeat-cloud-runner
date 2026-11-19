@@ -152,3 +152,4 @@ Repair trigger: normalize legacy Ketsa audit rows with metadata provenance at e9
 Repair trigger: fill empty legacy Ketsa metadata provenance at 805f80abe0db50d0f9616b680682f0dbac4d450c.
 
 - 2026-11-19: Corregido el escaneo de audio importado: library.py usa FFprobe como fallback cuando Mutagen no puede leer metadatos.
+- 2026-11-19: Curator eligibility now accepts official Ketsa tracks with documented absent instrumentation metadata.
