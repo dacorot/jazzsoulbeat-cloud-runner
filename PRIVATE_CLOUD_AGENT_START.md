@@ -166,3 +166,5 @@ Playlist security regression repair marker: 2026-11-19T00:10:00Z
 Growth isolation and resumable-source marker: 2026-11-19T00:20:00Z
 
 Auxiliary growth persistence retry marker: 2026-11-19T00:40:00Z
+
+Render shell syntax repair marker: 2026-11-19T01:00:00Z
