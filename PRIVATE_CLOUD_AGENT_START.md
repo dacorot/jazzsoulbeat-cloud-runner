@@ -132,3 +132,6 @@ Repair trigger: bound FFmpeg repair fallback timeouts at ab8811c800995e44db6ec5d
 
 
 Repair trigger: update library test schema for metadata_source at a2dda8b212ce49092e769ed45056256126aee361.
+
+
+Repair trigger: decouple slow Incompetech downloads from primary Ketsa growth at 2f978289e450daa5cc93e2fda3a1cf70a6ac4ebe.
