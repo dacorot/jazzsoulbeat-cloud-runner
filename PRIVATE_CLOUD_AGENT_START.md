@@ -157,3 +157,4 @@ Repair trigger: fill empty legacy Ketsa metadata provenance at 805f80abe0db50d0f
 - 2026-11-19: Curator now detects legacy SQLite schemas before applying metadata_source filters, preserving test and migration compatibility.
 - 2026-11-19: Ketsa growth batch expanded from 40 to 80 candidates to reach the approved two-hour evergreen target without lowering gates.
 - 2026-11-19: Expuestos en main.py los comandos pdca-start, pdca-do, pdca-check y pdca-act usados por las acciones Deming.
+- 2026-11-19: PDCA start no sobreescribe data/agent.db local después de promoción; restaura estado desde Drive solo si el DB no existe.
