@@ -192,3 +192,6 @@ Exact mux shortest repair marker: 2026-11-19T06:00:00Z
 Exact H264 duration re-encode marker: 2026-11-19T07:00:00Z
 
 Requested-duration contract repair marker: 2026-11-19T08:00:00Z
+
+
+Visual repair trigger: 2026-11-19 — locked camera, no zoom, reference contract integrated, explicit rain/fog/steam layers required.
