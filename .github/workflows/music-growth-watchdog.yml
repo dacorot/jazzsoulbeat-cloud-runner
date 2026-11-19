@@ -67,6 +67,8 @@ jobs:
           timeout 120s python main.py audit-incompetech-sources
           timeout 120s python main.py audit-incompetech-track-pages
           timeout 120s python -c "import rights_audit; rights_audit.audit_incompetech()"
+          timeout 120s python main.py discover-ketsa --limit 40
+          timeout 180s python main.py download-ketsa --limit 40
           timeout 60s python main.py intake-library-growth
 
       - name: Promote only the eligible evidence-bound batch
@@ -92,7 +94,6 @@ jobs:
           PY
           python main.py promote-library --candidates output/library-promotion/eligible.json --report output/library-promotion/import-report.json
           python main.py reconcile-music
-          python main.py scan
           python main.py library-status
 
       - name: Persist growth, library and audit evidence
