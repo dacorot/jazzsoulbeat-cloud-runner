@@ -148,8 +148,30 @@ jobs:
           python -m compileall -q .
           python -m unittest discover -s tests -v
 
+      - name: Preflight all cloud dependencies before touching production data
+        id: preflight
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: |
+          set -euo pipefail
+          test -n "$DRIVE_TOKEN_JSON" || { echo "::error::DRIVE_TOKEN_JSON is missing before production."; exit 1; }
+          command -v ffmpeg >/dev/null || { echo "::error::ffmpeg unavailable in preflight."; exit 1; }
+          command -v ffprobe >/dev/null || { echo "::error::ffprobe unavailable in preflight."; exit 1; }
+          test -r requirements.txt || { echo "::error::Agent requirements are unavailable."; exit 1; }
+          echo "Preflight: secrets, FFmpeg and agent files are present."
+          python main.py drive-status >/tmp/jsb-drive-preflight.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path('/tmp/jsb-drive-preflight.json').read_text(encoding='utf-8'))
+          if not isinstance(report, dict):
+              raise SystemExit('Drive preflight returned no structured status.')
+          print('Preflight: Drive connection and status query succeeded.')
+          PY
       - name: Restore only the data needed for this cloud task
         id: restore
+        if: ${{ steps.preflight.outcome == 'success' }}
         working-directory: agent
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
