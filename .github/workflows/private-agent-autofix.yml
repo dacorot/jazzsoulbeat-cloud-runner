@@ -1,6 +1,9 @@
 name: Jazz Soul Beat - private agent auto-fix
 
 on:
+  push:
+    paths:
+      - ".github/workflows/private-agent-autofix.yml"
   workflow_dispatch:
   workflow_run:
     workflows:
@@ -16,7 +19,7 @@ concurrency:
 
 jobs:
   repair:
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'failure' }}
+    if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'failure' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -88,7 +91,10 @@ jobs:
           python -m compileall -q .
           python -m pytest -q tests/test_visual_contract.py tests/test_visual_directors.py tests/test_scene_factory.py
           test -s autofix-report.txt
-          ! grep -qx "NO_SAFE_REPAIR" autofix-report.txt
+          if grep -qx "NO_SAFE_REPAIR" autofix-report.txt; then
+            echo "No allowlisted repair matched; no branch or PR will be created."
+            exit 0
+          fi
 
       - name: Create isolated repair branch and pull request
         if: success()
