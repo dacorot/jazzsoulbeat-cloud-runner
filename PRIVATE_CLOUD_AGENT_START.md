@@ -180,3 +180,5 @@ HF authenticated visual generation wiring marker: 2026-11-19T02:00:00Z
 Description credit compaction repair marker: 2026-11-19T02:30:00Z
 
 Effective crossfade duration contract repair marker: 2026-11-19T03:00:00Z
+
+Exact mix target enforcement marker: 2026-11-19T04:00:00Z
