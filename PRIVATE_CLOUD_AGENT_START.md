@@ -99,3 +99,6 @@ Repair trigger: connect Ketsa receipt to rights intake contract at 1a00456de0848
 Repair trigger: use music-only Drive restore before growth at 84b1402f989c5c94b373b848c8d654727030f9cc.
 
 Repair trigger: portable FFmpeg seam frame extraction at 32d675ecb43788d953ff615d8c60b4ae13c4ee98.
+
+
+Repair trigger: bound Incompetech per-track network timeouts at aaa71316610498d6a2654a62643726ec090968c2.
