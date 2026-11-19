@@ -201,3 +201,5 @@ Visual repair retry: 2026-11-19 — tests aligned with locked-camera contract an
 Visual repair retry 2: 2026-11-19 — corrected test indentation after locked-camera assertion update.
 
 Runner repair trigger: 2026-11-19 — increased bounded FFmpeg installation timeout for slow Ubuntu mirrors; no publication.
+
+Visual test fixture repair: 2026-11-19 — all multi-scene fixtures now declare environmental motion.
