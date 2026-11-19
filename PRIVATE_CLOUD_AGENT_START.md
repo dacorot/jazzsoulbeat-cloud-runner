@@ -138,3 +138,6 @@ Repair trigger: decouple slow Incompetech downloads from primary Ketsa growth at
 
 
 Repair trigger: skip absent original-master integration and update its manifest compatibility at 896fcbf5ffe8718bc63849325133c3f55ecebbf9 and e7583a60df2dedd0ce64d4cbee3a4f7001bd2804.
+
+
+Repair trigger: retain metadata_source in final quality validation at e072d7e6ddc33335887df51676a036b93fdf11e6.
