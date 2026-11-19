@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: jazz-soul-beat-openlofi-review
+  group: jazz-soul-beat-shared-private-drive-state
   cancel-in-progress: false
 
 jobs:
