@@ -201,20 +201,20 @@ jobs:
 
       - name: Run autonomous external music growth agents
         id: external_music_growth
-        timeout-minutes: 180
+        timeout-minutes: 60
         if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
         working-directory: agent
         run: |
           set -euo pipefail
-          timeout 600s python main.py discover-incompetech
-          timeout 600s python main.py download-incompetech
-          timeout 600s python main.py inspect-incompetech
-          timeout 600s python main.py audit-incompetech-sources
-          timeout 600s python main.py audit-incompetech-track-pages
-          timeout 600s python main.py discover-ketsa --limit 40
-          timeout 600s python main.py download-ketsa --limit 40
-          timeout 600s python main.py intake-library-growth
-          timeout 600s python main.py drive-push-growth-research
+          timeout 300s python main.py discover-incompetech
+          timeout 300s python main.py download-incompetech
+          timeout 300s python main.py inspect-incompetech
+          timeout 300s python main.py audit-incompetech-sources
+          timeout 300s python main.py audit-incompetech-track-pages
+          timeout 300s python main.py discover-ketsa --limit 40
+          timeout 300s python main.py download-ketsa --limit 40
+          timeout 300s python main.py intake-library-growth
+          timeout 300s python main.py drive-push-growth-research
 
       - name: Enforce music growth throughput
         id: growth_gate
