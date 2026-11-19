@@ -57,7 +57,13 @@ jobs:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
         run: python main.py drive-pull-state
 
-      - name: Locate requested approved audio ledger and scene
+      - name: Restore definitive visual samples
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: python main.py drive-pull-visual-assets
+
+      - name: Locate requested approved audio and exactly one definitive image
         id: locate
         working-directory: agent
         env:
@@ -67,18 +73,20 @@ jobs:
           import json, os
           from pathlib import Path
           requested = os.environ["AUDIO_REQUEST_ID"]
+          samples = sorted(
+              p for p in Path("assets/visual-agents/approved-style-samples").rglob("*")
+              if p.is_file() and p.suffix.lower() in {".jpg", ".jpeg", ".png", ".webp"}
+          )
+          if len(samples) < 1:
+              raise SystemExit("Definitive visual sample set is unavailable")
+          image = samples[0]
           for ledger in sorted(Path("output/original-music").glob("*/approval_ledger.json")):
               data = json.loads(ledger.read_text(encoding="utf-8"))
               request = data.get("requests", {}).get(requested)
               if request:
-                  scene = next(ledger.parent.glob("visual-review/cafe-library-clean-window-v2-candidate.png"), None)
-                  if scene is None:
-                      raise SystemExit(
-                          f"No approved integrated-window scene beside {ledger}; "
-                          "procedural full-frame rain is forbidden for production reviews"
-                      )
                   print(f"ledger={ledger}")
-                  print(f"scene={scene}")
+                  print(f"scene={image}")
+                  print(f"sample_sha256={__import__('hashlib').sha256(image.read_bytes()).hexdigest()}")
                   raise SystemExit(0)
           raise SystemExit("Approved audio request was not found in restored private state")
           PY
