@@ -66,3 +66,5 @@ Every video must use exactly one user-approved style sample from
 `assets/visual-agents/approved-style-samples/`. The camera is locked: no zoom,
 pan, parallax, or scene montage. Rain is fail-closed and may render only with a
 verified window mask; otherwise the review renderer uses steam-only motion.
+
+Audio assembly also enforces a 32-second equal-power crossfade and rejects insufficient effective duration.
