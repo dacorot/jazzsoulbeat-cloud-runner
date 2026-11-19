@@ -58,3 +58,11 @@ La tarea `self-test` genera únicamente el video sintético de comprobación; no
 4. Revisa el resultado en la ejecución. No se realiza ninguna publicación en YouTube.
 
 El runner es efímero: no conserva archivos después del trabajo. La continuidad depende de Google Drive y de los workflows programados/manuales. Esto ofrece ejecución por horarios, no un proceso 24/7 permanentemente activo. La producción se bloquea mientras no exista una hora completa de música aprobada con derechos verificados. Todos los workflows que escriben en la base SQLite o en la carpeta de estado de Drive comparten el mismo grupo de concurrencia; así se evita que dos ejecuciones sobrescriban estados mutuamente.
+
+
+## Visual production lock
+
+Every video must use exactly one user-approved style sample from
+`assets/visual-agents/approved-style-samples/`. The camera is locked: no zoom,
+pan, parallax, or scene montage. Rain is fail-closed and may render only with a
+verified window mask; otherwise the review renderer uses steam-only motion.
