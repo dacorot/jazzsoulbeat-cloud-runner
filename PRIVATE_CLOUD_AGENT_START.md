@@ -111,3 +111,6 @@ Repair trigger: bound Ketsa per-track network timeout at 7ff784a429fdaf7c5e458df
 
 
 Repair trigger: skip redundant growth-batch Drive restore at 7fac1c72f6b18e6ada8c42ef49b29034ec9bb7ad.
+
+
+Repair trigger: make discarded original-music restore non-blocking at 0116731c0fec418e2c6375259d5f1aa13e2c5025.
