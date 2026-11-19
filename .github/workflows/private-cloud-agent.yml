@@ -279,7 +279,6 @@ jobs:
               )
           PY
       - name: Restore autonomous library-growth batch for promotion
-        continue-on-error: true
         if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
         working-directory: agent
         env:
@@ -287,7 +286,6 @@ jobs:
         run: timeout 600s python main.py drive-pull-growth-batch
 
       - name: Restore approved original-music package for promotion
-        continue-on-error: true
         if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
         working-directory: agent
         env:
@@ -295,7 +293,6 @@ jobs:
         run: timeout 600s python main.py drive-pull-original-music
 
       - name: Prepare hash-bound candidates from approved original music
-        continue-on-error: true
         if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
         working-directory: agent
         run: |
@@ -351,7 +348,6 @@ jobs:
           print(f"Prepared {len(candidates)} hash-bound original candidates.")
           PY
       - name: Integrate approved original masters
-        continue-on-error: true
         id: original_promotion
         if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
         working-directory: agent
@@ -361,7 +357,6 @@ jobs:
           python main.py reconcile-music
 
       - name: Import rights-eligible library candidates
-        continue-on-error: true
         id: library_promotion
         if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
         working-directory: agent
