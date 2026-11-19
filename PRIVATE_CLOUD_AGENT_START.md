@@ -108,3 +108,6 @@ Repair trigger: bounded FFprobe fallback for promoted external audio duration at
 
 
 Repair trigger: bound Ketsa per-track network timeout at 7ff784a429fdaf7c5e458dfb5a2c95a31a872fc3.
+
+
+Repair trigger: skip redundant growth-batch Drive restore at 7fac1c72f6b18e6ada8c42ef49b29034ec9bb7ad.
