@@ -6,14 +6,16 @@ from scripts.visual_motion_agent import create_plan
 
 
 class VisualMotionAgentTests(unittest.TestCase):
-    def test_plan_allows_only_steam_motion_and_static_rain(self):
+    def test_plan_allows_only_locked_plate_motion(self):
         with tempfile.TemporaryDirectory() as directory:
             image = Path(directory) / "approved.png"
             image.write_bytes(b"approved base")
             plan = create_plan(image)
-        self.assertEqual(plan["profile"], "static_rain_steam_only")
-        self.assertEqual(plan["animated_layers"], ["coffee_steam"])
-        self.assertIn("exterior_rain_texture", plan["static_layers"])
+        self.assertEqual(plan["profile"], "single_approved_plate_integrated_motion")
+        self.assertEqual(plan["animated_layers"], ["coffee_steam", "approved_plate_rain_highlights"])
+        self.assertEqual(plan["static_layers"], ["approved_base_plate"])
+        self.assertEqual(plan["rain_mode"], "integrated_plate_only")
+        self.assertTrue(plan["rain_mask_required"])
         self.assertEqual(plan["camera"], "locked")
         self.assertFalse(plan["creative_approval"])
 
