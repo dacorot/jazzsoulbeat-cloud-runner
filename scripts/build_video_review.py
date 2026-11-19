@@ -41,7 +41,7 @@ def prepare(ledger_path: Path, audio_request_id: str, image: Path,
         if not image.is_file():
             raise ValueError("review_image_missing")
         # Preserve compatibility with lightweight render fakes used by older
-        # integration tests while allowing explicit integrated-plate mode.
+        # integration tests while allowing an explicit fail-closed motion mode.
         if rain_mode == "procedural_window":
             report = render(audio, image, output, duration)
         else:
@@ -83,7 +83,7 @@ def main() -> int:
     parser.add_argument("--image", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--duration", type=int, default=240)
-    parser.add_argument("--rain-mode", choices=("procedural_window", "integrated_plate", "masked_window"),
+    parser.add_argument("--rain-mode", choices=("procedural_window", "integrated_plate", "masked_window", "static_window", "steam_only"),
                         default="procedural_window")
     args = parser.parse_args()
     try:
