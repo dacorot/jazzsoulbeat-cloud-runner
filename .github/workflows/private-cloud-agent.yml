@@ -491,19 +491,7 @@ jobs:
             if ! python -c 'import json,sys; from pathlib import Path; from video import _validated_scene_selection; p=Path(sys.argv[1]); m=json.loads(p.read_text(encoding="utf-8")); assert m.get("status") in {"SCENE_SET_GENERATED_PENDING_HUMAN_QA","SCENE_SET_COMPLETE_WITH_DERIVED_VARIANTS_PENDING_HUMAN_QA"}; _validated_scene_selection(p,m,minimum_scenes=8)' "$SCENE_MANIFEST"; then
               echo "No hay una biblioteca visual completa; se intentará generarla solo con cuotas gratuitas."
               if ! python scene_factory.py; then
-                python - <<'PY'
-                import json
-                from pathlib import Path
-                manifest = Path("assets/visual-agents/midnight_jazz_soul/scenes/SCENE_MANIFEST.json")
-                if not manifest.is_file():
-                    raise SystemExit("scene_factory falló y no dejó manifiesto visual.")
-                data = json.loads(manifest.read_text(encoding="utf-8"))
-                allowed = {"SCENE_SET_GENERATED_PENDING_HUMAN_QA", "SCENE_SET_COMPLETE_WITH_DERIVED_VARIANTS_PENDING_HUMAN_QA"}
-                scenes = data.get("scenes")
-                if data.get("status") not in allowed or not isinstance(scenes, list) or len(scenes) < 8:
-                    raise SystemExit("scene_factory falló sin dejar un conjunto visual válido de al menos 8 escenas.")
-                print("scene_factory reportó proveedor no disponible, pero dejó un manifiesto válido de 8 escenas; se continúa al render.")
-                PY
+                python -c 'import json,sys; from pathlib import Path; p=Path("assets/visual-agents/midnight_jazz_soul/scenes/SCENE_MANIFEST.json"); assert p.is_file(), "scene_factory falló y no dejó manifiesto visual."; data=json.loads(p.read_text(encoding="utf-8")); allowed={"SCENE_SET_GENERATED_PENDING_HUMAN_QA","SCENE_SET_COMPLETE_WITH_DERIVED_VARIANTS_PENDING_HUMAN_QA"}; scenes=data.get("scenes"); assert data.get("status") in allowed and isinstance(scenes,list) and len(scenes) >= 8, "scene_factory falló sin dejar un conjunto visual válido de al menos 8 escenas."; print("scene_factory reportó proveedor no disponible, pero dejó un manifiesto válido de 8 escenas; se continúa al render.")'
               fi
             fi
             export JSB_REQUIRE_MULTI_SCENE=1
