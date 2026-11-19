@@ -286,7 +286,7 @@ def render(audio: Path, image: Path, output: Path, duration: int,
         raise FileNotFoundError("Audio e imagen deben existir")
     if not 20 <= duration <= 360:
         raise ValueError("La audición debe durar entre 20 y 360 segundos")
-    if rain_mode not in {"procedural_window", "integrated_plate", "masked_window", "static_window"}:
+    if rain_mode not in {"procedural_window", "integrated_plate", "masked_window", "static_window", "steam_only"}:
         raise ValueError("rain_mode inválido")
     ffmpeg = shutil.which("ffmpeg")
     ffprobe = shutil.which("ffprobe")
