@@ -177,7 +177,7 @@ jobs:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
         run: |
           if [[ "${{ env.TASK }}" == "build-evergreen" ]]; then
-            timeout 600s python main.py drive-pull-library
+            timeout 600s python main.py drive-pull-music-library
             python main.py migrate-manifests
           else
             python main.py drive-pull-state
