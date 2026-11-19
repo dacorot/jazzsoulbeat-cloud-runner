@@ -48,7 +48,13 @@ def audit(root: Path) -> dict:
         "scene_diversity_policy": seasonal.get("scene_diversity", {}).get("same_focal_instrument_in_every_scene_allowed") is False,
         "scene_library": scene["status"] in {"READY", "PRIVATE_SCENE_LIBRARY_NOT_PRESENT"},
         "queue": len(queue.get("jobs", [])) == 12 and len(queue.get("parallel_music_lanes", [])) == 3,
-        "visual_contract": visual.get("allowed_profile") == "static_rain_steam_only" and visual.get("motion_contract", {}).get("camera") == "locked",
+        "visual_contract": (
+            visual.get("allowed_profile") == "single_approved_plate_integrated_motion"
+            and visual.get("input_contract", {}).get("single_image_per_video") is True
+            and visual.get("input_contract", {}).get("approved_style_samples_required") is True
+            and visual.get("motion_contract", {}).get("camera") == "locked"
+            and visual.get("motion_contract", {}).get("rain_mask_required") is True
+        ),
         "music_policy": policy.get("dedup_required_before_download") is True and policy.get("never_auto_approve") is True,
         "audio_capacity": approved_seconds >= target_seconds,
         "publication_disabled": all(job.get("publication") == "DISABLED" for job in queue.get("jobs", [])),
