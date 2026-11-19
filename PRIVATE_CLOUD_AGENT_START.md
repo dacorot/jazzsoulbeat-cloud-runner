@@ -95,3 +95,5 @@ Repair trigger: pass DRIVE_TOKEN_JSON into growth persistence step at 75fd3e6618
 Repair trigger: mandatory preflight before production data access at 1b7dbab7f1ea6bd9f2eb77a2fc15752b416e3260.
 
 Repair trigger: connect Ketsa receipt to rights intake contract at 1a00456de0848361c4e28a33bc82f9ab64a0d855.
+
+Repair trigger: use music-only Drive restore before growth at 84b1402f989c5c94b373b848c8d654727030f9cc.
