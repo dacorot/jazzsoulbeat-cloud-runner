@@ -56,7 +56,7 @@ class ReadinessAuditTests(unittest.TestCase):
             self.assertEqual(result["status"], "INCOMPLETE")
             self.assertFalse(result["gates"]["human_creative_audio_approval"])
             self.assertFalse(result["gates"]["private_upload_approval"])
-            self.assertEqual(result["publication"], "DISABLED")
+            self.assertEqual(result["publication"], "HUMAN_GATED")
 
     def test_qhd_gate_requires_the_manifest_hash_to_match_the_mp4(self):
         with tempfile.TemporaryDirectory() as directory:
