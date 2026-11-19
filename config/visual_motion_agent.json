@@ -25,7 +25,8 @@
       "exterior_rain_texture"
     ],
     "camera": "locked",
-    "rain": "integrated_plate_only",
+    "rain": "verified_window_mask_only",
+    "rain_fallback": "steam_only_locked_camera",
     "loop_seconds": 20,
     "fps": 30,
     "resolution": [
