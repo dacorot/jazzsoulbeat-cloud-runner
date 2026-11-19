@@ -5,6 +5,10 @@ on:
     paths:
       - ".github/workflows/inspect-ketsa-reference-frames.yml"
   workflow_dispatch:
+concurrency:
+  group: jazz-soul-beat-shared-private-drive-state
+  cancel-in-progress: false
+
 permissions:
   contents: read
 jobs:
