@@ -32,8 +32,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: jazz-soul-beat-visual-production
-  cancel-in-progress: true
+  group: jazz-soul-beat-shared-private-drive-state
+  cancel-in-progress: false
 
 jobs:
   produce:
