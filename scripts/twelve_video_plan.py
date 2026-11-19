@@ -25,7 +25,7 @@ def build_plan(start: dt.date, count: int = 12) -> dict:
             "title_direction": category["display_name"],
             "mission": category["mission"],
             "visual_agent": "visual_motion_agent",
-            "visual_profile": "static_rain_steam_only",
+            "visual_profile": "single_approved_plate_integrated_motion",
             "image_status": "PLAN_READY_BASE_IMAGE_REQUIRED",
             "motion_status": "CONTRACT_READY",
             "music_status": "SEARCH_AND_APPROVAL_REQUIRED",
