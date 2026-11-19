@@ -184,3 +184,5 @@ Effective crossfade duration contract repair marker: 2026-11-19T03:00:00Z
 Exact mix target enforcement marker: 2026-11-19T04:00:00Z
 
 Retry after transient FFmpeg mirror timeout: 2026-11-19T04:30:00Z
+
+Correct regression expectation marker: 2026-11-19T05:00:00Z
