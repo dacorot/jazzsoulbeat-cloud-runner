@@ -213,13 +213,13 @@ jobs:
         if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
         working-directory: agent
         timeout-minutes: 8
-        run: timeout 300s python main.py discover-ketsa --limit 40
+        run: timeout 300s python main.py discover-ketsa --limit 80
 
       - name: Download Ketsa review candidates
         if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
         working-directory: agent
         timeout-minutes: 25
-        run: timeout 1500s python main.py download-ketsa --limit 40
+        run: timeout 1500s python main.py download-ketsa --limit 80
 
       - name: Intake library growth candidates
         id: intake_growth
