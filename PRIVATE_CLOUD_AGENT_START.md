@@ -195,3 +195,5 @@ Requested-duration contract repair marker: 2026-11-19T08:00:00Z
 
 
 Visual repair trigger: 2026-11-19 — locked camera, no zoom, reference contract integrated, explicit rain/fog/steam layers required.
+
+Visual repair retry: 2026-11-19 — tests aligned with locked-camera contract and bounded Drive folder fallback.
