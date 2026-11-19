@@ -227,18 +227,6 @@ jobs:
         timeout-minutes: 5
         run: timeout 300s python main.py discover-incompetech
 
-      - name: Download Incompetech review candidates
-        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
-        working-directory: agent
-        timeout-minutes: 8
-        run: timeout 300s python main.py download-incompetech
-
-      - name: Inspect Incompetech audio
-        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
-        working-directory: agent
-        timeout-minutes: 5
-        run: timeout 300s python main.py inspect-incompetech
-
       - name: Audit Incompetech source evidence
         if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
         working-directory: agent
