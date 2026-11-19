@@ -7,6 +7,7 @@ import importlib
 import json
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 
@@ -61,7 +62,12 @@ def audit(root: Path) -> dict:
 
 def _visual(root, image):
     from scripts.visual_motion_agent import create_plan
-    plan = create_plan(image)
+    # Readiness checks the immutable contract without depending on a private
+    # binary that is restored from Drive only during production.
+    with tempfile.TemporaryDirectory() as directory:
+        fixture = Path(directory) / "approved-style-sample.png"
+        fixture.write_bytes(b"readiness fixture")
+        plan = create_plan(fixture)
     assert plan["profile"] == "single_approved_plate_integrated_motion"
     assert plan["animated_layers"] == ["coffee_steam", "approved_plate_rain_highlights"]
     assert plan["camera"] == "locked"
