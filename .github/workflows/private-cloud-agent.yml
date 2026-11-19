@@ -239,6 +239,7 @@ jobs:
         run: timeout 300s python main.py intake-library-growth
 
       - name: Persist growth research
+        continue-on-error: true
         if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
         working-directory: agent
         timeout-minutes: 10
