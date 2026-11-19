@@ -76,6 +76,7 @@ jobs:
           PY
 
       - name: Verify repaired branch
+        id: verify
         working-directory: agent
         run: |
           set -euo pipefail
@@ -83,12 +84,14 @@ jobs:
           python -m pytest -q tests/test_visual_contract.py tests/test_visual_directors.py tests/test_scene_factory.py
           test -s autofix-report.txt
           if grep -qx "NO_SAFE_REPAIR" autofix-report.txt; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "No allowlisted repair matched; no branch or PR will be created."
             exit 0
           fi
+          echo "changed=true" >> "$GITHUB_OUTPUT"
 
       - name: Create isolated repair branch and pull request
-        if: success()
+        if: ${{ steps.verify.outputs.changed == 'true' }}
         working-directory: agent
         env:
           GH_TOKEN: ${{ secrets.PRIVATE_REPO_AUTOFIX_TOKEN }}
