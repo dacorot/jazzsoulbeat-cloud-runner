@@ -62,7 +62,8 @@ def audit(root: Path) -> dict:
 def _visual(root, image):
     from scripts.visual_motion_agent import create_plan
     plan = create_plan(image)
-    assert plan["animated_layers"] == ["coffee_steam"]
+    assert plan["profile"] == "single_approved_plate_integrated_motion"
+    assert plan["animated_layers"] == ["coffee_steam", "approved_plate_rain_highlights"]
     assert plan["camera"] == "locked"
     return {"profile": plan["profile"], "base_image_sha256": plan["base_image_sha256"]}
 
@@ -128,17 +129,22 @@ def _twelve_video_queue():
     import datetime as dt
     result = build_plan(dt.date(2026, 11, 18))
     jobs = result.get("jobs", [])
-    if len(jobs) != 12 or any(job.get("visual_profile") != "static_rain_steam_only" for job in jobs):
+    if len(jobs) != 12 or any(job.get("visual_profile") != "single_approved_plate_integrated_motion" for job in jobs):
         raise RuntimeError("twelve_video_queue_contract_incomplete")
     return {"jobs": len(jobs), "parallel_music_lanes": result["parallel_music_lanes"]}
 
 
 def _imports():
-    for module in ("scripts.stable_audio3_producer", "scripts.diffrhythm2_producer",
-                   "scripts.music_audio_qc", "scripts.approval_gate", "scripts.production_gate",
-                   "scripts.music_producer_agent"):
+    # The public runner validates only adapters shipped in this repository.
+    # Private generation adapters are checked by the private cloud workflow;
+    # their absence here is intentional and must not block orchestration.
+    modules = ("scripts.music_audio_qc", "scripts.approval_gate",
+               "scripts.music_producer_agent")
+    for module in modules:
         importlib.import_module(module)
-    return {"modules": 6}
+    return {"modules": len(modules), "private_adapters": [
+        "stable_audio3_producer", "diffrhythm2_producer", "production_gate"
+    ]}
 
 
 def _operational(module_name, expected_id):
