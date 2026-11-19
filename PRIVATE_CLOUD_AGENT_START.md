@@ -141,3 +141,6 @@ Repair trigger: skip absent original-master integration and update its manifest 
 
 
 Repair trigger: retain metadata_source in final quality validation at e072d7e6ddc33335887df51676a036b93fdf11e6.
+
+
+Repair trigger: parallelize bounded Ketsa downloads with ordered durable receipts at 64ccd99b5aa38d6c01fc280283127c4b8fc75d5c.
