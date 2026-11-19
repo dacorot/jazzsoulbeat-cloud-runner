@@ -221,25 +221,67 @@ jobs:
           print(f"Growth baseline: {len(files)} audio files.")
           PY
 
-      - name: Run autonomous external music growth agents
-        id: external_music_growth
-        timeout-minutes: 60
+      - name: Discover Incompetech catalog
         if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
         working-directory: agent
+        timeout-minutes: 5
+        run: timeout 300s python main.py discover-incompetech
+
+      - name: Download Incompetech review candidates
+        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        working-directory: agent
+        timeout-minutes: 8
+        run: timeout 300s python main.py download-incompetech
+
+      - name: Inspect Incompetech audio
+        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        working-directory: agent
+        timeout-minutes: 5
+        run: timeout 300s python main.py inspect-incompetech
+
+      - name: Audit Incompetech source evidence
+        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        working-directory: agent
+        timeout-minutes: 5
+        run: timeout 300s python main.py audit-incompetech-sources
+
+      - name: Audit Incompetech track pages
+        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        working-directory: agent
+        timeout-minutes: 5
+        run: timeout 300s python main.py audit-incompetech-track-pages
+
+      - name: Discover Ketsa catalog
+        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        working-directory: agent
+        timeout-minutes: 8
+        run: timeout 300s python main.py discover-ketsa --limit 40
+
+      - name: Download Ketsa review candidates
+        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        working-directory: agent
+        timeout-minutes: 25
+        run: timeout 1500s python main.py download-ketsa --limit 40
+
+      - name: Intake library growth candidates
+        id: intake_growth
+        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        working-directory: agent
+        timeout-minutes: 5
+        run: timeout 300s python main.py intake-library-growth
+
+      - name: Persist growth research
+        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        working-directory: agent
+        timeout-minutes: 10
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
-        run: |
-          set -euo pipefail
-          timeout 300s python main.py discover-incompetech
-          timeout 300s python main.py download-incompetech
-          timeout 300s python main.py inspect-incompetech
-          timeout 300s python main.py audit-incompetech-sources
-          timeout 300s python main.py audit-incompetech-track-pages
-          timeout 300s python main.py discover-ketsa --limit 40
-          timeout 300s python main.py download-ketsa --limit 40
-          timeout 300s python main.py intake-library-growth
-          timeout 300s python main.py drive-push-growth-research
+        run: timeout 600s python main.py drive-push-growth-research
 
+      - name: Complete external music growth
+        id: external_music_growth
+        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        run: echo "External music growth completed with individually bounded stages."
       - name: Enforce music growth throughput
         id: growth_gate
         if: ${{ steps.external_music_growth.outcome == 'success' }}
