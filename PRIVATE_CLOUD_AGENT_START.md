@@ -174,3 +174,5 @@ Publication idempotency syntax repair marker: 2026-11-19T01:15:00Z
 Visual original-scene gate repair marker: 2026-11-19T01:30:00Z
 
 Visual seed checkpoint versioning marker: 2026-11-19T01:45:00Z
+
+HF authenticated visual generation wiring marker: 2026-11-19T02:00:00Z
