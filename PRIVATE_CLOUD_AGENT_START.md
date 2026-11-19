@@ -114,3 +114,6 @@ Repair trigger: skip redundant growth-batch Drive restore at 7fac1c72f6b18e6ada8
 
 
 Repair trigger: make discarded original-music restore non-blocking at 0116731c0fec418e2c6375259d5f1aa13e2c5025.
+
+
+Repair trigger: cancel stale push-triggered correction run while preserving scheduled safety at a9e2b96fc3c8c99677f4a17cd104236179cf36d0.
