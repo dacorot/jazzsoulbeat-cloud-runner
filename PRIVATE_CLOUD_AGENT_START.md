@@ -120,3 +120,6 @@ Repair trigger: cancel stale push-triggered correction run while preserving sche
 
 
 Repair trigger: preserve Ketsa quality metadata and duration during promotion at 53a8837387a7f6d8fced1c67d58515a767d21dc1 and 1bb7b10ef9d77889540225a8448177ab424b4c62.
+
+
+Repair trigger: split external growth into individually bounded observable stages at ac6dcc573569f5f3ea515f95f5bc566b9bb37978.
