@@ -105,3 +105,6 @@ Repair trigger: bound Incompetech per-track network timeouts at aaa71316610498d6
 
 
 Repair trigger: bounded FFprobe fallback for promoted external audio duration at 9b98997104b6c2fd161e2821db2e0c0983cd43a4.
+
+
+Repair trigger: bound Ketsa per-track network timeout at 7ff784a429fdaf7c5e458dfb5a2c95a31a872fc3.
