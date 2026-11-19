@@ -102,3 +102,6 @@ Repair trigger: portable FFmpeg seam frame extraction at 32d675ecb43788d953ff615
 
 
 Repair trigger: bound Incompetech per-track network timeouts at aaa71316610498d6a2654a62643726ec090968c2.
+
+
+Repair trigger: bounded FFprobe fallback for promoted external audio duration at 9b98997104b6c2fd161e2821db2e0c0983cd43a4.
