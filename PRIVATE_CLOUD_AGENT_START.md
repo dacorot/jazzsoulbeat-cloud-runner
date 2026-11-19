@@ -87,3 +87,5 @@ FFmpeg fallback repair marker: 2026-11-19T00:35:00Z — retry video with static 
 Repair trigger: FFmpeg fallback chain deployed at 00ff9663d451c8fe7b22e2414f1953384b1f307e.
 
 Repair trigger: enforce 20 new music files per growth run and enable Ketsa source at ec1819f891804e325e5bf43cf0ef2e5addfbfd54.
+
+Repair trigger: strict 60-minute window with minimum 20 new music files at e8f503f75d7124fa813f74e3456e31ab584a31da.
