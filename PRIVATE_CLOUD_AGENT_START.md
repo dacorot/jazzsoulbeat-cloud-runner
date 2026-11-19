@@ -129,3 +129,6 @@ Repair trigger: preserve Ketsa metadata provenance and allow explicitly unlisted
 
 
 Repair trigger: bound FFmpeg repair fallback timeouts at ab8811c800995e44db6ec5de4bb580e33ea38e9e.
+
+
+Repair trigger: update library test schema for metadata_source at a2dda8b212ce49092e769ed45056256126aee361.
