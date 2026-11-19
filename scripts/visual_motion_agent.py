@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Guarded visual-motion agent for fixed-camera ambient review videos.
 
-This agent has one job: turn an approved still image into a restrained ambient
-visual where only coffee steam animates. Exterior rain is a static glass
-texture. It never generates or replaces the scene, moves the camera, grants
-creative approval, or publishes anything.
+This agent has one job: turn one approved style-reference still into a restrained
+ambient visual. The camera is locked; motion is localized to coffee steam and
+a verified exterior window plate only. It never generates or replaces the scene,
+moves the camera, grants creative approval, or publishes anything.
 """
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ import json
 from pathlib import Path
 
 
-PROFILE = "static_rain_steam_only"
+PROFILE = "single_approved_plate_integrated_motion"
 DEFAULT_DURATION = 20
 DEFAULT_FPS = 30
 DEFAULT_SIZE = (1920, 1080)
@@ -52,9 +52,11 @@ def create_plan(image: Path, *, duration: int = DEFAULT_DURATION,
         "width": width,
         "height": height,
         "camera": "locked",
-        "animated_layers": ["coffee_steam"],
-        "static_layers": ["approved_base_plate", "exterior_rain_texture"],
-        "rain_placement": "behind_window_mullions",
+        "animated_layers": ["coffee_steam", "approved_plate_rain_highlights"],
+        "static_layers": ["approved_base_plate"],
+        "rain_mode": "integrated_plate_only",
+        "rain_mask_required": True,
+        "rain_placement": "verified_window_mask_only",
         "creative_approval": False,
         "publication": "DISABLED",
     }
