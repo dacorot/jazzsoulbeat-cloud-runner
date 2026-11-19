@@ -81,3 +81,5 @@ Visual contract syntax repair marker: 2026-11-18T23:50:00Z — retry with correc
 Batch guard repair marker: 2026-11-18T23:55:00Z — retry after correcting 8/48 validation.
 
 Optional-growth unblock marker: 2026-11-19T00:15:00Z — retry production without optional enrichment blockers.
+
+FFmpeg fallback repair marker: 2026-11-19T00:35:00Z — retry video with static downloader fallback.
