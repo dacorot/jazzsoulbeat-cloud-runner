@@ -38,10 +38,20 @@ jobs:
           conclusion="$(printf '%s' "$latest" | jq -r '.conclusion // ""')"
           attempt="$(printf '%s' "$latest" | jq -r '.run_attempt')"
           title="$(printf '%s' "$latest" | jq -r '.display_title')"
+          jobs="$(gh api -H "Accept: application/vnd.github+json" "/repos/${{ github.repository }}/actions/runs/$run_id/jobs?filter=latest")"
+          failed_step="$(printf '%s' "$jobs" | jq -r '[.jobs[].steps[]? | select(.conclusion == "failure") | .name] | first // ""')"
+          retryable=true
+          case "$failed_step" in
+            "Build an evergreen or seasonal video (never uploads)"*|"Capture and validate the exact production render folder"*|"Verify and close requested-task PDCA cycle"*)
+              retryable=false
+              ;;
+          esac
           echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
           echo "status=$status" >> "$GITHUB_OUTPUT"
           echo "conclusion=$conclusion" >> "$GITHUB_OUTPUT"
           echo "attempt=$attempt" >> "$GITHUB_OUTPUT"
+          echo "retryable=$retryable" >> "$GITHUB_OUTPUT"
+          echo "failed_step=$failed_step" >> "$GITHUB_OUTPUT"
           {
             echo "## First-video watchdog"
             echo
@@ -49,11 +59,13 @@ jobs:
             echo "- Status: `$status`"
             echo "- Conclusion: `$conclusion`"
             echo "- Attempt: `$attempt`"
+            echo "- Failed step: $failed_step"
+            echo "- Retryable: `$retryable`"
             echo "- Title: $title"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Recover bounded failed run
-        if: ${{ steps.inspect.outputs.status == 'completed' && steps.inspect.outputs.conclusion == 'failure' && fromJSON(steps.inspect.outputs.attempt) < 3 }}
+        if: ${{ steps.inspect.outputs.status == 'completed' && steps.inspect.outputs.conclusion == 'failure' && steps.inspect.outputs.retryable == 'true' && fromJSON(steps.inspect.outputs.attempt) < 3 }}
         env:
           GH_TOKEN: ${{ github.token }}
           RUN_ID: ${{ steps.inspect.outputs.run_id }}
