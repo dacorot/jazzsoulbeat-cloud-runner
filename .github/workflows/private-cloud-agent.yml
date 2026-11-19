@@ -102,8 +102,8 @@ jobs:
             echo "FFmpeg missing; attempting the controlled Ubuntu package repair."
             set +e
             if command -v sudo >/dev/null 2>&1; then
-              timeout 300s sudo apt-get update -qq
-              timeout 300s sudo apt-get install -y --no-install-recommends ffmpeg
+              timeout 90s sudo apt-get update -qq
+              timeout 90s sudo apt-get install -y --no-install-recommends ffmpeg
             else
               echo "sudo is unavailable; skipping apt repair."
             fi
@@ -112,8 +112,8 @@ jobs:
 
           if ! command -v ffmpeg >/dev/null 2>&1 || ! command -v ffprobe >/dev/null 2>&1; then
             echo "Apt repair did not provide FFmpeg; attempting the pinned static repair."
-            python -m pip install --disable-pip-version-check ffmpeg-downloader==0.5.3
-            python -m ffmpeg_downloader install @gpl
+            timeout 180s python -m pip install --disable-pip-version-check ffmpeg-downloader==0.5.3
+            timeout 180s python -m ffmpeg_downloader install @gpl
             FFMPEG_BIN_DIR="$(python -c 'import ffmpeg_downloader as f; from pathlib import Path; p=Path(f.ffmpeg_path); q=Path(f.ffprobe_path); assert p.is_file(), p; assert q.is_file(), q; print(p.parent)')"
             echo "$FFMPEG_BIN_DIR" >> "$GITHUB_PATH"
             export PATH="$FFMPEG_BIN_DIR:$PATH"
