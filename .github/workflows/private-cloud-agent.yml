@@ -89,18 +89,22 @@ jobs:
           python-version: "3.11"
 
       - name: Ensure FFmpeg
+        timeout-minutes: 15
         run: |
-          if ! command -v ffmpeg >/dev/null 2>&1 || ! command -v ffprobe >/dev/null 2>&1; then
-            export DEBIAN_FRONTEND=noninteractive
-            timeout 600s sudo apt-get update -qq
-            timeout 600s sudo apt-get install --yes --no-install-recommends ffmpeg
+          set -euo pipefail
+          if command -v ffmpeg >/dev/null 2>&1 && command -v ffprobe >/dev/null 2>&1; then
+            echo "Using FFmpeg already present on the GitHub-hosted runner."
           else
-            echo "FFmpeg already available on the runner; skipping apt install."
+            echo "FFmpeg is missing; trying the pinned static downloader."
+            python -m pip install --disable-pip-version-check ffmpeg-downloader==0.5.3
+            python -m ffmpeg_downloader install @gpl
+            FFMPEG_BIN_DIR="$(python -c 'import ffmpeg_downloader as f; from pathlib import Path; p=Path(f.ffmpeg_path); q=Path(f.ffprobe_path); assert p.is_file(), p; assert q.is_file(), q; print(p.parent)')"
+            echo "$FFMPEG_BIN_DIR" >> "$GITHUB_PATH"
           fi
-          command -v ffmpeg >/dev/null 2>&1 || { echo "FFmpeg installation did not provide ffmpeg"; exit 1; }
-          command -v ffprobe >/dev/null 2>&1 || { echo "FFmpeg installation did not provide ffprobe"; exit 1; }
-          ffmpeg -version
-          ffprobe -version
+          command -v ffmpeg
+          command -v ffprobe
+          ffmpeg -version | head -n 2
+          ffprobe -version | head -n 2
 
       - name: Install agent dependencies
         working-directory: agent
