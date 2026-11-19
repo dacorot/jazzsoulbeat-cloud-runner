@@ -153,3 +153,4 @@ Repair trigger: fill empty legacy Ketsa metadata provenance at 805f80abe0db50d0f
 
 - 2026-11-19: Corregido el escaneo de audio importado: library.py usa FFprobe como fallback cuando Mutagen no puede leer metadatos.
 - 2026-11-19: Curator eligibility now accepts official Ketsa tracks with documented absent instrumentation metadata.
+- 2026-11-19: FFmpeg repair shortened to bounded apt install; removed the unbounded static downloader fallback that could stall the workflow.
