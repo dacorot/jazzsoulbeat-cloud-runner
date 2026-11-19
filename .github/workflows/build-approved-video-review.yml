@@ -99,7 +99,7 @@ jobs:
             --audio-request-id "${{ inputs.audio_request_id }}" \
             --image "${{ steps.locate.outputs.scene }}" \
             --output "$OUTPUT" \
-            --rain-mode static_window \
+            --rain-mode integrated_plate \
             --duration 240 > video-review-request.json
           python - <<'PY' >> "$GITHUB_OUTPUT"
           import json
