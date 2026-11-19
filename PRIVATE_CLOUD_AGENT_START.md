@@ -188,3 +188,5 @@ Retry after transient FFmpeg mirror timeout: 2026-11-19T04:30:00Z
 Correct regression expectation marker: 2026-11-19T05:00:00Z
 
 Exact mux shortest repair marker: 2026-11-19T06:00:00Z
+
+Exact H264 duration re-encode marker: 2026-11-19T07:00:00Z
