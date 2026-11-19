@@ -199,3 +199,5 @@ Visual repair trigger: 2026-11-19 — locked camera, no zoom, reference contract
 Visual repair retry: 2026-11-19 — tests aligned with locked-camera contract and bounded Drive folder fallback.
 
 Visual repair retry 2: 2026-11-19 — corrected test indentation after locked-camera assertion update.
+
+Runner repair trigger: 2026-11-19 — increased bounded FFmpeg installation timeout for slow Ubuntu mirrors; no publication.
