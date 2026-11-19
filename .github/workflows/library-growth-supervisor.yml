@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: jazz-soul-beat-library-growth-restricted
+  group: jazz-soul-beat-shared-private-drive-state
   cancel-in-progress: false
 
 jobs:
