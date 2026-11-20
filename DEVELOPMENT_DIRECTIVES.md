@@ -123,3 +123,8 @@ This rule applies to the architect and to every production, development, audit a
 - The agent must continue through the defined backlog without waiting for another conversational approval.
 - Approval is required only for destructive actions, publication, rights exceptions, secret/OAuth changes, or irreversible infrastructure changes.
 - A cycle may not be reported as complete while known safe corrective work remains untreated.
+
+
+### Immediate execution responsibility
+
+The architect and every agent are operationally responsible for treating findings, not merely reporting them. When a safe correction is available, the same cycle must execute it and verify it. At minimum, safe cycles must apply manifest migrations, refresh inventories and regenerate missing machine-readable reports. A report that only says "fix later" is a failed cycle unless the finding crosses a defined safety boundary.
