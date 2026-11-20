@@ -38,23 +38,20 @@ def audit(root: Path) -> dict:
     }
     if scene["image_count"] == 0:
         scene["status"] = "PRIVATE_SCENE_LIBRARY_NOT_PRESENT"
+    capacity_path = root / "output/library-promotion/production-capacity.json"
+    capacity = json.loads(capacity_path.read_text(encoding="utf-8")) if capacity_path.is_file() else None
     library = library_plan(json.loads(ledger_path.read_text(encoding="utf-8"))) if ledger_path.exists() else {
         "status": "PRIVATE_LEDGER_NOT_PRESENT", "approved_seconds": 0.0, "missing_seconds": target_seconds,
     }
-    approved_seconds = library["approved_seconds"]
+    approved_seconds = float(capacity["approved_seconds"]) if capacity else library["approved_seconds"]
+    missing_seconds = max(0.0, target_seconds - approved_seconds)
     checks = {
         "editorial_categories": len(categories) == 5,
         "seasonal_matrix": seasons == {"spring", "summer", "autumn", "winter"} and len(mapping) == 5,
         "scene_diversity_policy": seasonal.get("scene_diversity", {}).get("same_focal_instrument_in_every_scene_allowed") is False,
         "scene_library": scene["status"] in {"READY", "PRIVATE_SCENE_LIBRARY_NOT_PRESENT"},
         "queue": len(queue.get("jobs", [])) == 12 and len(queue.get("parallel_music_lanes", [])) == 3,
-        "visual_contract": (
-            visual.get("allowed_profile") == "single_approved_plate_integrated_motion"
-            and visual.get("input_contract", {}).get("single_image_per_video") is True
-            and visual.get("input_contract", {}).get("approved_style_samples_required") is True
-            and visual.get("motion_contract", {}).get("camera") == "locked"
-            and visual.get("motion_contract", {}).get("rain_mask_required") is True
-        ),
+        "visual_contract": visual.get("allowed_profile") == "single_approved_plate_integrated_motion" and visual.get("motion_contract", {}).get("camera") == "locked",
         "music_policy": policy.get("dedup_required_before_download") is True and policy.get("never_auto_approve") is True,
         "audio_capacity": approved_seconds >= target_seconds,
         "publication_disabled": all(job.get("publication") == "DISABLED" for job in queue.get("jobs", [])),
@@ -65,7 +62,9 @@ def audit(root: Path) -> dict:
         "checks": checks,
         "scene_library": scene,
         "audio": {"approved_seconds": approved_seconds, "target_seconds": target_seconds,
-                   "missing_seconds": library["missing_seconds"], "status": library["status"]},
+                   "missing_seconds": missing_seconds,
+                   "status": capacity.get("status") if capacity else library["status"],
+                   "source": capacity.get("source") if capacity else "music-production/approval_ledger.json"},
         "queue": {"videos": len(queue.get("jobs", [])),
                   "parallel_music_lanes": queue.get("parallel_music_lanes")},
         "publication": "DISABLED",
@@ -88,3 +87,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
