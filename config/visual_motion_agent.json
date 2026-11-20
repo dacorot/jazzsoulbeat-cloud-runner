@@ -1,5 +1,6 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
+  "contract_revision": "single-approved-image-fail-closed-rain",
   "id": "visual_motion_agent",
   "display_name": "Jazz Soul Beat — Visual Motion Agent",
   "mission": "Create fixed-camera ambient visuals from an approved base image, with restrained localized motion only.",
