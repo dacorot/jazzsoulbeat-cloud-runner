@@ -214,3 +214,8 @@ Visual test fixture repair: 2026-11-19 — all multi-scene fixtures now declare 
 2026-11-20: Readiness audit now uses private production-capacity evidence instead of stale original-audio ledger.
 
 2026-11-20: Critical pipeline repair: restored audited growth batch, promoted eligible tracks, and persisted the expanded production library before rendering.
+
+
+## Immediate video-02 execution directive
+
+The next private-cloud cycle must restore and migrate the existing approved library, audit the approved single visual image, build video-02 with adaptive crossfades and locked-camera motion, validate the complete provenance package, and persist the result privately. No new music generation is required. Publication remains disabled.
