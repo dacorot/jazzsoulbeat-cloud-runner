@@ -6,7 +6,7 @@ on:
       - "VISUAL_PRODUCTION_START.md"
   schedule:
     # Twice daily, serialized against every other private Drive mutation.
-    - cron: "0 */12 * * *"
+    - cron: "0 */2 * * *"
   workflow_dispatch:
     inputs:
       categories:
@@ -17,7 +17,7 @@ on:
       per_category:
         description: "New candidates per category (free quota bounded)"
         required: true
-        default: "1"
+        default: "2"
         type: string
       agent_ref:
         description: "Private agent branch or SHA"
