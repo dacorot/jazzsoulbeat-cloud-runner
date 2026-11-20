@@ -15,3 +15,6 @@ Run source discovery, rights auditing and the next eligible promotion batch imme
 
 ## Promotion execution retry — 2026-11-20
 The promotion gate is now connected after rights and style audit. Execute intake, promote eligible hash-bound tracks, persist the library, and report the exact approved count.
+
+
+Retry after ephemeral library schema normalization — 2026-11-20T23:00Z.
