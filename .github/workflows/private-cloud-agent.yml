@@ -133,7 +133,7 @@ jobs:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
         run: |
           set +e
-          timeout 120s python main.py drive-pull-growth-batch
+          timeout --kill-after=10s 120s python main.py drive-pull-growth-batch
           code=$?
           if [[ "$code" == "124" ]]; then
             echo "::warning::Optional growth-batch restore timed out; production library remains usable and the growth batch will retry next cycle."
