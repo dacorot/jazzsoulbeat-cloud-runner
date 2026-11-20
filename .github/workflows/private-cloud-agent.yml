@@ -132,8 +132,12 @@ jobs:
         working-directory: agent
         run: |
           set -euo pipefail
-          python main.py prepare-original-promotion
-          python main.py reconcile-music
+          if [[ -d output/original-music/approved-stable-audio3-20261116 ]]; then
+            python main.py prepare-original-promotion
+            python main.py reconcile-music
+          else
+            echo "No approved original-music package; external licensed intake remains the active source."
+          fi
 
       - name: Import rights-eligible library candidates
         id: library_promotion
