@@ -85,14 +85,21 @@ def _search(root):
 
 
 def _library(root, ledger):
-    from scripts.longform_library_agent import plan
-    result = plan(json.loads(ledger.read_text(encoding="utf-8")))
-    if result["status"] != "READY_FOR_LONGFORM_ASSEMBLY":
-        raise RuntimeError(
-            f"longform_audio_capacity_blocked: missing_seconds={result['missing_seconds']}"
-        )
-    return {"status": result["status"], "approved_seconds": result["approved_seconds"],
-            "missing_seconds": result["missing_seconds"]}
+    capacity_path = root / "output/library-promotion/production-capacity.json"
+    if capacity_path.is_file():
+        result = json.loads(capacity_path.read_text(encoding="utf-8"))
+        if result.get("status") != "READY":
+            raise RuntimeError(
+                f"production_capacity_blocked: approved_seconds={result.get("approved_seconds", 0)} "
+                f"target_seconds={result.get("target_seconds", 7200)}"
+            )
+        return {"status": "READY_FOR_LONGFORM_ASSEMBLY",
+                "approved_seconds": result.get("approved_seconds", 0),
+                "missing_seconds": max(0, result.get("target_seconds", 7200) - result.get("approved_seconds", 0)),
+                "source": result.get("source", "production-capacity.json")}
+    raise RuntimeError(
+        "private_production_capacity_evidence_missing: restore the private library before readiness evaluation"
+    )
 
 
 def _editorial(root):
