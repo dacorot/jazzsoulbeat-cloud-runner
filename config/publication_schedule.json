@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "channel": "Jazz Soul Beat",
+  "timezone": "America/Bogota",
+  "publication_mode": "AUTO_AFTER_HASH_BOUND_PUBLIC_APPROVAL",
+  "slots": [
+    {"weekday": "friday", "time": "12:00"},
+    {"weekday": "sunday", "time": "10:00"},
+    {"weekday": "tuesday", "time": "14:00"}
+  ],
+  "initial_test_matrix": true,
+  "selection_basis": "initial_test_matrix_until_three_comparable_releases",
+  "sequence": {
+    "video_01": "friday_12:00",
+    "video_02": "sunday_10:00",
+    "video_03": "tuesday_14:00"
+  },
+  "requirements_before_scheduling": [
+    "exact_video_hash_approved",
+    "creative_approval",
+    "rights_verified",
+    "english_description_complete",
+    "tracklist_and_performer_credits_complete",
+    "youtube_private_upload_verified"
+  ],
+  "safety": {
+    "never_schedule_unapproved_artifact": true,
+    "never_replace_hash_bound_artifact": true,
+    "never_publish_if_any_gate_fails": true,
+    "publication_requires_explicit_user_approval": true
+  }
+}
