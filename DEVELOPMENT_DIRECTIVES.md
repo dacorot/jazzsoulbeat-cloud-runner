@@ -114,7 +114,7 @@ No agent may report success merely because a job started.
 
 ## Immediate treatment rule
 
-Every autonomous cycle must treat each detected finding immediately.
+This rule applies to the architect and to every production, development, audit and supervisory agent. Every autonomous cycle must treat each detected finding immediately.
 
 - Safe, reversible and testable defects must be corrected in the same cycle.
 - The agent must run the relevant regression test immediately after the correction.
