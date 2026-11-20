@@ -105,6 +105,15 @@ jobs:
           echo "exit_code=$((autonomy_code || ledger_code || deming_code || inventory_code))" >> "$GITHUB_OUTPUT"
           exit 0
 
+      - name: Build canonical artifact inventory
+        id: artifact_inventory
+        continue-on-error: true
+        run: |
+          set +e
+          python scripts/artifact_inventory_agent.py > output/development/canonical-inventory.txt 2>&1
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+          exit 0
+
       - name: Run readiness and pipeline-health audits
         id: readiness
         continue-on-error: true
@@ -127,6 +136,7 @@ jobs:
           SAFE_REMEDIATION: ${{ steps.safe_remediation.outputs.exit_code }}
           AUDITS: ${{ steps.audits.outputs.exit_code }}
           READINESS: ${{ steps.readiness.outputs.exit_code }}
+          ARTIFACT_INVENTORY: ${{ steps.artifact_inventory.outputs.exit_code }}
         run: |
           python - <<'PY'
           import json, os
@@ -149,6 +159,7 @@ jobs:
                   "safe_remediation": os.environ.get("SAFE_REMEDIATION"),
                   "architecture_audits": os.environ.get("AUDITS"),
                   "readiness_audits": os.environ.get("READINESS"),
+                  "artifact_inventory": os.environ.get("ARTIFACT_INVENTORY"),
               },
           }
           failed = [name for name, value in values["exit_codes"].items() if value not in {"0", "", None}]
