@@ -108,15 +108,15 @@ jobs:
           python -m compileall -q .
           python -m unittest discover -s tests -v
 
-      - name: Restore only the data needed for this cloud task
-        id: restore
+      - name: Restore production library and validate state
+        id: restore_library
         working-directory: agent
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
         run: |
           if [[ "${{ env.TASK }}" == "build-evergreen" ]]; then
+            # The production library is a hard dependency for rendering.
             timeout 600s python main.py drive-pull-library
-            timeout 600s python main.py drive-pull-growth-batch
             timeout 120s python main.py migrate-manifests
             timeout 900s python main.py scan
           else
@@ -124,14 +124,31 @@ jobs:
           fi
           python main.py drive-status
 
+      - name: Restore optional growth batch without blocking production
+        id: restore_growth
+        if: ${{ steps.restore_library.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        continue-on-error: true
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: |
+          set +e
+          timeout 120s python main.py drive-pull-growth-batch
+          code=$?
+          if [[ "$code" == "124" ]]; then
+            echo "::warning::Optional growth-batch restore timed out; production library remains usable and the growth batch will retry next cycle."
+            exit 0
+          fi
+          exit "$code"
+
       - name: Show approved library status
-        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        if: ${{ steps.restore_library.outcome == 'success' && env.TASK == 'build-evergreen' }}
         working-directory: agent
         run: python main.py library-status
 
       - name: Integrate approved original masters
         id: original_promotion
-        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        if: ${{ steps.restore_library.outcome == 'success' && env.TASK == 'build-evergreen' }}
         working-directory: agent
         run: |
           set -euo pipefail
@@ -144,7 +161,7 @@ jobs:
 
       - name: Import rights-eligible library candidates
         id: library_promotion
-        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        if: ${{ steps.restore_library.outcome == 'success' && env.TASK == 'build-evergreen' }}
         working-directory: agent
         run: |
           set -euo pipefail
@@ -173,7 +190,7 @@ jobs:
           timeout 600s python main.py drive-push-library
       - name: Write production library capacity evidence
         id: production_capacity
-        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        if: ${{ steps.restore_library.outcome == 'success' && env.TASK == 'build-evergreen' }}
         working-directory: agent
         env:
           HOURS: ${{ env.HOURS }}
@@ -218,7 +235,7 @@ jobs:
 
       - name: Initialize or resume the sequential orchestrator checkpoint
         id: orchestrator_checkpoint
-        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        if: ${{ steps.restore_library.outcome == 'success' && env.TASK == 'build-evergreen' }}
         working-directory: agent
         env:
           PYTHONPATH: ${{ github.workspace }}
@@ -245,7 +262,7 @@ jobs:
 
       - name: Check whether the approved library can satisfy the requested video
         id: production_gate
-        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        if: ${{ steps.restore_library.outcome == 'success' && env.TASK == 'build-evergreen' }}
         working-directory: agent
         env:
           HOURS: ${{ env.HOURS }}
@@ -278,7 +295,7 @@ jobs:
 
       - name: Start Deming PDCA cycle for requested cloud task
         id: pdca_start
-        if: ${{ steps.restore.outcome == 'success' && (env.TASK == 'self-test' || steps.production_gate.outputs.eligible == 'true') }}
+        if: ${{ steps.restore_library.outcome == 'success' && (env.TASK == 'self-test' || steps.production_gate.outputs.eligible == 'true') }}
         uses: ./.github/actions/pdca-start
         with:
           task: ${{ env.TASK }}
@@ -287,13 +304,13 @@ jobs:
 
       - name: Build synthetic technical test (never uploads)
         id: self_test
-        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'self-test' }}
+        if: ${{ steps.restore_library.outcome == 'success' && env.TASK == 'self-test' }}
         working-directory: agent
         run: python main.py self-test
 
       - name: Build an evergreen or seasonal video (never uploads)
         id: build_video
-        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' && steps.production_gate.outputs.eligible == 'true' }}
+        if: ${{ steps.restore_library.outcome == 'success' && env.TASK == 'build-evergreen' && steps.production_gate.outputs.eligible == 'true' }}
         working-directory: agent
         env:
           MIX_HOURS: ${{ env.HOURS }}
@@ -393,7 +410,7 @@ jobs:
 
       - name: Persist generated visual scene library privately
         id: persist_visual_assets
-        if: ${{ always() && steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' && steps.build_video.outcome != 'skipped' }}
+        if: ${{ always() && steps.restore_library.outcome == 'success' && env.TASK == 'build-evergreen' && steps.build_video.outcome != 'skipped' }}
         working-directory: agent
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
@@ -404,7 +421,7 @@ jobs:
 
       - name: Persist only the validated production folder and production database
         id: persist_outputs
-        if: ${{ always() && steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' && steps.build_video.outcome == 'success' && steps.capture_render.outcome == 'success' }}
+        if: ${{ always() && steps.restore_library.outcome == 'success' && env.TASK == 'build-evergreen' && steps.build_video.outcome == 'success' && steps.capture_render.outcome == 'success' }}
         working-directory: agent
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
@@ -416,7 +433,7 @@ jobs:
 
       - name: Persist synthetic QA and autonomy state only
         id: persist_qa
-        if: ${{ always() && steps.restore.outcome == 'success' && env.TASK == 'self-test' }}
+        if: ${{ always() && steps.restore_library.outcome == 'success' && env.TASK == 'self-test' }}
         working-directory: agent
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
@@ -432,12 +449,12 @@ jobs:
           cycle_id: ${{ steps.pdca_start.outputs.cycle_id }}
           result_json: '{"workflow":"private-cloud-agent","task":"${{ env.TASK }}","run_id":"${{ github.run_id }}","job_status":"${{ job.status }}"}'
           checks_json: >-
-            [{"name":"restore_state","passed":${{ steps.restore.outcome == 'success' }}},{"name":"requested_task","passed":${{ (env.TASK == 'self-test' && steps.self_test.outcome == 'success') || (env.TASK == 'build-evergreen' && steps.build_video.outcome == 'success') }}},{"name":"private_drive_persistence","passed":${{ (env.TASK == 'self-test' && steps.persist_qa.outcome == 'success') || (env.TASK == 'build-evergreen' && steps.persist_outputs.outcome == 'success') }}},{"name":"visual_library_persistence","passed":${{ env.TASK == 'self-test' || steps.persist_visual_assets.outcome == 'success' }}},{"name":"no_youtube_publication","passed":true}]
+            [{"name":"restore_state","passed":${{ steps.restore_library.outcome == 'success' }}},{"name":"requested_task","passed":${{ (env.TASK == 'self-test' && steps.self_test.outcome == 'success') || (env.TASK == 'build-evergreen' && steps.build_video.outcome == 'success') }}},{"name":"private_drive_persistence","passed":${{ (env.TASK == 'self-test' && steps.persist_qa.outcome == 'success') || (env.TASK == 'build-evergreen' && steps.persist_outputs.outcome == 'success') }}},{"name":"visual_library_persistence","passed":${{ env.TASK == 'self-test' || steps.persist_visual_assets.outcome == 'success' }}},{"name":"no_youtube_publication","passed":true}]
           evidence: 'GitHub Actions run ${{ github.run_id }}; requested task outputs and private Drive inventory'
           drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
 
       - name: Confirm final Drive inventory
-        if: ${{ always() && steps.restore.outcome == 'success' }}
+        if: ${{ always() && steps.restore_library.outcome == 'success' }}
         working-directory: agent
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
