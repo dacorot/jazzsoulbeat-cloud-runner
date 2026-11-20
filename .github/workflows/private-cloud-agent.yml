@@ -367,6 +367,7 @@ jobs:
           assert visual.get("status") == "SINGLE_APPROVED_IMAGE", visual
           assert visual.get("scene_count") == 1, visual
           assert visual.get("camera") == "locked", visual
+          assert visual.get("motion_profile") == "steam_only_locked_camera", visual
           assert visual.get("approved_image_sha256"), "Falta hash de la imagen aprobada."
           expected_hash = hashlib.sha256((folder / "video.mp4").read_bytes()).hexdigest()
           assert visual.get("video_sha256") == expected_hash, "El hash de video no coincide con su procedencia."
