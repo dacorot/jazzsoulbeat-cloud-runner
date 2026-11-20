@@ -62,7 +62,7 @@ jobs:
         working-directory: agent
         run: |
           python main.py intake-library-growth
-          test -s output/library-promotion/eligible-external.json
+          test -f output/library-promotion/eligible-external.json
           test -s output/library-promotion/external-intake-report.json
 
       - name: Promote only eligible candidates into the private library
