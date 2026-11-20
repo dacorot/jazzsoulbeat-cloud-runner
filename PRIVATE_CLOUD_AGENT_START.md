@@ -208,3 +208,5 @@ Visual test fixture repair: 2026-11-19 — all multi-scene fixtures now declare 
 2026-11-20: Automatic production retry after wiring manifest migration and aligning single-image provenance hash validation.
 
 2026-11-20: Retry trigger after adding migration before restored-library scan.
+
+2026-11-20: Production-path optimization trigger: pip cache and bounded restore, scan and render stages.
