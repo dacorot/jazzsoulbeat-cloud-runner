@@ -65,6 +65,11 @@ jobs:
           test -f output/library-promotion/eligible-external.json
           test -s output/library-promotion/external-intake-report.json
 
+      - name: Normalize library CSV schema in ephemeral checkout
+        working-directory: agent
+        run: |
+          python -c 'from pathlib import Path; files=[Path("tracks/library.csv")]+sorted(Path("tracks/seasonal").glob("*/library.csv")); [p.write_text((lambda s: s if "metadata_source" in s.splitlines()[0].split(",") else s.replace(s.splitlines()[0], s.splitlines()[0]+",metadata_source", 1))(p.read_text(encoding="utf-8")), encoding="utf-8") for p in files if p.exists()]'
+
       - name: Promote only eligible candidates into the private library
         working-directory: agent
         env:
