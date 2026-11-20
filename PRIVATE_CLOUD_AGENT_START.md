@@ -203,3 +203,6 @@ Visual repair retry 2: 2026-11-19 — corrected test indentation after locked-ca
 Runner repair trigger: 2026-11-19 — increased bounded FFmpeg installation timeout for slow Ubuntu mirrors; no publication.
 
 Visual test fixture repair: 2026-11-19 — all multi-scene fixtures now declare environmental motion.
+
+
+2026-11-20: Automatic production retry after wiring manifest migration and aligning single-image provenance hash validation.
