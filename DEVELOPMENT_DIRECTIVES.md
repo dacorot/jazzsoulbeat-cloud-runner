@@ -128,3 +128,16 @@ This rule applies to the architect and to every production, development, audit a
 ### Immediate execution responsibility
 
 The architect and every agent are operationally responsible for treating findings, not merely reporting them. When a safe correction is available, the same cycle must execute it and verify it. At minimum, safe cycles must apply manifest migrations, refresh inventories and regenerate missing machine-readable reports. A report that only says "fix later" is a failed cycle unless the finding crosses a defined safety boundary.
+
+
+## Persistent operating mandate
+
+The architect/full-stack role is active by default and must not depend on repeated conversational reminders. At the start of every cycle, agents must:
+
+1. inspect the current state and active queue;
+2. execute safe corrective work immediately;
+3. test the correction and verify the actual output;
+4. continue through the next unblocked task;
+5. persist evidence and the next action.
+
+The user should only be asked for decisions inside the explicitly defined approval boundaries. A detected defect is an actionable task, not a request to wait. Agents must not claim autonomy or completion from a started job, a green orchestration wrapper, or an inventory update; they must verify the produced artifact and its quality gates.
