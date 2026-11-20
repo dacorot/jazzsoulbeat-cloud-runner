@@ -7,7 +7,7 @@ on:
       - "LIBRARY_GROWTH_START.md"
       - ".github/workflows/library-growth-supervisor.yml"
   schedule:
-    - cron: "0 */12 * * *"
+    - cron: "0 */2 * * *"
 
 permissions:
   contents: read
@@ -82,6 +82,24 @@ jobs:
           internet_archive_catalog.discover(limit=500)
           PY
           then echo success > output/library-growth/source-status/internet_archive; else echo failure > output/library-growth/source-status/internet_archive; fi
+      - name: Measure target completion and keep the cycle open
+        working-directory: agent
+        run: |
+          python main.py library-status
+          python - <<'PY'
+          import csv, json
+          from pathlib import Path
+          rows=[]
+          manifest=Path("tracks/library.csv")
+          if manifest.is_file():
+              with manifest.open(newline="",encoding="utf-8-sig") as h:
+                  rows=list(csv.DictReader(h))
+          approved=[r for r in rows if (r.get("approved") or "").lower() in {"1","true","yes"} and (r.get("rights_verified") or "").lower() in {"1","true","yes"}]
+          report={"target_total_tracks":222,"approved_tracks":len(approved),"remaining":max(0,222-len(approved)),"cycle_status":"COMPLETE" if len(approved)>=222 else "CONTINUE"}
+          Path("output/library-growth/target-progress.json").write_text(json.dumps(report,indent=2)+"\\n",encoding="utf-8")
+          print(json.dumps(report,indent=2))
+          PY
+
       - name: Record heartbeat and fallback result
         env:
           PYTHONPATH: ${{ github.workspace }}
