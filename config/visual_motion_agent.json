@@ -1,6 +1,5 @@
 {
   "schema_version": 2,
-  "contract_revision": "single-approved-image-fail-closed-rain",
   "id": "visual_motion_agent",
   "display_name": "Jazz Soul Beat — Visual Motion Agent",
   "mission": "Create fixed-camera ambient visuals from an approved base image, with restrained localized motion only.",
@@ -8,33 +7,18 @@
   "input_contract": {
     "base_image_required": true,
     "base_image_must_be_approved": true,
-    "audio_optional_for_visual_only_preview": true,
-    "single_image_per_video": true,
-    "approved_style_samples_required": true,
-    "approved_style_sample_roots": [
-      "assets/visual-agents/approved-style-samples/autumn_coffeehouse/",
-      "assets/visual-agents/approved-style-samples/coffee_time/"
-    ]
+    "audio_optional_for_visual_only_preview": true
   },
   "motion_contract": {
-    "animated_layers": [
-      "coffee_steam",
-      "approved_plate_rain_highlights"
-    ],
-    "static_layers": [
-      "approved_base_plate",
-      "exterior_rain_texture"
-    ],
+    "animated_layers": ["coffee_steam", "approved_plate_rain_highlights"],
+    "static_layers": ["approved_base_plate"],
     "camera": "locked",
-    "rain": "verified_window_mask_only",
-    "rain_fallback": "steam_only_locked_camera",
+    "rain": "integrated_plate_only",
+    "rain_mask_required": true,
+    "rain_placement": "verified_window_mask_only",
     "loop_seconds": 20,
     "fps": 30,
-    "resolution": [
-      1920,
-      1080
-    ],
-    "rain_mask_required": true
+    "resolution": [1920, 1080]
   },
   "forbidden": [
     "full_frame_particle_overlay",
@@ -45,13 +29,8 @@
     "camera_parallax",
     "scene_redesign",
     "automatic_creative_approval",
-    "automatic_publication",
-    "rain_over_interior_pixels",
-    "multiple_base_images_per_video"
+    "automatic_publication"
   ],
-  "human_gates": [
-    "base_image_approval",
-    "animation_approval",
-    "publication_approval"
-  ]
+  "human_gates": ["base_image_approval", "animation_approval", "publication_approval"]
 }
+
