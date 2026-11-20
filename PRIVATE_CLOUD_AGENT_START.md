@@ -223,3 +223,7 @@ The next private-cloud cycle must restore and migrate the existing approved libr
 
 ## Immediate retry directive — 2026-11-20
 The optional growth-batch restore was isolated from the production critical path. Retry video-02 now using the validated production library. Do not publish to YouTube; persist the validated render privately only.
+
+
+## Timeout hardening retry — 2026-11-20
+Force-kill stalled optional growth restore after 120s; production render must proceed independently.
