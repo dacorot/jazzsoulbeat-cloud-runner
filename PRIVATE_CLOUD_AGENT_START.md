@@ -212,3 +212,5 @@ Visual test fixture repair: 2026-11-19 — all multi-scene fixtures now declare 
 2026-11-20: Production-path optimization trigger: pip cache and bounded restore, scan and render stages.
 
 2026-11-20: Readiness audit now uses private production-capacity evidence instead of stale original-audio ledger.
+
+2026-11-20: Critical pipeline repair: restored audited growth batch, promoted eligible tracks, and persisted the expanded production library before rendering.
