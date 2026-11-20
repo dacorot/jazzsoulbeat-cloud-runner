@@ -116,6 +116,7 @@ jobs:
         run: |
           if [[ "${{ env.TASK }}" == "build-evergreen" ]]; then
             timeout 600s python main.py drive-pull-library
+            timeout 600s python main.py drive-pull-growth-batch
             timeout 120s python main.py migrate-manifests
             timeout 900s python main.py scan
           else
@@ -148,6 +149,9 @@ jobs:
         run: |
           set -euo pipefail
           candidates="output/library-promotion/eligible.json"
+          if [[ ! -s "$candidates" && -s "output/library-promotion/eligible-external.json" ]]; then
+            candidates="output/library-promotion/eligible-external.json"
+          fi
           report="output/library-promotion/import-report.json"
           mkdir -p "$(dirname "$report")"
           if [[ -s "$candidates" ]]; then
@@ -158,6 +162,15 @@ jobs:
             echo "No hay lote elegible de derechos; el proceso continúa buscando fuentes."
           fi
 
+      - name: Persist promoted production library
+        id: persist_library
+        if: ${{ steps.library_promotion.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: |
+          set -euo pipefail
+          timeout 600s python main.py drive-push-library
       - name: Write production library capacity evidence
         id: production_capacity
         if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
