@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "source_of_truth": "GitHub code and policies; private Drive runtime state and evidence",
+  "domains": {
+    "audio": {
+      "canonical_roots": ["tracks/", "tracks/seasonal/<season>/"],
+      "review_root": "tracks/review/",
+      "states": ["candidate", "rights_pending", "approved", "quarantined", "retired"]
+    },
+    "visual": {
+      "canonical_roots": ["assets/visual-agents/<category>/"],
+      "reference_root": "assets/visual-agents/approved-style-samples/",
+      "candidate_root": "assets/visual-agents/<category>/candidate_scenes/",
+      "motion_root": "assets/visual-agents/<category>/motion/",
+      "states": ["reference_approved", "candidate_pending_qa", "motion_pending_qa", "approved_for_video", "rejected"]
+    },
+    "video": {
+      "canonical_roots": ["output/<run-id>/"],
+      "review_root": "music-production/visual-review/",
+      "rejected_root": "music-production/visual-rejected/",
+      "states": ["rendered_pending_qa", "approved_private_upload", "scheduled_public", "rejected"]
+    },
+    "evidence": {
+      "canonical_roots": ["output/<domain>/", "music-production/"],
+      "states": ["report", "manifest", "approval_ledger", "checkpoint"]
+    },
+    "code": {
+      "canonical_roots": ["scripts/", "config/", ".github/workflows/"],
+      "states": ["active", "legacy", "test_only"]
+    }
+  },
+  "rules": {
+    "do_not_move_active_assets_during_video_production": true,
+    "manifest_before_migration": true,
+    "hash_before_use": true,
+    "candidates_never_count_as_approved_capacity": true,
+    "rejected_assets_never_enter_production": true,
+    "secrets_never_indexed": true
+  }
+}
