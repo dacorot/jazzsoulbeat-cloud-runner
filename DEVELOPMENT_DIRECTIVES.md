@@ -110,3 +110,16 @@ A cycle is complete only when its report includes:
 - next scheduled action.
 
 No agent may report success merely because a job started.
+
+
+## Immediate treatment rule
+
+Every autonomous cycle must treat each detected finding immediately.
+
+- Safe, reversible and testable defects must be corrected in the same cycle.
+- The agent must run the relevant regression test immediately after the correction.
+- Blockers must be diagnosed, mitigated or escalated in the same cycle; they may not be left as passive observations.
+- Missing reports, manifests, heartbeats or production evidence must be regenerated or marked explicitly as blocked with a concrete next action.
+- The agent must continue through the defined backlog without waiting for another conversational approval.
+- Approval is required only for destructive actions, publication, rights exceptions, secret/OAuth changes, or irreversible infrastructure changes.
+- A cycle may not be reported as complete while known safe corrective work remains untreated.
