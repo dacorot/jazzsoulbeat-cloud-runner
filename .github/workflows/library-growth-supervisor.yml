@@ -72,7 +72,7 @@ jobs:
           OPENVERSE_CLIENT_SECRET: ${{ secrets.OPENVERSE_CLIENT_SECRET }}
         run: |
           if python main.py discover-commons --limit 200; then echo success > output/library-growth/source-status/wikimedia_commons; else echo failure > output/library-growth/source-status/wikimedia_commons; fi
-          if python main.py discover-openverse --limit 300; then echo success > output/library-growth/source-status/openverse; else echo failure > output/library-growth/source-status/openverse; fi
+          echo disabled > output/library-growth/source-status/openverse_adapter_missing
           if python main.py discover-ccmixter --limit 200; then echo success > output/library-growth/source-status/ccmixter; else echo failure > output/library-growth/source-status/ccmixter; fi
       - name: Discover secondary leads
         working-directory: agent
