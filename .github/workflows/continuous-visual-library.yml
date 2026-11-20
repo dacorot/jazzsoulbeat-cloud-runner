@@ -1,6 +1,9 @@
 name: Continuous visual library production
 
 on:
+  push:
+    paths:
+      - "VISUAL_PRODUCTION_START.md"
   schedule:
     # Twice daily, serialized against every other private Drive mutation.
     - cron: "0 */12 * * *"
