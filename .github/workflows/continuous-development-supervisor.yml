@@ -71,6 +71,21 @@ jobs:
           echo "exit_code=$((compile_code || test_code))" >> "$GITHUB_OUTPUT"
           exit 0
 
+      - name: Apply safe corrections immediately
+        id: safe_remediation
+        continue-on-error: true
+        working-directory: agent
+        run: |
+          set +e
+          mkdir -p output/development
+          python main.py migrate-manifests > output/development/safe-migrate-manifests.txt 2>&1
+          migration_code=$?
+          python main.py inventory-assets > output/development/safe-inventory-assets.txt 2>&1
+          inventory_code=$?
+          printf '{"migration_exit":%s,"inventory_exit":%s}\n' "$migration_code" "$inventory_code" > output/development/safe-remediation-status.json
+          echo "exit_code=$((migration_code || inventory_code))" >> "$GITHUB_OUTPUT"
+          exit 0
+
       - name: Run architecture and PDCA audits
         id: audits
         continue-on-error: true
@@ -109,6 +124,7 @@ jobs:
         env:
           PUBLIC_TESTS: ${{ steps.public_tests.outputs.exit_code }}
           PRIVATE_TESTS: ${{ steps.private_tests.outputs.exit_code }}
+          SAFE_REMEDIATION: ${{ steps.safe_remediation.outputs.exit_code }}
           AUDITS: ${{ steps.audits.outputs.exit_code }}
           READINESS: ${{ steps.readiness.outputs.exit_code }}
         run: |
@@ -121,7 +137,7 @@ jobs:
               "generated_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
               "cycle": "PDCA",
               "policy": {
-                  "read_only_audit": True,
+                  "safe_auto_remediation": True,
                   "automatic_publication": False,
                   "automatic_deletion": False,
                   "automatic_secret_changes": False,
@@ -130,6 +146,7 @@ jobs:
               "exit_codes": {
                   "public_tests": os.environ.get("PUBLIC_TESTS"),
                   "private_tests": os.environ.get("PRIVATE_TESTS"),
+                  "safe_remediation": os.environ.get("SAFE_REMEDIATION"),
                   "architecture_audits": os.environ.get("AUDITS"),
                   "readiness_audits": os.environ.get("READINESS"),
               },
