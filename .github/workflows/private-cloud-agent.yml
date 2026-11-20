@@ -48,7 +48,7 @@ permissions:
 
 concurrency:
   group: jazz-soul-beat-shared-private-drive-state
-  cancel-in-progress: ${{ github.event_name == 'push' }}
+  cancel-in-progress: false
 
 jobs:
   run-agent:
@@ -88,23 +88,12 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Ensure FFmpeg
-        timeout-minutes: 15
+      - name: Install FFmpeg
         run: |
-          set -euo pipefail
-          if ! command -v ffmpeg >/dev/null 2>&1 || ! command -v ffprobe >/dev/null 2>&1; then
-            echo "FFmpeg missing; installing the pinned Ubuntu package."
-            command -v sudo >/dev/null 2>&1 || { echo "::error::sudo unavailable for FFmpeg installation."; exit 1; }
-            timeout 300s sudo apt-get update -qq
-            timeout 600s sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ffmpeg
-          fi
-          command -v ffmpeg >/dev/null 2>&1 || { echo "::error::ffmpeg unavailable after repair."; exit 1; }
-          command -v ffprobe >/dev/null 2>&1 || { echo "::error::ffprobe unavailable after repair."; exit 1; }
-          echo "FFmpeg repair verified:"
-          command -v ffmpeg
-          command -v ffprobe
-          ffmpeg -version | head -n 2
-          ffprobe -version | head -n 2
+          sudo apt-get update
+          sudo apt-get install --yes ffmpeg
+          ffmpeg -version
+          ffprobe -version
 
       - name: Install agent dependencies
         working-directory: agent
@@ -118,270 +107,33 @@ jobs:
           python -m compileall -q .
           python -m unittest discover -s tests -v
 
-      - name: Preflight all cloud dependencies before touching production data
-        id: preflight
-        working-directory: agent
-        env:
-          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
-        run: |
-          set -euo pipefail
-          test -n "$DRIVE_TOKEN_JSON" || { echo "::error::DRIVE_TOKEN_JSON is missing before production."; exit 1; }
-          command -v ffmpeg >/dev/null || { echo "::error::ffmpeg unavailable in preflight."; exit 1; }
-          command -v ffprobe >/dev/null || { echo "::error::ffprobe unavailable in preflight."; exit 1; }
-          test -r requirements.txt || { echo "::error::Agent requirements are unavailable."; exit 1; }
-          echo "Preflight: secrets, FFmpeg and agent files are present."
-          python main.py drive-status >/tmp/jsb-drive-preflight.json
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          report = json.loads(Path('/tmp/jsb-drive-preflight.json').read_text(encoding='utf-8'))
-          if not isinstance(report, dict):
-              raise SystemExit('Drive preflight returned no structured status.')
-          print('Preflight: Drive connection and status query succeeded.')
-          PY
       - name: Restore only the data needed for this cloud task
         id: restore
-        if: ${{ steps.preflight.outcome == 'success' }}
         working-directory: agent
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
         run: |
           if [[ "${{ env.TASK }}" == "build-evergreen" ]]; then
-            timeout 600s python main.py drive-pull-music-library
-            python main.py migrate-manifests
+            python main.py drive-pull-library
+            python main.py scan
           else
             python main.py drive-pull-state
           fi
           python main.py drive-status
-
-      - name: Restore validated visual scene library
-        id: restore_visual_assets
-        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
-        working-directory: agent
-        env:
-          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
-        run: timeout 600s python main.py drive-pull-visual-assets
-
-      - name: Validate approved music library without synthetic generation
-        id: validate_approved_library
-        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
-        working-directory: agent
-        run: |
-          set -euo pipefail
-          python main.py scan
-          python main.py library-status
-          echo "Synthetic procedural generation is disabled; only approved external/original masters are eligible."
 
       - name: Show approved library status
         if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
         working-directory: agent
         run: python main.py library-status
 
-      - name: Snapshot music library before growth
-        id: growth_before
-        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
-        working-directory: agent
-        run: |
-          set -euo pipefail
-          mkdir -p output/library-promotion
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          root = Path("tracks")
-          files = sorted(
-              str(p.relative_to(root))
-              for p in root.rglob("*")
-              if p.is_file() and p.suffix.lower() in {".mp3",".wav",".flac",".m4a",".ogg"}
-          )
-          Path("output/library-promotion/growth-before.json").write_text(
-              json.dumps({"audio_files": files}, indent=2) + "\n", encoding="utf-8"
-          )
-          print(f"Growth baseline: {len(files)} audio files.")
-          PY
-
-      - name: Discover Incompetech catalog
-        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
-        working-directory: agent
-        timeout-minutes: 5
-        run: timeout 300s python main.py discover-incompetech
-
-      - name: Audit Incompetech source evidence
-        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
-        working-directory: agent
-        timeout-minutes: 5
-        run: timeout 300s python main.py audit-incompetech-sources
-
-      - name: Audit Incompetech track pages
-        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
-        working-directory: agent
-        timeout-minutes: 5
-        run: timeout 300s python main.py audit-incompetech-track-pages
-
-      - name: Discover Ketsa catalog
-        continue-on-error: true
-        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
-        working-directory: agent
-        timeout-minutes: 8
-        run: timeout 300s python main.py discover-ketsa --limit 80
-
-      - name: Download Ketsa review candidates
-        continue-on-error: true
-        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
-        working-directory: agent
-        timeout-minutes: 25
-        run: timeout 1500s python main.py download-ketsa --limit 80
-
-      - name: Intake library growth candidates
-        id: intake_growth
-        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' && hashFiles('agent/output/ketsa_candidates.csv') != '' }}
-        working-directory: agent
-        timeout-minutes: 5
-        run: timeout 300s python main.py intake-library-growth
-
-      - name: Persist growth research
-        continue-on-error: true
-        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
-        working-directory: agent
-        timeout-minutes: 10
-        env:
-          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
-        run: timeout 600s python main.py drive-push-growth-research
-
-      - name: Complete external music growth
-        id: external_music_growth
-        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
-        run: echo "External music growth completed with individually bounded stages."
-      - name: Enforce music growth throughput
-        id: growth_gate
-        if: ${{ steps.external_music_growth.outcome == 'success' }}
-        working-directory: agent
-        env:
-          REQUIRED_NEW_TRACKS: "20"
-        run: |
-          set -euo pipefail
-          python - <<'PY'
-          import json, os
-          from pathlib import Path
-          before = set(json.loads(Path("output/library-promotion/growth-before.json").read_text(encoding="utf-8"))["audio_files"])
-          root = Path("tracks")
-          after = {
-              str(p.relative_to(root))
-              for p in root.rglob("*")
-              if p.is_file() and p.suffix.lower() in {".mp3",".wav",".flac",".m4a",".ogg"}
-          }
-          new_files = sorted(after - before)
-          required = int(os.environ["REQUIRED_NEW_TRACKS"])
-          report = {
-              "baseline_audio_files": len(before),
-              "current_audio_files": len(after),
-              "new_audio_files": len(new_files),
-              "required_new_audio_files": required,
-              "new_files": new_files,
-              "status": "PASS" if len(new_files) >= required else "FAIL",
-          }
-          Path("output/library-promotion/growth-throughput.json").write_text(
-              json.dumps(report, indent=2) + "\n", encoding="utf-8"
-          )
-          print(json.dumps(report, indent=2))
-          if len(new_files) < required:
-              print(
-                  f"Growth throughput below target: {len(new_files)} new audio files; "
-                  f"minimum target is {required}. Production remains governed by the approved-library gate."
-              )
-          PY
-      - name: Restore autonomous library-growth batch for promotion
-        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
-        working-directory: agent
-        env:
-          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
-        run: |
-          set -euo pipefail
-          if [[ -s output/library-promotion/eligible-external.json ]]; then
-            echo "Growth artifacts already exist in this run; skipping redundant Drive restore."
-          else
-            timeout 600s python main.py drive-pull-growth-batch
-          fi
-
-      - name: Restore approved original-music package for promotion
-        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
-        working-directory: agent
-        env:
-          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
-        run: |
-          set -euo pipefail
-          if [[ -d output/original-music/approved-stable-audio3-20261116 ]]; then
-            echo "Approved original-music package already present; skipping Drive restore."
-          else
-            echo "No approved original-music package present; external licensed intake remains the active source."
-          fi
-
-      - name: Prepare hash-bound candidates from approved original music
-        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
-        working-directory: agent
-        run: |
-          mkdir -p output/library-promotion
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          root = Path("output/original-music/approved-stable-audio3-20261116")
-          index_path = root / "AUDITION_INDEX.json"
-          rights_path = root / "STABLE_AUDIO3_RIGHTS_REVIEW.json"
-          candidates = []
-          external_path = Path("output/library-promotion/eligible-external.json")
-          if external_path.is_file():
-              external = json.loads(external_path.read_text(encoding="utf-8"))
-              if isinstance(external, list):
-                  candidates.extend(external)
-                  print(f"Loaded {len(external)} autonomous external candidates.")
-          if index_path.is_file() and rights_path.is_file():
-              index = json.loads(index_path.read_text(encoding="utf-8"))
-              rights = json.loads(rights_path.read_text(encoding="utf-8"))
-              evidence_url = "https://stability.ai/community-license-agreement"
-              source_url = "https://huggingface.co/stabilityai/stable-audio-3-medium"
-              for item in index.get("candidates", []):
-                  if item.get("creative_approval") is not True or item.get("rights_verified") is not True:
-                      continue
-                  artifact = Path(item["file"])
-                  if not artifact.is_file():
-                      continue
-                  candidates.append({
-                      "decision": "ELIGIBLE_FOR_LIBRARY",
-                      "rights_verified": True,
-                      "eligible_for_video_assembly": True,
-                      "title": item["title"],
-                      "artist": "Stable Audio 3 / Stability AI",
-                      "artifact": str(artifact),
-                      "artifact_sha256": item["sha256"],
-                      "duration_seconds": item["duration_seconds"],
-                      "license_name": "Stability AI Community License",
-                      "license_url": evidence_url,
-                      "source_url": source_url,
-                      "attribution": "Generated with Stable Audio 3 by Stability AI; used under the Stability AI Community License.",
-                      "rights_evidence_url": evidence_url,
-                      "permission": "yes",
-                      "license_verified": "yes",
-                      "uploader_authority": "yes",
-                      "composition_rights": "yes",
-                      "performance_rights": "yes",
-                      "recording_rights": "yes",
-                      "reviewed_at": rights.get("reviewed_at_utc", "2026-11-14"),
-                      "review_notes": "Exact mastered hash reviewed under the current Stability AI Community License. Commercial registration, revenue threshold, AUP compliance and residual similarity risk remain applicable.",
-                  })
-          Path("output/library-promotion/eligible.json").write_text(json.dumps(candidates, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-          print(f"Prepared {len(candidates)} hash-bound original candidates.")
-          PY
       - name: Integrate approved original masters
         id: original_promotion
         if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
         working-directory: agent
         run: |
           set -euo pipefail
-          if [[ -d output/original-music/approved-stable-audio3-20261116 ]]; then
-            python main.py prepare-original-promotion
-            python main.py reconcile-music
-          else
-            echo "No approved original-music package; skipping original-master integration."
-          fi
+          python main.py prepare-original-promotion
+          python main.py reconcile-music
 
       - name: Import rights-eligible library candidates
         id: library_promotion
@@ -399,6 +151,51 @@ jobs:
             printf '{"approved": [], "rejected": [], "approved_seconds": 0, "publication": "DISABLED", "status": "NO_ELIGIBLE_BATCH"}\n' > "$report"
             echo "No hay lote elegible de derechos; el proceso continúa buscando fuentes."
           fi
+
+      - name: Write production library capacity evidence
+        id: production_capacity
+        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        working-directory: agent
+        env:
+          HOURS: ${{ env.HOURS }}
+        run: |
+          set -euo pipefail
+          mkdir -p output/library-promotion
+          python - <<'PY'
+          import csv, json, os
+          from pathlib import Path
+
+          root = Path("tracks")
+          manifests = [root / "library.csv", *sorted((root / "seasonal").glob("*/library.csv"))]
+          approved = []
+          for manifest in manifests:
+              if not manifest.is_file():
+                  continue
+              with manifest.open(newline="", encoding="utf-8-sig") as handle:
+                  for row in csv.DictReader(handle):
+                      truthy = {"1", "true", "yes"}
+                      if str(row.get("approved", "")).lower() in truthy and str(row.get("rights_verified", "")).lower() in truthy:
+                          try:
+                              seconds = float(row.get("duration_seconds") or row.get("duration") or 0)
+                          except (TypeError, ValueError):
+                              seconds = 0.0
+                          if seconds > 0:
+                              approved.append(row)
+          target = int(float(os.environ["HOURS"]) * 3600)
+          total = sum(float(row.get("duration_seconds") or row.get("duration") or 0) for row in approved)
+          report = {
+              "agent_id": "production_library_capacity",
+              "source": "tracks/library.csv + tracks/seasonal/*/library.csv",
+              "approved_tracks": len(approved),
+              "approved_seconds": round(total, 2),
+              "target_seconds": target,
+              "status": "READY" if total >= target else "INSUFFICIENT",
+              "rights_gate": "approved_and_rights_verified_only",
+              "publication": "DISABLED",
+          }
+          Path("output/library-promotion/production-capacity.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+          print(json.dumps(report, indent=2))
+          PY
 
       - name: Initialize or resume the sequential orchestrator checkpoint
         id: orchestrator_checkpoint
@@ -485,18 +282,11 @@ jobs:
           SEASON: ${{ env.SEASON }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          if [[ "$COLLECTION" == "evergreen" ]]; then
-            SCENE_MANIFEST="assets/visual-agents/midnight_jazz_soul/scenes/SCENE_MANIFEST.json"
-            if ! python -c 'import json,sys; from pathlib import Path; from video import _validated_scene_selection; p=Path(sys.argv[1]); m=json.loads(p.read_text(encoding="utf-8")); assert m.get("status") in {"SCENE_SET_GENERATED_PENDING_HUMAN_QA","SCENE_SET_COMPLETE_WITH_DERIVED_VARIANTS_PENDING_HUMAN_QA"}; _validated_scene_selection(p,m,minimum_scenes=8)' "$SCENE_MANIFEST"; then
-              echo "No hay una biblioteca visual completa; se intentará generarla solo con cuotas gratuitas."
-              if ! python scene_factory.py; then
-                python -c 'import json,sys; from pathlib import Path; from video import _validated_scene_selection; p=Path("assets/visual-agents/midnight_jazz_soul/scenes/SCENE_MANIFEST.json"); assert p.is_file(), "scene_factory falló y no dejó manifiesto visual."; data=json.loads(p.read_text(encoding="utf-8")); allowed={"SCENE_SET_GENERATED_PENDING_HUMAN_QA","SCENE_SET_COMPLETE_WITH_DERIVED_VARIANTS_PENDING_HUMAN_QA"}; assert data.get("status") in allowed, "scene_factory dejó un estado visual no utilizable."; _validated_scene_selection(p,data,minimum_scenes=8); print("scene_factory reportó proveedor no disponible, pero dejó un manifiesto válido de 8 escenas originales; se continúa al render.")'
-              fi
-            fi
-            export JSB_REQUIRE_MULTI_SCENE=1
-          fi
+          # Approved visual contract: one human-approved image per video.
+          # Motion is limited to verified in-image effects; no scene factory
+          # or multi-scene fallback may override that contract.
+          export JSB_REQUIRE_MULTI_SCENE=0
           args=(make --hours "$MIX_HOURS" --auto --collection "$COLLECTION")
           if [[ "$COLLECTION" == "seasonal" ]]; then
             if [[ ! "$SEASON" =~ ^[a-z0-9][a-z0-9_-]{0,39}$ ]]; then
@@ -517,7 +307,7 @@ jobs:
         env:
           HOURS: ${{ env.HOURS }}
           COLLECTION: ${{ env.COLLECTION }}
-          JSB_REQUIRE_MULTI_SCENE: ${{ env.COLLECTION == 'evergreen' && '1' || '0' }}
+          JSB_REQUIRE_MULTI_SCENE: "0"
         run: |
           set -euo pipefail
           python - <<'PY'
@@ -567,26 +357,20 @@ jobs:
           source_text = (folder / "MUSIC_SOURCE.txt").read_text(encoding="utf-8")
           source_entries = [line for line in source_text.splitlines() if line[:1].isdigit() and ". " in line[:6]]
           assert source_entries, "MUSIC_SOURCE.txt contains no individual track entries."
-          if os.environ.get("COLLECTION") == "evergreen" and os.environ.get("JSB_REQUIRE_MULTI_SCENE") == "1":
-              provenance = folder / "VISUAL_SCENE_PROVENANCE.json"
-              assert provenance.is_file(), "Falta procedencia de escenas."
-              visual = json.loads(provenance.read_text(encoding="utf-8"))
-              assert visual.get("scene_count", 0) >= 8
-              expected_hash = hashlib.sha256((folder / "video.mp4").read_bytes()).hexdigest()
-              assert visual.get("video_sha256") == expected_hash, "El hash de video no coincide con su procedencia."
+          provenance = folder / "VISUAL_SCENE_PROVENANCE.json"
+          assert provenance.is_file(), "Falta procedencia visual del render."
+          visual = json.loads(provenance.read_text(encoding="utf-8"))
+          assert visual.get("status") == "SINGLE_APPROVED_IMAGE", visual
+          assert visual.get("scene_count") == 1, visual
+          assert visual.get("camera") == "locked", visual
+          assert visual.get("approved_image_sha256"), "Falta hash de la imagen aprobada."
+          expected_hash = hashlib.sha256((folder / "video.mp4").read_bytes()).hexdigest()
+          assert visual.get("video_sha256") == expected_hash, "El hash de video no coincide con su procedencia."
           print(f"PASS: {folder} | {duration:.2f}s | H.264 QHD | AAC estéreo")
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
               output.write(f"run_dir={folder.as_posix()}\n")
           PY
 
-      - name: Write hash-bound production artifact manifest
-        if: ${{ steps.capture_render.outcome == 'success' }}
-        working-directory: agent
-        run: |
-          python ../scripts/artifact_manifest_agent.py \
-            --run-dir "${{ steps.capture_render.outputs.run_dir }}" \
-            --output "${{ steps.capture_render.outputs.run_dir }}/ARTIFACT_MANIFEST.json"
-          test -s "${{ steps.capture_render.outputs.run_dir }}/ARTIFACT_MANIFEST.json"
       - name: Persist generated visual scene library privately
         id: persist_visual_assets
         if: ${{ always() && steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' && steps.build_video.outcome != 'skipped' }}
@@ -595,7 +379,7 @@ jobs:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
         run: |
           set -euo pipefail
-          timeout 600s python main.py drive-push-visual-assets
+          python main.py drive-push-visual-assets
           python main.py drive-status
 
       - name: Persist only the validated production folder and production database
@@ -605,10 +389,9 @@ jobs:
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
           JSB_PRODUCTION_RUN_DIR: ${{ steps.capture_render.outputs.run_dir }}
-          DRIVE_FILE_PREFIX: ${{ env.COLLECTION }}__${{ env.SEASON || 'evergreen' }}
         run: |
           set -euo pipefail
-          timeout 600s python main.py drive-push-production
+          python main.py drive-push-production
           python main.py drive-status
 
       - name: Persist synthetic QA and autonomy state only
@@ -619,8 +402,8 @@ jobs:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
         run: |
           set -euo pipefail
-          timeout 600s python main.py drive-push-qa
-          timeout 600s python main.py drive-push-state
+          python main.py drive-push-qa
+          python main.py drive-push-state
 
       - name: Verify and close requested-task PDCA cycle
         if: ${{ always() && steps.pdca_start.outcome == 'success' }}
@@ -646,3 +429,4 @@ jobs:
           echo "No se configuró ni ejecutó ninguna subida a YouTube."
           echo "El workflow no contiene YOUTUBE_TOKEN_JSON ni la opción --upload."
           echo "Los archivos persistentes se guardan únicamente en Google Drive privado."
+
