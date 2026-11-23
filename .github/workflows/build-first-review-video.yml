@@ -1,0 +1,246 @@
+name: Build new private Jazz Soul Beat review videos
+
+on:
+  # Legacy review builder retained for manual reproducibility only.
+  # Scheduled drafts are owned by private-cloud-agent.yml to avoid duplicated Drive writes.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  statuses: write
+
+concurrency:
+  group: jazz-soul-beat-shared-private-drive-state
+  cancel-in-progress: false
+
+jobs:
+  build-and-store:
+    name: Build a new 2–3 hour licensed jazz/soul review mix
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Check out cloud controller
+        uses: actions/checkout@v4
+
+      - name: Check out private agent branch at latest approved-track fix
+        uses: actions/checkout@v4
+        with:
+          repository: dacorot/jazzsoulbeat-agent
+          ref: fix/real-music-and-cinematic-motion
+          token: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
+          path: agent
+          persist-credentials: false
+
+      - name: Record exact agent revision under test
+        working-directory: agent
+        run: |
+          git rev-parse HEAD
+          git log -1 --pretty=%s
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install FFmpeg
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          if ! command -v ffmpeg >/dev/null 2>&1 || ! command -v ffprobe >/dev/null 2>&1; then
+            python -m pip install --disable-pip-version-check ffmpeg-downloader==0.5.3
+            python -m ffmpeg_downloader install @gpl
+            FFMPEG_BIN_DIR="$(python -c 'import ffmpeg_downloader as f; from pathlib import Path; p=Path(f.ffmpeg_path); q=Path(f.ffprobe_path); assert p.is_file(), p; assert q.is_file(), q; print(p.parent)')"
+            echo "$FFMPEG_BIN_DIR" >> "$GITHUB_PATH"
+            echo "Verified FFmpeg directory: $FFMPEG_BIN_DIR"
+          else
+            echo "Using FFmpeg already present on the GitHub-hosted runner."
+          fi
+          command -v ffmpeg
+          ffmpeg -version | head -n 2
+          command -v ffprobe
+          ffprobe -version | head -n 2
+
+      - name: Install dependencies
+        working-directory: agent
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Compile and test
+        working-directory: agent
+        run: |
+          python -m compileall -q .
+          python -m unittest discover -s tests -v
+
+      - name: Restore the approved music library and private project state
+        timeout-minutes: 15
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: |
+          python main.py drive-pull-library
+          python main.py scan
+          python main.py drive-status
+          python main.py library-status
+
+      - name: Start Deming PDCA cycle for the private 2–3 hour video build
+        id: pdca_start
+        uses: ./.github/actions/pdca-start
+        with:
+          task: first-video-production
+          objective: Produce and verify a 2–3 hour private Jazz Soul Beat video only when 500 approved songs and a scene-effect contract are present
+          drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
+
+      - name: Check approved 500-song library gate
+        id: library_gate
+        working-directory: agent
+        run: |
+          python - <<'PY'
+          import os
+          from db import conn
+          from mixer import DEFAULT_CROSSFADE_SECONDS
+          c = conn()
+          try:
+              rows = c.execute(
+                  "SELECT duration FROM tracks WHERE approved=1 AND rights_verified=1 "
+                  "AND duration>180 AND collection='evergreen' AND season='' "
+                  "AND genre<>'' AND instruments<>'' AND mood<>''"
+              ).fetchall()
+          finally:
+              c.close()
+          durations = [float(row["duration"]) for row in rows]
+          usable = sum(durations) - DEFAULT_CROSSFADE_SECONDS * max(0, len(durations)-1)
+          ready = len(durations) >= 500 and usable >= 7200
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
+              f.write("ready=" + ("true" if ready else "false") + chr(10))
+          print(f"Eligible approved tracks: {len(durations)}; usable seconds: {usable:.1f}; minimum songs: 500; ready: {ready}")
+          PY
+
+      - name: Skip safely until enough approved music exists
+        if: ${{ steps.library_gate.outputs.ready != 'true' }}
+        run: |
+          echo "No automatic build until the approved, rights-verified library contains 500 unique songs and at least two hours."
+
+      - name: Generate 2–3 hour review video from approved real tracks
+        if: ${{ steps.library_gate.outputs.ready == 'true' }}
+        working-directory: agent
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+          JSB_REQUIRE_MULTI_SCENE: "1"
+        run: |
+          echo "No YouTube upload is performed by automation. Build locally in runner and persist only to private Google Drive for review."
+          SCENE_MANIFEST="assets/visual-agents/midnight_jazz_soul/scenes/SCENE_MANIFEST.json"
+          if ! python -c 'import json,sys; from pathlib import Path; from video import _validated_scene_selection; p=Path(sys.argv[1]); m=json.loads(p.read_text(encoding="utf-8")); assert m.get("status") in {"SCENE_SET_GENERATED_PENDING_HUMAN_QA","SCENE_SET_COMPLETE_WITH_DERIVED_VARIANTS_PENDING_HUMAN_QA"}; _validated_scene_selection(p,m,minimum_scenes=8)' "$SCENE_MANIFEST"; then
+            echo "No hay una biblioteca visual completa; se intentará generarla solo con cuotas gratuitas."
+            set +e
+            python scene_factory.py
+            SCENE_GENERATION_STATUS=$?
+            set -e
+            python main.py drive-push-visual-assets
+            if [ "$SCENE_GENERATION_STATUS" -ne 0 ]; then exit "$SCENE_GENERATION_STATUS"; fi
+          fi
+          MIX_HOURS=$((2 + $(date +%s) % 2))
+          python main.py make --hours "$MIX_HOURS" --auto
+
+      - name: Verify video, thumbnail, metadata, and licensed music provenance
+        id: video_verify
+        if: ${{ steps.library_gate.outputs.ready == 'true' }}
+        working-directory: agent
+        shell: bash
+        run: |
+          set -euo pipefail
+          VIDEO="$(find output -type f -name video.mp4 -printf '%T@ %p\n' | sort -nr | head -1 | cut -d' ' -f2-)"
+          test -n "$VIDEO"
+          RUN_DIR="$(dirname "$VIDEO")"
+          test -s "$RUN_DIR/thumb.jpg"
+          test -s "$RUN_DIR/description.txt"
+          test -s "$RUN_DIR/MUSIC_SOURCE.txt"
+          test -s "$RUN_DIR/VISUAL_SCENE_PROVENANCE.json"
+          test -s "$RUN_DIR/mix.mp3"
+          ffprobe -v error -show_entries format=duration,size -show_entries stream=codec_type,codec_name,width,height,channels -of json "$VIDEO" > "$RUN_DIR/review-probe.json"
+          python - "$RUN_DIR/review-probe.json" <<'PY'
+          import hashlib, json, sys
+          from pathlib import Path
+          data = json.loads(Path(sys.argv[1]).read_text())
+          duration = float(data["format"]["duration"])
+          streams = data["streams"]
+          video = next(s for s in streams if s["codec_type"] == "video")
+          audio = next(s for s in streams if s["codec_type"] == "audio")
+          assert 7190 <= duration <= 10810, duration
+          assert video["codec_name"] == "h264" and (video["width"], video["height"]) == (2560, 1440), video
+          assert audio["codec_name"] == "aac" and audio["channels"] == 2, audio
+          print(f"PASS: {duration:.2f}s | H.264 2560x1440 QHD | AAC stereo | {data['format']['size']} bytes")
+          run_dir = Path(sys.argv[1]).parent
+          visual = json.loads((run_dir / "VISUAL_SCENE_PROVENANCE.json").read_text())
+          assert visual["scene_count"] >= 8, visual
+          assert len(visual["scene_loop_checks"]) >= 8, visual
+          assert all(item["status"] == "PASS" for item in visual["scene_loop_checks"]), visual
+          video_sha = hashlib.sha256((run_dir / "video.mp4").read_bytes()).hexdigest()
+          assert visual["video_sha256"] == video_sha, visual
+          manifest = Path(visual["scene_manifest"])
+          assert manifest.is_file()
+          manifest_sha = hashlib.sha256(manifest.read_bytes()).hexdigest()
+          assert visual["scene_manifest_sha256"] == manifest_sha, visual
+          source_text = (run_dir / "MUSIC_SOURCE.txt").read_text(encoding="utf-8")
+          assert source_text.count("Audio SHA-256:") > 0
+          print(f"PASS: {visual['scene_count']} seamless 60-second visual loops verified.")
+          print("PASS: video, scene manifest and selected music have exact SHA-256 provenance.")
+          PY
+          echo "Review package: $RUN_DIR"
+          find "$RUN_DIR" -maxdepth 1 -type f -printf '%f %s bytes\n' | sort
+
+      - name: Persist review package and provenance in private Google Drive
+        id: persist_review
+        if: ${{ steps.library_gate.outputs.ready == 'true' }}
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: |
+          python main.py drive-push
+          python main.py drive-status
+
+      - name: Verify and close daily video-build PDCA cycle
+        if: ${{ always() && steps.pdca_start.outcome == 'success' }}
+        uses: ./.github/actions/pdca-finish
+        with:
+          cycle_id: ${{ steps.pdca_start.outputs.cycle_id }}
+          result_json: '{"workflow":"first-review-video","run_id":"${{ github.run_id }}","approved_music_gate":"${{ steps.library_gate.outputs.ready }}","job_status":"${{ job.status }}"}'
+          checks_json: >-
+            [{"name":"approved_library_gate_executed","passed":${{ steps.library_gate.outcome == 'success' }}},{"name":"video_media_validation_or_safe_gate_block","passed":${{ steps.library_gate.outputs.ready != 'true' || steps.video_verify.outcome == 'success' }}},{"name":"private_drive_persistence_or_no_build_required","passed":${{ steps.library_gate.outputs.ready != 'true' || steps.persist_review.outcome == 'success' }}},{"name":"youtube_upload_prohibited","passed":true}]
+          evidence: 'GitHub Actions run ${{ github.run_id }}; video gate and private review package'
+          drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
+
+      - name: Confirm publication safety
+        run: |
+          echo "Public publishing is never performed by this workflow."
+          echo "No YouTube upload is performed automatically, even if OAuth credentials exist."
+          echo "The completed video remains in the private Google Drive review folder until separately authorized."
+
+      - name: Record private video build result on commit
+        if: always()
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESULT: ${{ job.status }}
+          READY: ${{ steps.library_gate.outputs.ready }}
+        run: |
+          if [ "$RESULT" != "success" ]; then
+            state=failure
+            description="Private review build failed; inspect workflow logs."
+          elif [ "$READY" != "true" ]; then
+            state=pending
+            description="Waiting for one complete hour of approved, rights-verified music; no video generated."
+          else
+            state=success
+            description="New private Drive review video generated; no YouTube upload performed."
+          fi
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state="$state" \
+            -f context="Jazz Soul Beat / first private video" \
+            -f description="$description"
+
+# Refresh trigger: run against private-agent head 80e96e4b0bfd4d4042adf4c6a5a3f56b79d6b239; FFmpeg is installed through the pinned Python downloader when not preinstalled.
+
+# Refresh trigger: build review package against latest private-agent head 7443e7fdd846f3afdf3221821d9a30184a6536c5.

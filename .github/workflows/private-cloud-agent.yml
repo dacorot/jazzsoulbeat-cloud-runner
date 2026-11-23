@@ -1,0 +1,449 @@
+name: Jazz Soul Beat private cloud agent
+
+on:
+  push:
+    paths:
+      - "PRIVATE_CLOUD_AGENT_START.md"
+  schedule:
+    # Three private production drafts weekly: Monday, Wednesday and Friday at 06:00 Colombia (UTC-5).
+    - cron: "0 11 * * 1,3,5"
+  workflow_dispatch:
+    inputs:
+      task:
+        description: "Tarea a ejecutar"
+        required: true
+        type: choice
+        options:
+          - self-test
+          - build-evergreen
+      hours:
+        description: "Duración del video evergreen aprobado (horas)"
+        required: true
+        default: "2"
+        type: choice
+        options:
+          - "1"
+          - "2"
+          - "3"
+      collection:
+        description: "Colección musical"
+        required: true
+        default: evergreen
+        type: choice
+        options:
+          - evergreen
+          - seasonal
+      season:
+        description: "Slug de temporada (solo seasonal; por ejemplo halloween)"
+        required: false
+        type: string
+      agent_ref:
+        description: "Rama o SHA del agente privado que se validará"
+        required: true
+        default: fix/real-music-and-cinematic-motion
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: jazz-soul-beat-shared-private-drive-state
+  cancel-in-progress: false
+
+jobs:
+  run-agent:
+    name: Restore, run safely, and persist privately
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    env:
+      TASK: ${{ github.event_name == 'workflow_dispatch' && inputs.task || 'build-evergreen' }}
+      HOURS: ${{ github.event_name == 'workflow_dispatch' && inputs.hours || '2' }}
+      COLLECTION: ${{ github.event_name == 'workflow_dispatch' && inputs.collection || 'evergreen' }}
+      SEASON: ${{ github.event_name == 'workflow_dispatch' && inputs.season || '' }}
+      AGENT_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.agent_ref || 'fix/real-music-and-cinematic-motion' }}
+    steps:
+      - name: Check out public controller
+        uses: actions/checkout@v4
+
+      - name: Validate private agent ref
+        env:
+          AGENT_REF: ${{ env.AGENT_REF }}
+        run: |
+          if [[ -z "$AGENT_REF" || ! "$AGENT_REF" =~ ^[A-Za-z0-9][A-Za-z0-9._/-]{0,99}$ || "$AGENT_REF" == *..* || "$AGENT_REF" == */ || "$AGENT_REF" == *//* ]]; then
+            echo "Rama o SHA del agente no válida."
+            exit 1
+          fi
+
+      - name: Check out private agent (read-only token)
+        uses: actions/checkout@v4
+        with:
+          repository: dacorot/jazzsoulbeat-agent
+          ref: ${{ env.AGENT_REF }}
+          token: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
+          path: agent
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ffmpeg
+          ffmpeg -version
+          ffprobe -version
+
+      - name: Install agent dependencies
+        working-directory: agent
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Compile and test private agent
+        working-directory: agent
+        run: |
+          python -m compileall -q .
+          python -m unittest discover -s tests -v
+
+      - name: Restore only the data needed for this cloud task
+        id: restore
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: |
+          if [[ "${{ env.TASK }}" == "build-evergreen" ]]; then
+            python main.py drive-pull-library
+            python main.py scan
+          else
+            python main.py drive-pull-state
+          fi
+          python main.py drive-status
+
+      - name: Show approved library status
+        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        working-directory: agent
+        run: python main.py library-status
+
+      - name: Integrate approved original masters
+        id: original_promotion
+        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        working-directory: agent
+        run: |
+          set -euo pipefail
+          if [[ -d output/original-music/approved-stable-audio3-20261116 ]]; then
+            python main.py prepare-original-promotion
+            python main.py reconcile-music
+          else
+            echo "No approved original-music package; external licensed intake remains the active source."
+          fi
+
+      - name: Import rights-eligible library candidates
+        id: library_promotion
+        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        working-directory: agent
+        run: |
+          set -euo pipefail
+          candidates="output/library-promotion/eligible.json"
+          report="output/library-promotion/import-report.json"
+          mkdir -p "$(dirname "$report")"
+          if [[ -s "$candidates" ]]; then
+            python main.py promote-library --candidates "$candidates" --report "$report"
+            python main.py library-status
+          else
+            printf '{"approved": [], "rejected": [], "approved_seconds": 0, "publication": "DISABLED", "status": "NO_ELIGIBLE_BATCH"}\n' > "$report"
+            echo "No hay lote elegible de derechos; el proceso continúa buscando fuentes."
+          fi
+
+      - name: Write production library capacity evidence
+        id: production_capacity
+        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        working-directory: agent
+        env:
+          HOURS: ${{ env.HOURS }}
+        run: |
+          set -euo pipefail
+          mkdir -p output/library-promotion
+          python - <<'PY'
+          import csv, json, os
+          from pathlib import Path
+
+          root = Path("tracks")
+          manifests = [root / "library.csv", *sorted((root / "seasonal").glob("*/library.csv"))]
+          approved = []
+          for manifest in manifests:
+              if not manifest.is_file():
+                  continue
+              with manifest.open(newline="", encoding="utf-8-sig") as handle:
+                  for row in csv.DictReader(handle):
+                      truthy = {"1", "true", "yes"}
+                      if str(row.get("approved", "")).lower() in truthy and str(row.get("rights_verified", "")).lower() in truthy:
+                          try:
+                              seconds = float(row.get("duration_seconds") or row.get("duration") or 0)
+                          except (TypeError, ValueError):
+                              seconds = 0.0
+                          if seconds > 0:
+                              approved.append(row)
+          target = int(float(os.environ["HOURS"]) * 3600)
+          total = sum(float(row.get("duration_seconds") or row.get("duration") or 0) for row in approved)
+          minimum_unique_tracks = 500
+          report = {
+              "agent_id": "production_library_capacity",
+              "source": "tracks/library.csv + tracks/seasonal/*/library.csv",
+              "approved_tracks": len(approved),
+              "approved_seconds": round(total, 2),
+              "target_seconds": target,
+              "minimum_unique_tracks": minimum_unique_tracks,
+              "missing_unique_tracks": max(0, minimum_unique_tracks - len(approved)),
+              "status": "READY" if total >= target and len(approved) >= minimum_unique_tracks else "INSUFFICIENT",
+              "rights_gate": "approved_and_rights_verified_only",
+              "publication": "DISABLED",
+          }
+          Path("output/library-promotion/production-capacity.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+          print(json.dumps(report, indent=2))
+          PY
+
+      - name: Initialize or resume the sequential orchestrator checkpoint
+        id: orchestrator_checkpoint
+        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        working-directory: agent
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          ORCHESTRATOR_VIDEO_ID: video-02
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          from scripts.orchestrator_agent import new_checkpoint, save_checkpoint
+          video_id = os.environ.get("ORCHESTRATOR_VIDEO_ID") or "video-02"
+          path = Path("output/orchestrator") / f"{video_id}.checkpoint.json"
+          if path.exists():
+              checkpoint = json.loads(path.read_text(encoding="utf-8"))
+              print(f"Resumed orchestrator: {video_id} at {checkpoint.get('stage')}")
+          else:
+              checkpoint = new_checkpoint(video_id)
+              save_checkpoint(path, checkpoint)
+              print(f"Initialized orchestrator: {video_id} at {checkpoint['stage']}")
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write(f"stage={checkpoint.get('stage')}\n")
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
+              summary.write(f"## Orchestrator checkpoint\n\nVideo: `{video_id}`\nStage: `{checkpoint.get('stage')}`\n")
+          PY
+
+      - name: Check whether the approved library can satisfy the requested video
+        id: production_gate
+        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        working-directory: agent
+        env:
+          HOURS: ${{ env.HOURS }}
+          COLLECTION: ${{ env.COLLECTION }}
+          SEASON: ${{ env.SEASON }}
+        run: |
+          python - <<'PY'
+          import os
+          import json
+          from pathlib import Path
+          from curator import pick
+
+          hours = float(os.environ["HOURS"])
+          collection = os.environ["COLLECTION"]
+          season = os.environ.get("SEASON") or None
+          capacity = json.loads(Path("output/library-promotion/production-capacity.json").read_text(encoding="utf-8"))
+          if capacity.get("approved_tracks", 0) < 500:
+              reason = f"Se requieren 500 canciones únicas aprobadas; solo hay {capacity.get('approved_tracks', 0)}."
+              with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+                  output.write("eligible=false\n")
+              with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
+                  summary.write("## Production gate\n\n**SKIPPED — " + reason + "**\n")
+              print("SKIPPED safely: " + reason)
+              raise SystemExit(0)
+          try:
+              tracks, source_seconds = pick(hours * 3600, collection=collection, season=season)
+          except SystemExit as exc:
+              with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+                  output.write("eligible=false\n")
+              reason = str(exc)
+              print("SKIPPED safely: " + reason)
+              with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
+                  summary.write("## Production gate\n\n**SKIPPED — no video was rendered.**\n\n" + reason + "\n")
+              raise SystemExit(0)
+          message = f"ELIGIBLE: {len(tracks)} approved tracks; {source_seconds/3600:.2f} source hours for a {hours:.2f}-hour render."
+          print(message)
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write("eligible=true\n")
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
+              summary.write("## Production gate\n\n**ELIGIBLE** — " + message + "\n")
+
+      - name: Start Deming PDCA cycle for requested cloud task
+        id: pdca_start
+        if: ${{ steps.restore.outcome == 'success' && (env.TASK == 'self-test' || steps.production_gate.outputs.eligible == 'true') }}
+        uses: ./.github/actions/pdca-start
+        with:
+          task: ${{ env.TASK }}
+          objective: Execute the explicitly requested cloud task, verify its outputs and preserve all publication and rights gates
+          drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
+
+      - name: Build synthetic technical test (never uploads)
+        id: self_test
+        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'self-test' }}
+        working-directory: agent
+        run: python main.py self-test
+
+      - name: Build an evergreen or seasonal video (never uploads)
+        id: build_video
+        if: ${{ steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' && steps.production_gate.outputs.eligible == 'true' }}
+        working-directory: agent
+        env:
+          MIX_HOURS: ${{ env.HOURS }}
+          COLLECTION: ${{ env.COLLECTION }}
+          SEASON: ${{ env.SEASON }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          # Approved visual contract: one human-approved image per video.
+          # Motion is limited to verified in-image effects; no scene factory
+          # or multi-scene fallback may override that contract.
+          export JSB_REQUIRE_MULTI_SCENE=0
+          args=(make --hours "$MIX_HOURS" --auto --collection "$COLLECTION")
+          if [[ "$COLLECTION" == "seasonal" ]]; then
+            if [[ ! "$SEASON" =~ ^[a-z0-9][a-z0-9_-]{0,39}$ ]]; then
+              echo "Temporada inválida o ausente; no se construirá ningún video."
+              exit 1
+            fi
+            args+=(--season "$SEASON")
+          elif [[ -n "$SEASON" ]]; then
+            echo "No se permite indicar temporada para evergreen."
+            exit 1
+          fi
+          python main.py "${args[@]}"
+
+      - name: Capture and validate the exact production render folder
+        id: capture_render
+        if: ${{ steps.build_video.outcome == 'success' }}
+        working-directory: agent
+        env:
+          HOURS: ${{ env.HOURS }}
+          COLLECTION: ${{ env.COLLECTION }}
+          JSB_REQUIRE_MULTI_SCENE: "0"
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          import subprocess
+          root = Path("output")
+          candidates = []
+          for folder in root.iterdir():
+              if not folder.is_dir() or not folder.name.startswith("20"):
+                  continue
+              required = ["mix.mp3", "video.mp4", "thumb.jpg", "description.txt", "MUSIC_SOURCE.txt"]
+              if all((folder / name).is_file() and (folder / name).stat().st_size > 0 for name in required):
+                  candidates.append(folder)
+          if not candidates:
+              raise SystemExit("No se encontró una carpeta de render completa; no se sincronizará nada.")
+          folder = max(candidates, key=lambda p: p.stat().st_mtime_ns)
+          probe = subprocess.run(
+              ["ffprobe", "-v", "error", "-show_entries", "stream=codec_type,codec_name,width,height,channels:format=duration", "-of", "json", str(folder / "video.mp4")],
+              check=True, capture_output=True, text=True
+          )
+          data = json.loads(probe.stdout)
+          video = next((s for s in data.get("streams", []) if s.get("codec_type") == "video"), None)
+          audio = next((s for s in data.get("streams", []) if s.get("codec_type") == "audio"), None)
+          assert video and video.get("codec_name") == "h264", video
+          assert (video.get("width"), video.get("height")) == (2560, 1440), video
+          assert audio and audio.get("codec_name") == "aac" and audio.get("channels") == 2, audio
+          duration = float(data["format"]["duration"])
+          expected = float(os.environ["HOURS"]) * 3600
+          assert abs(duration - expected) <= 3.0, (duration, expected)
+          mix_probe = subprocess.run(
+              ["ffprobe", "-v", "error", "-show_entries", "stream=codec_type,codec_name:format=duration", "-of", "json", str(folder / "mix.mp3")],
+              check=True, capture_output=True, text=True
+          )
+          mix_data = json.loads(mix_probe.stdout)
+          mix_audio = next((s for s in mix_data.get("streams", []) if s.get("codec_type") == "audio"), None)
+          assert mix_audio and mix_audio.get("codec_name") == "mp3", mix_data
+          mix_duration = float(mix_data["format"]["duration"])
+          assert abs(mix_duration - expected) <= 3.0, (mix_duration, expected)
+          thumb_probe = subprocess.run(
+              ["ffprobe", "-v", "error", "-show_entries", "stream=width,height", "-of", "json", str(folder / "thumb.jpg")],
+              check=True, capture_output=True, text=True
+          )
+          thumb_data = json.loads(thumb_probe.stdout)
+          thumb_stream = thumb_data.get("streams", [{}])[0]
+          assert (thumb_stream.get("width"), thumb_stream.get("height")) == (1280, 720), thumb_data
+          source_text = (folder / "MUSIC_SOURCE.txt").read_text(encoding="utf-8")
+          source_entries = [line for line in source_text.splitlines() if line[:1].isdigit() and ". " in line[:6]]
+          assert source_entries, "MUSIC_SOURCE.txt contains no individual track entries."
+          provenance = folder / "VISUAL_SCENE_PROVENANCE.json"
+          assert provenance.is_file(), "Falta procedencia visual del render."
+          visual = json.loads(provenance.read_text(encoding="utf-8"))
+          assert visual.get("status") == "SINGLE_APPROVED_IMAGE", visual
+          assert visual.get("scene_count") == 1, visual
+          assert visual.get("camera") == "locked", visual
+          assert visual.get("approved_image_sha256"), "Falta hash de la imagen aprobada."
+          expected_hash = hashlib.sha256((folder / "video.mp4").read_bytes()).hexdigest()
+          assert visual.get("video_sha256") == expected_hash, "El hash de video no coincide con su procedencia."
+          print(f"PASS: {folder} | {duration:.2f}s | H.264 QHD | AAC estéreo")
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write(f"run_dir={folder.as_posix()}\n")
+          PY
+
+      - name: Persist generated visual scene library privately
+        id: persist_visual_assets
+        if: ${{ always() && steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' && steps.build_video.outcome != 'skipped' }}
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: |
+          set -euo pipefail
+          python main.py drive-push-visual-assets
+          python main.py drive-status
+
+      - name: Persist only the validated production folder and production database
+        id: persist_outputs
+        if: ${{ always() && steps.restore.outcome == 'success' && env.TASK == 'build-evergreen' && steps.build_video.outcome == 'success' && steps.capture_render.outcome == 'success' }}
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+          JSB_PRODUCTION_RUN_DIR: ${{ steps.capture_render.outputs.run_dir }}
+        run: |
+          set -euo pipefail
+          python main.py drive-push-production
+          python main.py drive-status
+
+      - name: Persist synthetic QA and autonomy state only
+        id: persist_qa
+        if: ${{ always() && steps.restore.outcome == 'success' && env.TASK == 'self-test' }}
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: |
+          set -euo pipefail
+          python main.py drive-push-qa
+          python main.py drive-push-state
+
+      - name: Verify and close requested-task PDCA cycle
+        if: ${{ always() && steps.pdca_start.outcome == 'success' }}
+        uses: ./.github/actions/pdca-finish
+        with:
+          cycle_id: ${{ steps.pdca_start.outputs.cycle_id }}
+          result_json: '{"workflow":"private-cloud-agent","task":"${{ env.TASK }}","run_id":"${{ github.run_id }}","job_status":"${{ job.status }}"}'
+          checks_json: >-
+            [{"name":"restore_state","passed":${{ steps.restore.outcome == 'success' }}},{"name":"requested_task","passed":${{ (env.TASK == 'self-test' && steps.self_test.outcome == 'success') || (env.TASK == 'build-evergreen' && steps.build_video.outcome == 'success') }}},{"name":"private_drive_persistence","passed":${{ (env.TASK == 'self-test' && steps.persist_qa.outcome == 'success') || (env.TASK == 'build-evergreen' && steps.persist_outputs.outcome == 'success') }}},{"name":"visual_library_persistence","passed":${{ env.TASK == 'self-test' || steps.persist_visual_assets.outcome == 'success' }}},{"name":"no_youtube_publication","passed":true}]
+          evidence: 'GitHub Actions run ${{ github.run_id }}; requested task outputs and private Drive inventory'
+          drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
+
+      - name: Confirm final Drive inventory
+        if: ${{ always() && steps.restore.outcome == 'success' }}
+        working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: python main.py drive-status
+
+      - name: State safety boundaries
+        if: always()
+        run: |
+          echo "No se configuró ni ejecutó ninguna subida a YouTube."
+          echo "El workflow no contiene YOUTUBE_TOKEN_JSON ni la opción --upload."
+          echo "Los archivos persistentes se guardan únicamente en Google Drive privado."
