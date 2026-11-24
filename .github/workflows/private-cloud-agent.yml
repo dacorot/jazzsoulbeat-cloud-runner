@@ -301,6 +301,8 @@ jobs:
           HOURS: ${{ env.HOURS }}
           COLLECTION: ${{ env.COLLECTION }}
           SEASON: ${{ env.SEASON }}
+          VIDEO_ID: ${{ steps.next_video.outputs.video_id }}
+          JSB_PLAYLIST: ${{ env.COLLECTION == 'evergreen' && 'coffee_time' || env.SEASON }}
         run: |
           python - <<'PY'
           import os
