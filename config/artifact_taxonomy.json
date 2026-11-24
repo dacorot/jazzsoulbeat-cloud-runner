@@ -35,6 +35,14 @@
     "hash_before_use": true,
     "candidates_never_count_as_approved_capacity": true,
     "rejected_assets_never_enter_production": true,
+    "final_rejection_cleanup": {
+      "enabled": true,
+      "delete_only_after_all_audits_fail": true,
+      "require_recorded_reason_and_sha256": true,
+      "preserve_audit_record": true,
+      "never_delete_source_or_user_managed_files": true,
+      "quarantine_before_delete": true
+    },
     "secrets_never_indexed": true
   }
 }

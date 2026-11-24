@@ -8,7 +8,13 @@
     "maximum_tracks_target_per_playlist": 1000,
     "candidates_do_not_count": true,
     "rights_verified_required": true,
-    "genre_and_season_are_counted_separately": true
+    "genre_and_season_are_counted_separately": true,
+    "final_rejection_cleanup": {
+      "enabled": true,
+      "delete_only_after_complete_review": true,
+      "preserve_rejection_record": true,
+      "never_delete_original_or_user_managed_audio": true
+    }
   },
   "rules": [
     "The 32 approved tracks are an inventory, not a single playlist.",
