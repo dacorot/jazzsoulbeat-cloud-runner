@@ -40,7 +40,9 @@ jobs:
           latest_epoch=0
           [[ -n "$latest_created" ]] && latest_epoch="$(date -d "$latest_created" +%s)"
           age_seconds=$((now_epoch - latest_epoch))
-          if [[ "$running_count" == "0" && "$age_seconds" -ge 86400 ]]; then
+          # Recover same-day publication debt after a stale/failed cycle;
+          # concurrency still prevents duplicate renders.
+          if [[ "$running_count" == "0" && "$age_seconds" -ge 21600 ]]; then
             gh api --method POST -H "Accept: application/vnd.github+json" \
               "/repos/${{ github.repository }}/actions/workflows/private-cloud-agent.yml/dispatches" \
               -f ref=main -f 'inputs[task]=build-evergreen' -f 'inputs[hours]=2' \
