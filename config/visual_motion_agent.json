@@ -3,6 +3,19 @@
   "id": "visual_motion_agent",
   "display_name": "Jazz Soul Beat — Visual Motion Agent",
   "mission": "Create fixed-camera ambient visuals from an approved base image, with restrained localized motion only.",
+  "design_line": {
+    "name": "modern_cinematic_editorial",
+    "status": "ACTIVE",
+    "principles": [
+      "clean contemporary composition",
+      "deliberate negative space",
+      "refined architectural and material detail",
+      "controlled cinematic lighting",
+      "distinct scene concept per video",
+      "remain bound to the approved reference set"
+    ],
+    "must_not_become": ["neon cyberpunk", "glossy 3D", "generic stock art", "generic lo-fi collage", "visual clutter"]
+  },
   "allowed_profile": "single_approved_plate_integrated_motion",
   "input_contract": {
     "base_image_required": true,
