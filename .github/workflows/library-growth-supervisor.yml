@@ -122,13 +122,37 @@ jobs:
           import csv, json
           from pathlib import Path
           rows=[]
-          manifest=Path("tracks/library.csv")
-          if manifest.is_file():
+          manifests=[Path("tracks/library.csv")]+sorted(Path("tracks/seasonal").glob("*/library.csv"))
+          seen=set()
+          for manifest in manifests:
+              if not manifest.is_file():
+                  continue
               with manifest.open(newline="",encoding="utf-8-sig") as h:
-                  rows=list(csv.DictReader(h))
+                  for row in csv.DictReader(h):
+                      identity=row.get("path") or row.get("filename") or row.get("title")
+                      if identity and identity in seen:
+                          continue
+                      if identity:
+                          seen.add(identity)
+                      rows.append(row)
           approved=[r for r in rows if (r.get("approved") or "").lower() in {"1","true","yes"} and (r.get("rights_verified") or "").lower() in {"1","true","yes"}]
-          target_per_playlist = 500
-          report={"target_per_playlist":target_per_playlist,"approved_tracks":len(approved),"remaining_for_first_playlist":max(0,target_per_playlist-len(approved)),"cycle_status":"CONTINUE_UNTIL_EACH_PLAYLIST_REACHES_TARGET"}
+          ladder = [500, 600, 700, 800, 900, 1000]
+          from playlist_organizer import classify_playlists
+          playlist_counts={}
+          for row in approved:
+              playlists=classify_playlists(row.get("genre") or "") or ["unclassified"]
+              for playlist in playlists:
+                  playlist_counts[playlist]=playlist_counts.get(playlist,0)+1
+          policy_path=Path("../config/music_playlist_policy.json")
+          if policy_path.is_file():
+              policy=json.loads(policy_path.read_text(encoding="utf-8"))
+              for playlist in policy.get("playlist_rules", {}):
+                  playlist_counts.setdefault(playlist,0)
+          progress={}
+          for playlist, count in sorted(playlist_counts.items()):
+              current_target=next((target for target in ladder if count < target), ladder[-1])
+              progress[playlist]={"approved_tracks":count,"current_target":current_target,"remaining":max(0,current_target-count)}
+          report={"target_ladder_per_playlist":ladder,"advance_only_after_current_target_is_reached":True,"maximum_tracks_target_per_playlist":1000,"playlist_progress":progress,"approved_tracks_total":len(approved),"cycle_status":"CONTINUE_UNTIL_EACH_PLAYLIST_REACHES_CURRENT_TARGET"}
           Path("output/library-growth/target-progress.json").write_text(json.dumps(report,indent=2)+"\\n",encoding="utf-8")
           print(json.dumps(report,indent=2))
           PY

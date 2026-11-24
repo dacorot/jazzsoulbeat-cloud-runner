@@ -3,6 +3,9 @@
   "purpose": "Prevent mixing seasonal music into incompatible playlists.",
   "capacity_policy": {
     "approved_tracks_target_per_playlist": 500,
+    "target_ladder_per_playlist": [500, 600, 700, 800, 900, 1000],
+    "advance_only_after_current_target_is_reached": true,
+    "maximum_tracks_target_per_playlist": 1000,
     "candidates_do_not_count": true,
     "rights_verified_required": true,
     "genre_and_season_are_counted_separately": true
