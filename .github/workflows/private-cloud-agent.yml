@@ -449,6 +449,15 @@ jobs:
           print(quality.stdout)
           if quality.returncode != 0:
               raise SystemExit("Professional visual quality gate failed; private upload blocked.")
+          effects = subprocess.run(
+              ["python", "../scripts/visual_effect_audit.py", "--video", str(folder / "video.mp4"),
+               "--provenance", str(provenance), "--effect-report", str(folder / "EFFECT_EXECUTION_REPORT.json"),
+               "--output", str(folder / "EFFECT_AUDIT.json")],
+              check=False, capture_output=True, text=True
+          )
+          print(effects.stdout)
+          if effects.returncode != 0:
+              raise SystemExit("Visual effects audit failed; private upload blocked.")
           board = subprocess.run(
               ["python", "../scripts/video_release_board.py", "--run-dir", str(folder),
                "--expected-seconds", str(expected), "--output", str(folder / "VIDEO_RELEASE_BOARD.json")],

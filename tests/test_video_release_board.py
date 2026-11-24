@@ -20,6 +20,7 @@ def _run(tmp_path: Path, *, transition_status="PASS"):
         "playlist": "coffee_time",
         "music_visual_match": "LINKED_TO_PLAYLIST_AND_TRACK_METADATA",
     }))
+    (tmp_path / "EFFECT_AUDIT.json").write_text(json.dumps({"status": "PASS", "effects_verified": True, "effects": ["localized_coffee_steam"]}))
 
 
 def test_all_roles_must_pass(tmp_path):

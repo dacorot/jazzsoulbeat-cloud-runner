@@ -14,6 +14,7 @@ from pathlib import Path
 def review(run_dir: Path, expected_seconds: float) -> dict:
     transition_path = run_dir / "AUDIO_TRANSITION_REPORT.json"
     visual_path = run_dir / "VISUAL_SCENE_PROVENANCE.json"
+    effect_path = run_dir / "EFFECT_AUDIT.json"
     required = ["video.mp4", "mix.mp3", "thumb.jpg", "description.txt", "MUSIC_SOURCE.txt"]
     checks = []
 
@@ -22,6 +23,7 @@ def review(run_dir: Path, expected_seconds: float) -> dict:
 
     transition = json.loads(transition_path.read_text(encoding="utf-8")) if transition_path.is_file() else {}
     visual = json.loads(visual_path.read_text(encoding="utf-8")) if visual_path.is_file() else {}
+    effects = json.loads(effect_path.read_text(encoding="utf-8")) if effect_path.is_file() else {}
 
     # Supervisor: operational/technical gates.
     check("supervisor", "audio_transition_audit", transition.get("status") == "PASS", str(transition.get("failures", [])))
@@ -29,6 +31,7 @@ def review(run_dir: Path, expected_seconds: float) -> dict:
     check("supervisor", "no_audible_gaps", not any(value > 0.20 for value in silences), str(silences))
     check("supervisor", "every_boundary_analyzed", transition.get("transition_count") == max(0, transition.get("track_count", 0) - 1))
     check("supervisor", "required_artifacts_present", all((run_dir / item).is_file() and (run_dir / item).stat().st_size > 0 for item in required))
+    check("supervisor", "effects_verified", effects.get("status") == "PASS" and effects.get("effects_verified") is True, str(effects.get("failures", [])))
 
     # Coordinator: exact artifact and delivery contract.
     video = run_dir / "video.mp4"
@@ -44,6 +47,7 @@ def review(run_dir: Path, expected_seconds: float) -> dict:
     check("visual_director", "single_identity_plate", visual.get("scene_count") == 1 and bool(visual.get("approved_image_sha256")))
     check("visual_director", "unique_reference_bound", visual.get("visual_uniqueness") == "REQUIRED_AND_HASH_BOUND" and bool(visual.get("reference_perceptual_signature")))
     check("visual_director", "playlist_linked", bool(visual.get("playlist")) and bool(visual.get("music_visual_match")))
+    check("visual_director", "effects_reviewed", effects.get("status") == "PASS" and bool(effects.get("effects")))
     check("metadata_director", "track_source_manifest", (run_dir / "MUSIC_SOURCE.txt").is_file())
     check("metadata_director", "description_present", bool((run_dir / "description.txt").read_text(encoding="utf-8").strip()) if (run_dir / "description.txt").is_file() else False)
 
