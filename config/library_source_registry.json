@@ -55,6 +55,15 @@
       "fallback_priority": 6
     },
     {
+      "id": "youtube_creative_commons",
+      "lane": "community_catalogs",
+      "kind": "discovery_only_primary_license_leads",
+      "owner_evidence": "YouTube_video_status_and_primary_video_page",
+      "command": "python main.py discover-youtube --limit 200",
+      "fallback_priority": 7,
+      "download_requires": ["primary_page_license_confirmation", "recording_rights_confirmation", "hash_verified_audio"]
+    },
+    {
       "id": "original_auditions",
       "enabled": false,
       "lane": "original_auditions",
@@ -62,7 +71,7 @@
       "owner_evidence": "model_terms_and_human_similarity_review",
       "delegated_to": "private-cloud-agent original-music workflow",
       "command": "manual_or_scheduled_free_model_audition_workflow",
-      "fallback_priority": 7
+      "fallback_priority": 8
     }
   ],
   "never_auto_approve": true,
