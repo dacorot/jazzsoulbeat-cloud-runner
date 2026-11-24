@@ -1,10 +1,11 @@
 # Jazz Soul Beat — contexto operativo persistente
 
-> **Contrato activo vigente (2026-11-22):** la entrega actual es una ola
-> privada de 12 videos de 3.600 s cada uno; la biblioteca de audio aprobada
-> debe alcanzar 36.000 s y la publicación permanece desactivada. Las menciones
-> anteriores a 7.200 s, 690 s, renders antiguos o preflights históricos son
-> registro de decisiones previas y no instrucciones ejecutables actuales.
+> **Contrato activo vigente (2026-11-23, v2026-11-23):** no existe una
+> entrega candidata válida. El proyecto permanece `BLOCKED` y la publicación
+> está `DISABLED`. Se requieren 12 videos independientes de 2–3 horas, al
+> menos 500 pistas únicas aprobadas y hash-bound, al menos 36.000 s aprobados,
+> y un efecto visual validado por escena. Las entregas de 1 hora, los pools
+> repetidos y las referencias antiguas son históricas y no ejecutables.
 
 > Este archivo es la memoria de recuperación del proyecto. Leerlo antes de
 > continuar después de reiniciar el PC, cerrar la conversación o recuperar un
@@ -23,15 +24,17 @@
   animadas validadas. No existe fallback a una escena limpia.
 - La entrega `jazz-only-10-videos-2026-11-22/` queda invalidada como candidata
   final: sus videos duran una hora y usan un único motion clip.
-- Estado actual: `BLOCKED` hasta alcanzar 500 canciones. Hay 170 aprobadas y
-  aproximadamente 37.277,5 segundos.
+- Estado actual: `BLOCKED` hasta alcanzar 500 canciones y generar una nueva
+  entrega que pase los gates de duración, unicidad y efectos visuales. El
+  ledger registra 170 pistas aprobadas por derechos/hash y aproximadamente
+  37.277,5 segundos; esa cifra no sustituye el requisito de 500 pistas.
 
 ## Estado confirmado
 
-- Última actualización: 2026-11-17, cierre de sesión.
+- Última actualización reconciliada: 2026-11-24.
 - El proyecto está aprobado para continuar; no reabrir la aprobación creativa
   por defecto.
-- El último video generado y revisado es:
+- Último artefacto histórico revisado (no candidato activo):
   `music-production/generated/jazz-soul-beat-video-01-autumn-coffee-crossfade-review.mp4`
 - Duración: 3600 segundos.
 - Contiene video H.264 y audio AAC a 44.1 kHz.

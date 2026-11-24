@@ -9,8 +9,14 @@ import json
 from pathlib import Path
 
 
-def build_plan(start: dt.date, count: int = 12) -> dict:
-    config = json.loads(Path("config/channel_agents.json").read_text(encoding="utf-8"))
+def build_plan(start: dt.date, count: int = 12, config_root: Path | None = None) -> dict:
+    """Build the deterministic queue from an explicit project root.
+
+    The optional root keeps the public helper compatible with existing callers
+    while preventing audits from depending on the process working directory.
+    """
+    root = (config_root or Path.cwd()).resolve()
+    config = json.loads((root / "config/channel_agents.json").read_text(encoding="utf-8"))
     categories = config["editorial_categories"]
     jobs = []
     for index in range(count):

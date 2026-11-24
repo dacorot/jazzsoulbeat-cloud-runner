@@ -1,0 +1,21 @@
+# Local environments and caches
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Private/runtime state
+*.db
+*.db-*
+*.lock
+secure/
+
+# Generated media is persisted through the private Drive workflow, not Git.
+music-production/generated/*.wav
+music-production/generated/*.flac
+music-production/generated/*.mp3
+music-production/visual-review/*.mp4
+
+# Local render intermediates
+output/
+tmp/

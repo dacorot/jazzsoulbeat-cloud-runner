@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "mission": "Keep the Jazz Soul Beat music-library growth loop active without granting rights automatically.",
+  "free_only": true,
+  "sources": [
+    {
+      "id": "ketsa_official",
+      "lane": "official_creator_catalogs",
+      "kind": "primary_creator_catalog",
+      "owner_evidence": "official_creator_page_and_track_page",
+      "command": "python main.py discover-ketsa --limit 100",
+      "fallback_priority": 1
+    },
+    {
+      "id": "incompetech_official",
+      "lane": "official_creator_catalogs",
+      "kind": "primary_creator_catalog",
+      "owner_evidence": "official_catalog_and_track_page",
+      "command": "python main.py discover-incompetech",
+      "fallback_priority": 2
+    },
+    {
+      "id": "wikimedia_commons",
+      "lane": "open_license_primary_pages",
+      "kind": "open_license_catalog",
+      "owner_evidence": "item_page_uploader_and_license",
+      "command": "python main.py discover-commons --limit 200",
+      "fallback_priority": 3
+    },
+    {
+      "id": "openverse",
+      "lane": "community_catalogs",
+      "kind": "aggregator_lead",
+      "owner_evidence": "original_source_page_required",
+      "command": "python main.py discover-openverse --limit 300",
+      "fallback_priority": 4
+    },
+    {
+      "id": "ccmixter",
+      "lane": "community_catalogs",
+      "kind": "community_catalog",
+      "owner_evidence": "track_page_uploader_and_sample_declarations",
+      "command": "python main.py discover-ccmixter --limit 200",
+      "fallback_priority": 5
+    },
+    {
+      "id": "internet_archive",
+      "lane": "community_catalogs",
+      "kind": "secondary_lead",
+      "owner_evidence": "primary_rights_source_required",
+      "command": "internet_archive_catalog.discover(limit=500)",
+      "fallback_priority": 6
+    },
+    {
+      "id": "original_auditions",
+      "enabled": false,
+      "lane": "original_auditions",
+      "kind": "original_generation_review",
+      "owner_evidence": "model_terms_and_human_similarity_review",
+      "delegated_to": "private-cloud-agent original-music workflow",
+      "command": "manual_or_scheduled_free_model_audition_workflow",
+      "fallback_priority": 7
+    }
+  ],
+  "never_auto_approve": true,
+  "never_publish": true,
+  "required_candidate_fields": [
+    "title",
+    "artist",
+    "duration_seconds",
+    "source_url",
+    "license_name",
+    "license_url",
+    "attribution",
+    "rights_status"
+  ]
+}

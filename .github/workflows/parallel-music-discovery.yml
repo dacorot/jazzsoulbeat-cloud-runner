@@ -1,0 +1,97 @@
+name: Jazz Soul Beat - Parallel music discovery lanes
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Three autonomous discovery passes daily: 19:00, 03:00 and 11:00 Colombia.
+    # GitHub may delay scheduled jobs; concurrency prevents overlapping runs.
+    - cron: "0 0,8,16 * * *"
+  push:
+    paths:
+      - "MUSIC_PARALLEL_DISCOVERY_START.md"
+      - ".github/workflows/parallel-music-discovery.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: jazz-soul-beat-parallel-discovery
+  cancel-in-progress: false
+
+jobs:
+  discover:
+    name: "Discovery lane: ${{ matrix.lane }}"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - lane: primary_catalogs
+            commands: "python main.py discover-ketsa --limit 100 && python main.py discover-incompetech && python main.py audit-incompetech-sources"
+          - lane: community_catalogs
+            commands: "python main.py discover-commons --limit 200 && python main.py discover-openverse --limit 300 && python main.py discover-ccmixter --limit 200"
+          - lane: independent_metadata
+            commands: "python ../scripts/music_agents.py"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: dacorot/jazzsoulbeat-agent
+          ref: fix/real-music-and-cinematic-motion
+          token: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
+          path: agent
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Validate library source registry before discovery
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          registry = json.loads(Path("config/library_source_registry.json").read_text(encoding="utf-8"))
+          assert registry.get("free_only") is True
+          assert registry.get("never_auto_approve") is True
+          assert registry.get("never_publish") is True
+          assert len(registry.get("sources", [])) >= 6
+          print(f"Library sources configured: {len(registry['sources'])}")
+          PY
+      - name: Install private-agent dependencies
+        working-directory: agent
+        run: python -m pip install -r requirements.txt
+      - name: Run read-only discovery lane
+        working-directory: agent
+        env:
+          DISCOVERY_LANE: ${{ matrix.lane }}
+        run: |
+          set -o pipefail
+          mkdir -p "output/parallel-discovery/${DISCOVERY_LANE}"
+          { echo "lane=${DISCOVERY_LANE}"; echo "started_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"; } > "output/parallel-discovery/${DISCOVERY_LANE}/run.txt"
+          ${{ matrix.commands }} 2>&1 | tee -a "output/parallel-discovery/${DISCOVERY_LANE}/run.txt"
+          python ../scripts/music_dedup_agent.py \
+            --existing $(find output -type f \( -name '*.csv' -o -name '*.json' \) | sort) \
+            --candidates $(find output -maxdepth 1 -type f -name '*_candidates.csv' | sort) \
+            --output "output/parallel-discovery/${DISCOVERY_LANE}/dedup-report.json" \
+            2>&1 | tee -a "output/parallel-discovery/${DISCOVERY_LANE}/run.txt"
+          mapfile -t EXISTING_FILES < <(find output music-library -type f \( -name '*.csv' -o -name '*.json' \) ! \( -name '*_candidates.csv' -o -name 'candidate_catalog.csv' \) 2>/dev/null | sort)
+          mapfile -t CANDIDATE_FILES < <(find output music-library -type f \( -name '*_candidates.csv' -o -name 'candidate_catalog.csv' \) 2>/dev/null | sort)
+          python ../scripts/review_audio_downloader.py \
+            --existing "${EXISTING_FILES[@]}" \
+            --candidates "${CANDIDATE_FILES[@]}" \
+            --output "output/parallel-discovery/${DISCOVERY_LANE}/audio-review" \
+            --limit 40 \
+            2>&1 | tee -a "output/parallel-discovery/${DISCOVERY_LANE}/run.txt"
+      - name: Assert discovery remains review-only
+        working-directory: agent
+        run: |
+          if rg -n "rights_verified.*(True|true|1)|youtube_upload|PRIVATE_ONLY_AUTHORIZED" output/parallel-discovery; then
+            echo "Unsafe approval/publication marker detected in discovery output"
+            exit 1
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: parallel-discovery-${{ matrix.lane }}
+          path: agent/output/parallel-discovery/${{ matrix.lane }}
+          if-no-files-found: error

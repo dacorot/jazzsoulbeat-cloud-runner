@@ -26,13 +26,17 @@ def audit(root: Path) -> dict:
     import datetime as dt
 
     categories = channel.get("editorial_categories", [])
-    # The active project objective is ten hours of approved unique audio.
-    # The previous 7200-second value belonged to the retired 2–3 hour pilot.
-    target_seconds = 36000
+    # The active project objective is defined by config/active_contract.json.
+    # Keep this audit fail-closed if the contract is missing or malformed.
+    contract = json.loads((root / "config/active_contract.json").read_text(encoding="utf-8"))
+    target_seconds = int(contract["audio"]["minimum_approved_seconds"])
+    minimum_tracks = int(contract["audio"]["minimum_unique_tracks"])
+    min_video = int(contract["delivery"]["min_duration_seconds"])
+    max_video = int(contract["delivery"]["max_duration_seconds"])
     ledger_path = root / "music-production/approval_ledger.json"
     seasons = set(seasonal.get("seasons", {}))
     mapping = seasonal.get("playlist_mapping", {})
-    queue = build_plan(dt.date(2026, 11, 18))
+    queue = build_plan(dt.date(2026, 11, 18), config_root=root)
     scene_folder = root / "music-production/visual-review"
     scene = inspect(scene_folder) if scene_folder.exists() else {
         "status": "PRIVATE_SCENE_LIBRARY_NOT_PRESENT", "image_count": 0,
@@ -51,12 +55,12 @@ def audit(root: Path) -> dict:
         "editorial_categories": len(categories) == 5,
         "seasonal_matrix": seasons == {"spring", "summer", "autumn", "winter"} and len(mapping) == 5,
         "scene_diversity_policy": seasonal.get("scene_diversity", {}).get("same_focal_instrument_in_every_scene_allowed") is False,
-        "scene_library": scene["status"] == "READY",
-        "queue": len(queue.get("jobs", [])) == 12 and len(queue.get("parallel_music_lanes", [])) == 3 and all(job.get("target_duration_seconds") in (7200, 10800) for job in queue.get("jobs", [])),
+        "scene_library": scene["status"] == "READY" and scene.get("creative_approval") is True and scene.get("animation_approval") is True,
+        "queue": len(queue.get("jobs", [])) == int(contract["delivery"]["video_count"]) and len(queue.get("parallel_music_lanes", [])) == 3 and all(min_video <= job.get("target_duration_seconds") <= max_video for job in queue.get("jobs", [])),
         "visual_contract": visual.get("allowed_profile") == "approved_scene_effect_profile" and visual.get("motion_contract", {}).get("camera") == "locked" and len(visual.get("motion_contract", {}).get("effect_profiles", [])) >= 5,
         "music_policy": policy.get("dedup_required_before_download") is True and policy.get("never_auto_approve") is True,
         "audio_capacity": approved_seconds >= target_seconds,
-        "audio_song_count": library.get("approved_unique_tracks", 0) >= 500,
+        "audio_song_count": library.get("approved_unique_tracks", 0) >= minimum_tracks,
         "publication_disabled": all(job.get("publication") == "DISABLED" for job in queue.get("jobs", [])),
     }
     return {

@@ -1,5 +1,15 @@
 # Jazz Soul Beat — estado único del proyecto
 
+> **Fuente de verdad reconciliada: 2026-11-24 · contrato v2026-11-23**
+>
+> Estado: `BLOCKED_ACTIVE_CONTRACT` · Publicación: `DISABLED` · Entrega
+> candidata activa: ninguna. Requisitos simultáneos: 500 pistas únicas
+> aprobadas/hash-bound, 36.000 s aprobados, 12 videos independientes de 2–3
+> horas y efectos visuales validados por escena.
+
+El contrato ejecutable único está en `config/active_contract.json`; los
+informes históricos no pueden sustituirlo.
+
 ## Corrección de contrato y bloqueo — 2026-11-23
 
 La entrega anterior queda invalidada. Los gates activos requieren 500 canciones
@@ -7,7 +17,7 @@ La entrega anterior queda invalidada. Los gates activos requieren 500 canciones
 visual obligatorio por video. La biblioteca actual contiene 170 canciones
 aprobadas; el proyecto permanece `BLOCKED` y no se debe regenerar ni publicar.
 
-Actualizado: 2026-11-21
+Actualizado: 2026-11-24
 
 ## Auditoría PASS_EDITORIAL — derechos y procedencia (2026-11-21)
 
@@ -297,13 +307,27 @@ Actualizado: 2026-11-21
 - La auditoría full-file dejó `3` pases técnicos (`535,82 s`) y `4` rechazos.
 - No se migró ninguna pista: el registro del proyecto clasifica Internet
   Archive como `secondary_lead` y exige fuente primaria de derechos adicional.
-## Cierre de auditoría iterativa — 2026-11-23
+## Cierre histórico superseded — 2026-11-23 — NOT EXECUTABLE
 
 - Se completó el quinto lote de revisión oficial Ketsa: 17 descargas aisladas, 12 pases técnicos hash-bound y `2.437,56` segundos incorporados.
 - Capacidad aprobada actual: `37.277,48` segundos frente al objetivo de `36.000`; déficit: `0`.
 - Suites: runner `91/91 OK`; agente `111/111 OK`.
 - Integridad: `0` errores de sintaxis Python, `0` errores JSON y `0` archivos aprobados faltantes o con hash incorrecto.
-- Reconciliación: `RECONCILED_READY`; ledger, SQLite, CSV y manifiesto quedan diferenciados por contrato y documentados por hash.
+- Reconciliación histórica: `RECONCILED_READY`; este resultado quedó
+  invalidado por la corrección de contrato del 23-11 y no autoriza producción
+  ni publicación.
 - Entregas: `12/12`, hashes únicos, metadatos completos; publicación `DISABLED` / `NOT_PUBLISHED`.
-- Auditoría profunda: `PASS`; cinco auditorías cíclicas: `PASS`.
+- Auditoría profunda histórica: `PASS`; cinco auditorías cíclicas: `PASS`.
+
+## Estado operativo actual — 2026-11-24
+
+- El ledger es la fuente canónica de decisiones hash-bound; SQLite y CSV son
+  almacenes locales de producción y no se consideran sincronizados solo por
+  compartir archivos.
+- El ledger contiene 170 pistas aprobadas por derechos/hash y 37.277,48 s,
+  pero faltan 330 pistas para el mínimo activo de 500.
+- La entrega de 12 videos de una hora queda invalidada: pool único de
+  1.911,620586 s y efectos visuales no validados.
+- No se generará ni publicará una nueva entrega hasta que los gates de audio,
+  duración, unicidad y efectos visuales pasen conjuntamente.
 
