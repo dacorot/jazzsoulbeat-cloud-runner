@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "status": "ACTIVE",
+  "purpose": "Only professional-quality music may advance toward a Jazz Soul Beat video.",
+  "non_negotiable": [
+    "No experimental, rough, demo, placeholder or provisional audio may enter production review.",
+    "Generated music is rejected unless it already meets the same professional standard as licensed music.",
+    "A rights-cleared track can still fail creative and technical quality.",
+    "No track advances because the library is short; a failed gate remains failed."
+  ],
+  "required_gates": [
+    "genre_purity",
+    "professional_arrangement",
+    "natural_instrumentation_or_convincing_synthesis",
+    "clean_editing_and_structure",
+    "no_repetition_or_artifacts",
+    "no_clipping_or_distortion",
+    "controlled_dynamics_and_loudness",
+    "professional_stereo_image",
+    "bpm_and_rhythm_consistency",
+    "rights_and_provenance_verified",
+    "final_audio_audit_pass"
+  ],
+  "generated_audio": {
+    "allowed_only_as": "candidate_for_the_same_full_quality_gate",
+    "automatic_creative_approval": false,
+    "professional_failure_action": "quarantine_and_record_negative_feedback",
+    "never_use_as_filler": true
+  },
+  "publication": "disabled_until_all_audio_and_video_gates_pass"
+}
