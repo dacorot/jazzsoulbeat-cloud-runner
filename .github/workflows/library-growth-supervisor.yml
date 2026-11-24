@@ -7,8 +7,8 @@ on:
       - "LIBRARY_GROWTH_START.md"
       - ".github/workflows/library-growth-supervisor.yml"
   schedule:
-    # Canonical autonomous growth cycle: 19:00, 03:00 and 11:00 Colombia.
-    - cron: "0 0,8,16 * * *"
+    # Canonical autonomous growth cycle: four runs daily, 19:00, 01:00, 07:00 and 13:00 Colombia.
+    - cron: "0 0,6,12,18 * * *"
 
 permissions:
   contents: read
