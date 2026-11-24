@@ -48,8 +48,10 @@ jobs:
             conclusion="$(printf '%s' "$latest" | jq -r '.conclusion // ""')"
             attempt="$(printf '%s' "$latest" | jq -r '.run_attempt')"
             title="$(printf '%s' "$latest" | jq -r '.display_title')"
-            jobs="$(gh api -H "Accept: application/vnd.github+json" "/repos/${{ github.repository }}/actions/runs/$run_id/jobs?filter=latest")"
-            failed_step="$(printf '%s' "$jobs" | jq -r '[.jobs[].steps[]? | select(.conclusion == "failure") | .name] | first // ""')"
+            # Do not make recovery depend on the jobs endpoint. A missing or
+            # permission-limited jobs response must not prevent a new private
+            # production cycle from being dispatched.
+            failed_step=""
           fi
           retryable=true
           case "$failed_step" in
