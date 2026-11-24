@@ -9,9 +9,9 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 try:
-    from .autonomous_learning import load_model, probability, retrain
+    from .autonomous_learning import append_feedback, load_model, probability, retrain
 except ImportError:  # direct script execution from the GitHub Actions agent checkout
-    from autonomous_learning import load_model, probability, retrain
+    from autonomous_learning import append_feedback, load_model, probability, retrain
 
 
 def digest(path: Path) -> str:
@@ -27,6 +27,11 @@ def source_is_primary(url: str, domains: list[str]) -> bool:
     return any(host == domain or host.endswith("." + domain) for domain in domains)
 
 
+def license_is_allowed(name: str) -> bool:
+    normalized = " ".join(name.upper().replace("_", " ").split())
+    return normalized in {"CC0", "CC0 1.0", "CC0 1.0 UNIVERSAL", "CC BY 4.0", "CC BY 4.0 INTERNATIONAL"}
+
+
 def evaluate(candidate: dict, policy: dict, model: dict) -> tuple[dict, dict]:
     title = str(candidate.get("title", ""))
     text = " ".join(str(candidate.get(key, "")) for key in ("title", "genres", "tags", "description")).lower()
@@ -36,8 +41,8 @@ def evaluate(candidate: dict, policy: dict, model: dict) -> tuple[dict, dict]:
     expected_hash = str(candidate.get("artifact_sha256", candidate.get("sha256", "")))
     actual_hash = digest(artifact) if artifact.is_file() else ""
     features = {
-        "primary_source": source_is_primary(source_url, policy["primary_domains"]) or candidate.get("primary_source_verified") is True,
-        "license_allowed": any(license_name.startswith(prefix) for prefix in policy["allowed_license_prefixes"]),
+        "primary_source": source_is_primary(source_url, policy["primary_domains"]),
+        "license_allowed": license_is_allowed(license_name),
         "hash_verified": bool(expected_hash) and expected_hash == actual_hash,
         "technical_ok": candidate.get("technical_ok", candidate.get("technical_valid", False)) is True,
         "instrumental": candidate.get("instrumental", candidate.get("vocals", True) is False) is True,
@@ -80,6 +85,7 @@ def main() -> int:
     approved, quarantined = [], []
     for candidate in candidates:
         result, summary = evaluate(candidate, policy, model)
+        append_feedback(args.feedback, summary["features"], 1 if summary["decision"] == "approved" else 0, summary["decision"])
         (approved if summary["decision"] == "approved" else quarantined).append(result)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.quarantine.parent.mkdir(parents=True, exist_ok=True)

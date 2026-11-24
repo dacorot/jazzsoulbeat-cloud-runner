@@ -59,6 +59,25 @@ jobs:
           if python main.py download-incompetech; then echo success > output/library-growth/source-status/incompetech_download; else echo failure > output/library-growth/source-status/incompetech_download; fi
           if python -c 'import rights_audit; rights_audit.audit_ketsa()'; then echo success > output/library-growth/source-status/ketsa_rights_audit; else echo failure > output/library-growth/source-status/ketsa_rights_audit; fi
           if python main.py audit-incompetech-sources && python main.py audit-incompetech-track-pages && python -c 'import rights_audit; rights_audit.audit_incompetech()'; then echo success > output/library-growth/source-status/incompetech_rights_audit; else echo failure > output/library-growth/source-status/incompetech_rights_audit; fi
+      - name: Discover open and community catalogues
+        working-directory: agent
+        env:
+          OPENVERSE_CLIENT_ID: ${{ secrets.OPENVERSE_CLIENT_ID }}
+          OPENVERSE_CLIENT_SECRET: ${{ secrets.OPENVERSE_CLIENT_SECRET }}
+          YOUTUBE_TOKEN_JSON: ${{ secrets.YOUTUBE_TOKEN_JSON }}
+        run: |
+          if python main.py discover-commons --limit 200; then echo success > output/library-growth/source-status/wikimedia_commons; else echo failure > output/library-growth/source-status/wikimedia_commons; fi
+          echo disabled > output/library-growth/source-status/openverse_adapter_missing
+          if python main.py discover-ccmixter --limit 200; then echo success > output/library-growth/source-status/ccmixter; else echo failure > output/library-growth/source-status/ccmixter; fi
+          if python main.py discover-youtube --limit 200; then echo success > output/library-growth/source-status/youtube_creative_commons; else echo failure > output/library-growth/source-status/youtube_creative_commons; fi
+      - name: Discover secondary leads
+        working-directory: agent
+        run: |
+          if python - <<'PY'
+          import internet_archive_catalog
+          internet_archive_catalog.discover(limit=500)
+          PY
+          then echo success > output/library-growth/source-status/internet_archive; else echo failure > output/library-growth/source-status/internet_archive; fi
       - name: Make autonomous rights decisions and promotion batch
         working-directory: agent
         run: |
@@ -97,25 +116,6 @@ jobs:
             echo "No hay candidatos elegibles para promoción en este ciclo."
           fi
 
-      - name: Discover open and community catalogues
-        working-directory: agent
-        env:
-          OPENVERSE_CLIENT_ID: ${{ secrets.OPENVERSE_CLIENT_ID }}
-          OPENVERSE_CLIENT_SECRET: ${{ secrets.OPENVERSE_CLIENT_SECRET }}
-          YOUTUBE_TOKEN_JSON: ${{ secrets.YOUTUBE_TOKEN_JSON }}
-        run: |
-          if python main.py discover-commons --limit 200; then echo success > output/library-growth/source-status/wikimedia_commons; else echo failure > output/library-growth/source-status/wikimedia_commons; fi
-          echo disabled > output/library-growth/source-status/openverse_adapter_missing
-          if python main.py discover-ccmixter --limit 200; then echo success > output/library-growth/source-status/ccmixter; else echo failure > output/library-growth/source-status/ccmixter; fi
-          if python main.py discover-youtube --limit 200; then echo success > output/library-growth/source-status/youtube_creative_commons; else echo failure > output/library-growth/source-status/youtube_creative_commons; fi
-      - name: Discover secondary leads
-        working-directory: agent
-        run: |
-          if python - <<'PY'
-          import internet_archive_catalog
-          internet_archive_catalog.discover(limit=500)
-          PY
-          then echo success > output/library-growth/source-status/internet_archive; else echo failure > output/library-growth/source-status/internet_archive; fi
       - name: Measure target completion and keep the cycle open
         working-directory: agent
         run: |
@@ -197,7 +197,6 @@ jobs:
           })
           progress.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
           print("Music search remains active; the next scheduled cycle will restart discovery.")
-          PY
           PY
       - name: Persist only growth reports to private Drive
         if: always()
