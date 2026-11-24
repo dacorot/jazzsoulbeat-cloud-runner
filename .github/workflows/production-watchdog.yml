@@ -34,7 +34,12 @@ jobs:
         run: |
           set -euo pipefail
           runs="$(gh api -H "Accept: application/vnd.github+json" "/repos/${{ github.repository }}/actions/workflows/private-cloud-agent.yml/runs?per_page=10")"
-          latest_created="$(printf '%s' "$runs" | jq -r '[.workflow_runs[]] | sort_by(.created_at) | reverse | .[0].created_at // ""')"
+          latest="$(printf '%s' "$runs" | jq -c '[.workflow_runs[]] | sort_by(.created_at) | reverse | .[0] // {}')"
+          latest_created="$(printf '%s' "$latest" | jq -r '.created_at // ""')"
+          latest_status="$(printf '%s' "$latest" | jq -r '.status // "none"')"
+          latest_conclusion="$(printf '%s' "$latest" | jq -r '.conclusion // ""')"
+          latest_run_id="$(printf '%s' "$latest" | jq -r '.id // ""')"
+          latest_attempt="$(printf '%s' "$latest" | jq -r '.run_attempt // 0')"
           running_count="$(printf '%s' "$runs" | jq '[.workflow_runs[] | select(.status == "in_progress" or .status == "queued")] | length')"
           now_epoch="$(date +%s)"
           latest_epoch=0
@@ -42,7 +47,7 @@ jobs:
           age_seconds=$((now_epoch - latest_epoch))
           # Recover same-day publication debt after a stale/failed cycle;
           # concurrency still prevents duplicate renders.
-          if [[ "$running_count" == "0" && "$age_seconds" -ge 21600 ]]; then
+          if [[ "$running_count" == "0" && ("$age_seconds" -ge 21600 || ("$latest_conclusion" == "failure" && "$age_seconds" -ge 300)) ]]; then
             gh api --method POST -H "Accept: application/vnd.github+json" \
               "/repos/${{ github.repository }}/actions/workflows/private-cloud-agent.yml/dispatches" \
               -f ref=main -f 'inputs[task]=build-evergreen' -f 'inputs[hours]=2' \
@@ -52,6 +57,13 @@ jobs:
           else
             echo "Private production already running or recent; no duplicate dispatch." >> "$GITHUB_STEP_SUMMARY"
           fi
+          {
+            echo "status=$latest_status"
+            echo "conclusion=$latest_conclusion"
+            echo "run_id=$latest_run_id"
+            echo "attempt=$latest_attempt"
+            echo "retryable=$([[ "$latest_conclusion" == "failure" && "$latest_attempt" -lt 3 ]] && echo true || echo false)"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Recover bounded failed run
         if: ${{ steps.inspect.outputs.status == 'completed' && steps.inspect.outputs.conclusion == 'failure' && steps.inspect.outputs.retryable == 'true' && fromJSON(steps.inspect.outputs.attempt) < 3 }}
