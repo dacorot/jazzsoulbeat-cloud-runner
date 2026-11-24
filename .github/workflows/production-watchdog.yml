@@ -54,7 +54,7 @@ jobs:
           if [[ "$running_count" == "0" && ("$force_dispatch" == "true" || "$age_seconds" -ge 21600 || (("$latest_conclusion" == "failure" || "$latest_conclusion" == "cancelled") && "$age_seconds" -ge 60 && "$latest_attempt" -lt 3)) ]]; then
             gh api --method POST -H "Accept: application/vnd.github+json" \
               "/repos/${{ github.repository }}/actions/workflows/private-cloud-agent.yml/dispatches" \
-              -f ref=main -f 'inputs[task]=build-evergreen' -f 'inputs[hours]=2' \
+              -f ref=main -f 'inputs[task]=build-evergreen' -f 'inputs[hours]=1' \
               -f 'inputs[collection]=evergreen' -f 'inputs[season]=' \
               -f 'inputs[agent_ref]=fix/real-music-and-cinematic-motion'
             echo "Private production cycle dispatched." >> "$GITHUB_STEP_SUMMARY"
