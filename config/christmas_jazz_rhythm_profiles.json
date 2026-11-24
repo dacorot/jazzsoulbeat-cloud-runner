@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "status": "ACTIVE_RESEARCH_PROFILE",
+  "purpose": "Guide original professional Christmas Jazz arrangements from high-level rhythmic and production traits.",
+  "rights_and_style_boundary": {
+    "no_artist_imitation": true,
+    "no_melody_or_lyrics_copying": true,
+    "no_voice_clone": true,
+    "use_only_high_level_rhythm_arrangement_traits": true,
+    "artists_referenced": ["Frank Sinatra", "Louis Armstrong", "Michael Bublé"]
+  },
+  "profiles": {
+    "classic_crooner_swing": {
+      "reference_context": "Sinatra holiday big-band and orchestral tradition",
+      "meter": "4/4",
+      "tempo_bpm": [92, 148],
+      "feel": ["medium swing", "relaxed swing", "occasional waltz for ballad material"],
+      "rhythm_section": ["walking or two-feel bass", "light ride cymbal", "controlled snare accents", "piano comping with space"],
+      "arrangement": ["clear intro", "vocal or melodic space", "brass and woodwind punctuation", "strings used for lift", "measured final resolution"],
+      "dynamics": "intimate opening, gradual orchestral lift, never overcompressed",
+      "avoid": ["stiff quantization", "constant brass wall", "excessive speed", "copying a known arrangement"]
+    },
+    "new_orleans_holiday_jazz": {
+      "reference_context": "Louis Armstrong holiday and traditional New Orleans jazz language",
+      "meter": "4/4",
+      "tempo_bpm": [96, 156],
+      "feel": ["two-beat to four-beat transition", "lilting swing", "syncopated parade pulse"],
+      "rhythm_section": ["strong walking/two-feel bass", "snare and bass-drum conversation", "banjo or guitar timekeeping", "collective ensemble accents"],
+      "arrangement": ["short ensemble statement", "call-and-response", "improvised-style instrumental conversation", "clear shout or tag ending"],
+      "dynamics": "bright and human, with controlled looseness rather than sloppy timing",
+      "avoid": ["novelty caricature", "cartoonish playing", "uncontrolled tempo drift", "artist imitation"]
+    },
+    "modern_traditional_pop_jazz": {
+      "reference_context": "Michael Bublé holiday production: contemporary traditional pop, vocal jazz and swing",
+      "meter": "4/4",
+      "tempo_bpm": [88, 132],
+      "feel": ["medium swing", "shuffle where composition demands it", "straight ballad for reflective material"],
+      "rhythm_section": ["tight bass and drum pocket", "clean piano/guitar comping", "selective pizzicato strings", "modern low-end control"],
+      "arrangement": ["immediate hook", "short instrumental fills", "big-band lift without masking the melody", "radio-clean ending"],
+      "dynamics": "polished, warm and wide; preserve transient life and vocal/melodic focus",
+      "avoid": ["overproduced pop gloss", "generic lounge loop", "copying a record-specific arrangement"]
+    }
+  },
+  "production_method": {
+    "analyze_each_track": ["bpm", "meter", "swing_ratio", "microtiming", "bass_pattern", "drum_pattern", "section_changes", "dynamic_arc"],
+    "transition_rule": "Crossfade only between compatible rhythmic profiles; never force swing into straight time or a two-feel into a dense four-beat groove.",
+    "quality_gate": "Professional audio quality policy applies before any Christmas track can enter a video.",
+    "learning": "Store accepted and rejected rhythmic features in the feedback model and retrain after every audited batch."
+  }
+}

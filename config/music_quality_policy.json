@@ -2,6 +2,7 @@
   "schema_version": 1,
   "status": "ACTIVE",
   "purpose": "Only professional-quality music may advance toward a Jazz Soul Beat video.",
+  "seasonal_rhythm_research": "config/christmas_jazz_rhythm_profiles.json",
   "non_negotiable": [
     "No experimental, rough, demo, placeholder or provisional audio may enter production review.",
     "Generated music is rejected unless it already meets the same professional standard as licensed music.",
