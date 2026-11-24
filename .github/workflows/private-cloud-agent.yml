@@ -174,14 +174,16 @@ jobs:
           if [[ -s "$candidates" ]]; then
             python main.py promote-library --candidates "$candidates" --report "$report"
             python main.py library-status
+            echo "promoted=true" >> "$GITHUB_OUTPUT"
           else
             printf '{"approved": [], "rejected": [], "approved_seconds": 0, "publication": "DISABLED", "status": "NO_ELIGIBLE_BATCH"}\n' > "$report"
             echo "No hay lote elegible de derechos; el proceso continúa buscando fuentes."
+            echo "promoted=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Persist promoted production library
         id: persist_library
-        if: ${{ steps.library_promotion.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        if: ${{ steps.library_promotion.outcome == 'success' && steps.library_promotion.outputs.promoted == 'true' && env.TASK == 'build-evergreen' }}
         working-directory: agent
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
