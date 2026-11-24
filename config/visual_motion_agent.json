@@ -14,7 +14,7 @@
       "distinct scene concept per video",
       "remain bound to the approved reference set"
     ],
-    "must_not_become": ["neon cyberpunk", "glossy 3D", "generic stock art", "generic lo-fi collage", "visual clutter"]
+    "must_not_become": ["anime", "illustration", "drawing", "comic linework", "neon cyberpunk", "glossy 3D", "generic stock art", "generic lo-fi collage", "visual clutter"]
   },
   "allowed_profile": "single_approved_plate_integrated_motion",
   "input_contract": {
