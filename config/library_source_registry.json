@@ -1,6 +1,13 @@
 {
   "version": 1,
   "mission": "Keep the Jazz Soul Beat music-library growth loop autonomous with evidence-bound private approval and no publication.",
+  "search_loop": {
+    "never_stop_when_no_eligible_music_is_found": true,
+    "empty_result_is_a_retry_state": true,
+    "restart_on_every_scheduled_cycle": true,
+    "scheduled_cycles_per_day": 4,
+    "continue_until_all_playlist_targets_are_met": true
+  },
   "approval_mode": "AUTONOMOUS_EVIDENCE_BOUND",
   "free_only": true,
   "sources": [
