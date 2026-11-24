@@ -42,6 +42,8 @@ def review(run_dir: Path, expected_seconds: float) -> dict:
     check("audio_director", "transition_learning_evidence", bool(transition.get("learning_features")))
     check("visual_director", "locked_camera", visual.get("camera") == "locked")
     check("visual_director", "single_identity_plate", visual.get("scene_count") == 1 and bool(visual.get("approved_image_sha256")))
+    check("visual_director", "unique_reference_bound", visual.get("visual_uniqueness") == "REQUIRED_AND_HASH_BOUND" and bool(visual.get("reference_perceptual_signature")))
+    check("visual_director", "playlist_linked", bool(visual.get("playlist")) and bool(visual.get("music_visual_match")))
     check("metadata_director", "track_source_manifest", (run_dir / "MUSIC_SOURCE.txt").is_file())
     check("metadata_director", "description_present", bool((run_dir / "description.txt").read_text(encoding="utf-8").strip()) if (run_dir / "description.txt").is_file() else False)
 

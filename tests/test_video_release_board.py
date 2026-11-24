@@ -15,6 +15,10 @@ def _run(tmp_path: Path, *, transition_status="PASS"):
     (tmp_path / "VISUAL_SCENE_PROVENANCE.json").write_text(json.dumps({
         "publication": "PRIVATE_REVIEW_ONLY", "camera": "locked", "scene_count": 1,
         "approved_image_sha256": "image",
+        "visual_uniqueness": "REQUIRED_AND_HASH_BOUND",
+        "reference_perceptual_signature": "0101",
+        "playlist": "coffee_time",
+        "music_visual_match": "LINKED_TO_PLAYLIST_AND_TRACK_METADATA",
     }))
 
 
