@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "mode": "PER_VIDEO_CAPACITY_TRIGGER",
+  "video_duration_seconds": {
+    "minimum": 7200,
+    "maximum": 10800,
+    "default": 7200
+  },
+  "start_condition": "approved_rights_verified_audio_seconds_for_next_video_at_least_requested_duration",
+  "global_campaign_capacity_is_not_a_start_condition": true,
+  "parallelism": {
+    "video_renders": 1,
+    "music_discovery_and_download": "parallel_with_render",
+    "library_growth_continues_after_video_start": true
+  },
+  "publication": "HUMAN_ONLY",
+  "private_upload": "AFTER_VIDEO_QA"
+}

@@ -10,6 +10,12 @@
     "max_duration_seconds": 10800,
     "independent_videos": true
   },
+  "production_start": {
+    "policy": "config/production_policy.json",
+    "per_video_capacity_trigger": true,
+    "do_not_wait_for_full_campaign_capacity": true,
+    "discovery_continues_during_render": true
+  },
   "audio": {
     "minimum_unique_tracks": 500,
     "minimum_approved_seconds": 36000,

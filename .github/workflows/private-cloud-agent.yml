@@ -234,12 +234,45 @@ jobs:
           PY
 
       - name: Initialize or resume the sequential orchestrator checkpoint
+        id: next_video
+        if: ${{ steps.restore_library.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        working-directory: agent
+        run: |
+          python - <<'PY'
+          import json, re
+          from pathlib import Path
+          checkpoints = sorted(Path("output/orchestrator").glob("video-*.checkpoint.json"))
+          active = []
+          completed = []
+          for path in checkpoints:
+              try:
+                  row = json.loads(path.read_text(encoding="utf-8"))
+              except (OSError, json.JSONDecodeError):
+                  continue
+              number = int(re.search(r"video-(\d+)", path.name).group(1))
+              if row.get("status") == "COMPLETE" or row.get("stage") == "PDCA_COMPLETE":
+                  completed.append(number)
+              else:
+                  active.append((number, row.get("video_id", f"video-{number:02d}")))
+          if active:
+              video_id = sorted(active)[0][1]
+          else:
+              # The first delivery already exists in the private history; when
+              # no checkpoint has been restored, resume with the missing second
+              # video instead of waiting for the full 12-video campaign.
+              video_id = f"video-{(max(completed + [1]) + 1):02d}"
+          print(f"Next per-video production target: {video_id}")
+          with open(__import__("os").environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write(f"video_id={video_id}\n")
+          PY
+
+      - name: Initialize or resume the sequential orchestrator checkpoint
         id: orchestrator_checkpoint
         if: ${{ steps.restore_library.outcome == 'success' && env.TASK == 'build-evergreen' }}
         working-directory: agent
         env:
           PYTHONPATH: ${{ github.workspace }}
-          ORCHESTRATOR_VIDEO_ID: video-02
+          ORCHESTRATOR_VIDEO_ID: ${{ steps.next_video.outputs.video_id }}
         run: |
           python - <<'PY'
           import json, os
@@ -273,6 +306,8 @@ jobs:
           import os
           from curator import pick
 
+          # This is a per-video gate. It must never require the complete
+          # twelve-video campaign capacity before starting the next render.
           hours = float(os.environ["HOURS"])
           collection = os.environ["COLLECTION"]
           season = os.environ.get("SEASON") or None
