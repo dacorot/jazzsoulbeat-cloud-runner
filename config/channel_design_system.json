@@ -4,9 +4,11 @@
   "status": "ACTIVE",
   "purpose": "Define one recognizable channel identity across banners, thumbnails, videos and live assets.",
   "creative_positioning": "Premium modern listening environments for Jazz, Soul and Lo-Fi audiences who want to relax, study, work or unwind.",
-  "visual_medium": "Cinematic editorial photography with realistic materials, controlled film grain and modern art direction.",
+  "visual_medium": "Two-tier system: modern editorial brand design for the channel cover; modern cinematic editorial illustration for videos.",
   "non_negotiable": [
-    "No anime, illustration, drawing, comic linework or character art.",
+    "Never use anime, manga, chibi or childish character styling anywhere on the channel.",
+    "The channel cover uses no illustration, drawing or character art of any kind; it may use photography, typography, abstract geometry, material textures or a refined graphic composition.",
+    "Video illustrations must be modernized translations of the user-supplied references, never generic anime.",
     "No generic stock-photo look, generic lo-fi collage or disposable thumbnail aesthetics.",
     "No mixing of Jazz, Soul and Lo-Fi labels in a way that misrepresents the playlist.",
     "No repeated scene concept, composition or hero object across consecutive videos.",
@@ -39,9 +41,9 @@
     }
   },
   "asset_rules": {
-    "channel_cover": "Brand-level environment, no playlist-specific title, no characters, no drawings.",
-    "video_thumbnail": "One unique scene tied to the actual music profile; title and genre must be truthful.",
-    "video_visual": "Locked camera, localized professional effects, reference-bound scene and audited motion.",
+    "channel_cover": "Modern brand-level editorial design based on the channel identity; photography is optional, but illustration, drawing, anime and characters are forbidden.",
+    "video_thumbnail": "Modern editorial illustration based on the approved references; one unique scene tied to the actual music profile; title and genre must be truthful.",
+    "video_visual": "Modern editorial illustration based on approved references, locked camera, localized professional effects and audited motion.",
     "live_graphics": "Use the channel system without introducing a new visual identity."
   },
   "quality_gate": {

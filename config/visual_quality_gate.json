@@ -3,6 +3,11 @@
   "id": "professional_visual_quality_gate",
   "purpose": "Reject technically or contractually weak visual masters before private upload.",
   "design_system": "config/channel_design_system.json",
+  "asset_medium_rules": {
+    "channel_cover": "MODERN_EDITORIAL_BRAND_DESIGN_NO_ILLUSTRATION",
+    "video_visuals": "MODERN_REFERENCE_BASED_ILLUSTRATION_ALLOWED",
+    "anime": "FORBIDDEN"
+  },
   "required_aspect_ratio": "16:9",
   "minimum_resolution": [1920, 1080],
   "allowed_effect_profiles": [

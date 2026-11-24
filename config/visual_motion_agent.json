@@ -15,7 +15,11 @@
       "distinct scene concept per video",
       "remain bound to the approved reference set"
     ],
-    "must_not_become": ["anime", "illustration", "drawing", "comic linework", "neon cyberpunk", "glossy 3D", "generic stock art", "generic lo-fi collage", "visual clutter"]
+    "allowed_by_asset": {
+      "channel_cover": "modern_editorial_brand_design_no_illustration",
+      "video_assets": "modern_reference_based_editorial_illustration"
+    },
+    "must_not_become": ["anime", "manga", "chibi", "childish character styling", "comic linework", "neon cyberpunk", "glossy 3D", "generic stock art", "generic lo-fi collage", "visual clutter"]
   },
   "allowed_profile": "single_approved_plate_integrated_motion",
   "input_contract": {
