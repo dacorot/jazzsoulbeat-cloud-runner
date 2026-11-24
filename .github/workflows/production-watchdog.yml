@@ -47,7 +47,7 @@ jobs:
           age_seconds=$((now_epoch - latest_epoch))
           # Recover same-day publication debt after a stale/failed cycle;
           # concurrency still prevents duplicate renders.
-          if [[ "$running_count" == "0" && ("$age_seconds" -ge 21600 || ( ("$latest_conclusion" == "failure" || "$latest_conclusion" == "cancelled") && "$age_seconds" -ge 300)) ]]; then
+          if [[ "$running_count" == "0" && ("$age_seconds" -ge 21600 || (("$latest_conclusion" == "failure" || "$latest_conclusion" == "cancelled") && "$age_seconds" -ge 60 && "$latest_attempt" -lt 3)) ]]; then
             gh api --method POST -H "Accept: application/vnd.github+json" \
               "/repos/${{ github.repository }}/actions/workflows/private-cloud-agent.yml/dispatches" \
               -f ref=main -f 'inputs[task]=build-evergreen' -f 'inputs[hours]=2' \
