@@ -1,5 +1,5 @@
 name: Jazz Soul Beat - first video watchdog
-# Release-gate correction: fresh dispatch with exact private YouTube metadata.
+# Release-gate correction: fresh dispatch with complete YouTube credits.
 
 on:
   push:
