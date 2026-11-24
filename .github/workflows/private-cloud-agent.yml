@@ -184,12 +184,15 @@ jobs:
       - name: Persist promoted production library
         id: persist_library
         if: ${{ steps.library_promotion.outcome == 'success' && steps.library_promotion.outputs.promoted == 'true' && env.TASK == 'build-evergreen' }}
+        continue-on-error: true
         working-directory: agent
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
         run: |
           set -euo pipefail
-          timeout 600s python main.py drive-push-library
+          if ! timeout 120s python main.py drive-push-library; then
+            echo "::warning::La persistencia del lote auxiliar no debe bloquear la producción; se conserva la biblioteca aprobada existente."
+          fi
       - name: Write production library capacity evidence
         id: production_capacity
         if: ${{ steps.restore_library.outcome == 'success' && env.TASK == 'build-evergreen' }}
