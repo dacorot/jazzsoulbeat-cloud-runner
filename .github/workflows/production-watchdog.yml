@@ -1,4 +1,5 @@
 name: Jazz Soul Beat - first video watchdog
+# Release-gate correction: the next cycle must re-run after visual contract repair.
 
 on:
   push:
