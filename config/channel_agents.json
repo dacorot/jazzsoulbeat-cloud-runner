@@ -1,6 +1,7 @@
 {
   "schema_version": 2,
   "channel": "Jazz Soul Beat",
+  "design_system": "config/channel_design_system.json",
   "editorial_categories": [
     {"id": "work_study", "display_name": "Work & Study", "mode": "instrumental", "mission": "Focused, low-fatigue jazz for concentration and reading."},
     {"id": "coffee_time", "display_name": "Coffee Time", "mode": "instrumental", "mission": "Warm, sophisticated café jazz with an organic pulse."},

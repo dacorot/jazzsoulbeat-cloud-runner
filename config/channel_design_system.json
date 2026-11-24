@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "id": "jazz_soul_beat_channel_design_system",
+  "status": "ACTIVE",
+  "purpose": "Define one recognizable channel identity across banners, thumbnails, videos and live assets.",
+  "creative_positioning": "Premium modern listening environments for Jazz, Soul and Lo-Fi audiences who want to relax, study, work or unwind.",
+  "visual_medium": "Cinematic editorial photography with realistic materials, controlled film grain and modern art direction.",
+  "non_negotiable": [
+    "No anime, illustration, drawing, comic linework or character art.",
+    "No generic stock-photo look, generic lo-fi collage or disposable thumbnail aesthetics.",
+    "No mixing of Jazz, Soul and Lo-Fi labels in a way that misrepresents the playlist.",
+    "No repeated scene concept, composition or hero object across consecutive videos.",
+    "Every visual must be linked to its playlist, music mood and approved reference evidence."
+  ],
+  "art_direction": {
+    "composition": [
+      "clean contemporary geometry",
+      "deliberate negative space",
+      "one strong visual idea per asset",
+      "asymmetric editorial balance",
+      "central safe area for channel title when required"
+    ],
+    "lighting": [
+      "motivated practical light",
+      "cinematic contrast without crushed detail",
+      "warm interior light against cool ambient shadows",
+      "natural reflections and controlled highlights"
+    ],
+    "materials": ["walnut", "brushed metal", "glass", "vinyl", "linen", "leather", "stone", "rain on glass"],
+    "palette": {
+      "base": ["midnight blue", "charcoal", "walnut brown"],
+      "accents": ["amber", "muted burgundy", "silver-blue reflections"],
+      "avoid": ["neon rainbow", "oversaturation", "flat pure white backgrounds"]
+    },
+    "typography": {
+      "voice": "restrained, premium, editorial, highly legible",
+      "cover_title": "JAZZ SOUL BEAT",
+      "thumbnail_rule": "Use only the exact playlist or video title; never add invented genre claims or technical filler."
+    }
+  },
+  "asset_rules": {
+    "channel_cover": "Brand-level environment, no playlist-specific title, no characters, no drawings.",
+    "video_thumbnail": "One unique scene tied to the actual music profile; title and genre must be truthful.",
+    "video_visual": "Locked camera, localized professional effects, reference-bound scene and audited motion.",
+    "live_graphics": "Use the channel system without introducing a new visual identity."
+  },
+  "quality_gate": {
+    "required": true,
+    "reviewers": ["visual_director", "supervisor", "coordinator", "quality_auditor"],
+    "fail_conditions": [
+      "anime_or_illustration_detected",
+      "reference_binding_missing",
+      "playlist_or_music_mismatch",
+      "scene_repetition_detected",
+      "effect_not_declared_or_not_executed",
+      "text_not_legible_or_not_truthful"
+    ]
+  }
+}

@@ -2,6 +2,7 @@
   "schema_version": 1,
   "id": "professional_visual_quality_gate",
   "purpose": "Reject technically or contractually weak visual masters before private upload.",
+  "design_system": "config/channel_design_system.json",
   "required_aspect_ratio": "16:9",
   "minimum_resolution": [1920, 1080],
   "allowed_effect_profiles": [
