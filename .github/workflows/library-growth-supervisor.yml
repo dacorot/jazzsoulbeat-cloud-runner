@@ -127,7 +127,8 @@ jobs:
               with manifest.open(newline="",encoding="utf-8-sig") as h:
                   rows=list(csv.DictReader(h))
           approved=[r for r in rows if (r.get("approved") or "").lower() in {"1","true","yes"} and (r.get("rights_verified") or "").lower() in {"1","true","yes"}]
-          report={"target_total_tracks":222,"approved_tracks":len(approved),"remaining":max(0,222-len(approved)),"cycle_status":"COMPLETE" if len(approved)>=222 else "CONTINUE"}
+          target_per_playlist = 500
+          report={"target_per_playlist":target_per_playlist,"approved_tracks":len(approved),"remaining_for_first_playlist":max(0,target_per_playlist-len(approved)),"cycle_status":"CONTINUE_UNTIL_EACH_PLAYLIST_REACHES_TARGET"}
           Path("output/library-growth/target-progress.json").write_text(json.dumps(report,indent=2)+"\\n",encoding="utf-8")
           print(json.dumps(report,indent=2))
           PY

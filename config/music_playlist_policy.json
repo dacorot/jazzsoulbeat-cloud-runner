@@ -1,6 +1,12 @@
 {
   "schema_version": 1,
   "purpose": "Prevent mixing seasonal music into incompatible playlists.",
+  "capacity_policy": {
+    "approved_tracks_target_per_playlist": 500,
+    "candidates_do_not_count": true,
+    "rights_verified_required": true,
+    "genre_and_season_are_counted_separately": true
+  },
   "rules": [
     "The 32 approved tracks are an inventory, not a single playlist.",
     "Christmas tracks may only be used in christmas_holiday and winter_holiday playlists.",
