@@ -1,6 +1,9 @@
 name: Jazz Soul Beat - first video watchdog
 
 on:
+  push:
+    paths:
+      - ".github/workflows/production-watchdog.yml"
   schedule:
     - cron: "*/5 * * * *"
   workflow_dispatch:
