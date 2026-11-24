@@ -27,87 +27,29 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Inspect latest private production run
+      - name: Dispatch missing private production cycle
         id: inspect
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           runs="$(gh api -H "Accept: application/vnd.github+json" "/repos/${{ github.repository }}/actions/workflows/private-cloud-agent.yml/runs?per_page=10")"
-          latest="$(printf '%s' "$runs" | jq '[.workflow_runs[]] | sort_by(.created_at) | reverse | .[0]')"
-          if [[ "$latest" == "null" ]]; then
-            run_id="none"
-            status="never_run"
-            conclusion=""
-            attempt="0"
-            title="No private production run exists"
-            failed_step=""
-          else
-            run_id="$(printf '%s' "$latest" | jq -r '.id')"
-            status="$(printf '%s' "$latest" | jq -r '.status')"
-            conclusion="$(printf '%s' "$latest" | jq -r '.conclusion // ""')"
-            attempt="$(printf '%s' "$latest" | jq -r '.run_attempt')"
-            title="$(printf '%s' "$latest" | jq -r '.display_title')"
-            # Do not make recovery depend on the jobs endpoint. A missing or
-            # permission-limited jobs response must not prevent a new private
-            # production cycle from being dispatched.
-            failed_step=""
-          fi
-          retryable=true
-          case "$failed_step" in
-            "Build an evergreen or seasonal video (never uploads)"*|"Capture and validate the exact production render folder"*|"Verify and close requested-task PDCA cycle"*)
-              retryable=false
-              ;;
-          esac
-          echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
-          echo "status=$status" >> "$GITHUB_OUTPUT"
-          echo "conclusion=$conclusion" >> "$GITHUB_OUTPUT"
-          echo "attempt=$attempt" >> "$GITHUB_OUTPUT"
-          echo "retryable=$retryable" >> "$GITHUB_OUTPUT"
-          echo "failed_step=$failed_step" >> "$GITHUB_OUTPUT"
-          latest_created="$(printf '%s' "$latest" | jq -r '.created_at // ""')"
+          latest_created="$(printf '%s' "$runs" | jq -r '[.workflow_runs[]] | sort_by(.created_at) | reverse | .[0].created_at // ""')"
+          running_count="$(printf '%s' "$runs" | jq '[.workflow_runs[] | select(.status == "in_progress" or .status == "queued")] | length')"
           now_epoch="$(date +%s)"
-          if [[ -n "$latest_created" ]]; then
-            latest_epoch="$(date -d "$latest_created" +%s)"
-            age_seconds=$((now_epoch - latest_epoch))
-          else
-            age_seconds=999999999
-          fi
-          running_count="$(printf '%s' "$runs" | jq '[.workflow_runs[] | select(.status == "in_progress" || .status == "queued")] | length')"
-          dispatch_needed=false
+          latest_epoch=0
+          [[ -n "$latest_created" ]] && latest_epoch="$(date -d "$latest_created" +%s)"
+          age_seconds=$((now_epoch - latest_epoch))
           if [[ "$running_count" == "0" && "$age_seconds" -ge 86400 ]]; then
-            dispatch_needed=true
+            gh api --method POST -H "Accept: application/vnd.github+json" \
+              "/repos/${{ github.repository }}/actions/workflows/private-cloud-agent.yml/dispatches" \
+              -f ref=main -f 'inputs[task]=build-evergreen' -f 'inputs[hours]=2' \
+              -f 'inputs[collection]=evergreen' -f 'inputs[season]=' \
+              -f 'inputs[agent_ref]=fix/real-music-and-cinematic-motion'
+            echo "Private production cycle dispatched." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Private production already running or recent; no duplicate dispatch." >> "$GITHUB_STEP_SUMMARY"
           fi
-          echo "dispatch_needed=$dispatch_needed" >> "$GITHUB_OUTPUT"
-          {
-            echo "## First-video watchdog"
-            echo
-            echo "- Run: `$run_id`"
-            echo "- Status: `$status`"
-            echo "- Conclusion: `$conclusion`"
-            echo "- Attempt: `$attempt`"
-            echo "- Failed step: $failed_step"
-            echo "- Retryable: `$retryable`"
-            echo "- Title: $title"
-            echo "- Production dispatch needed: $dispatch_needed"
-          } >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Dispatch missing private production cycle
-        if: ${{ steps.inspect.outputs.dispatch_needed == 'true' }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          gh api --method POST \
-            -H "Accept: application/vnd.github+json" \
-            "/repos/${{ github.repository }}/actions/workflows/private-cloud-agent.yml/dispatches" \
-            -f ref=main \
-            -f 'inputs[task]=build-evergreen' \
-            -f 'inputs[hours]=2' \
-            -f 'inputs[collection]=evergreen' \
-            -f 'inputs[season]=' \
-            -f 'inputs[agent_ref]=fix/real-music-and-cinematic-motion'
-          echo "Dispatched a missing private production cycle." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Recover bounded failed run
         if: ${{ steps.inspect.outputs.status == 'completed' && steps.inspect.outputs.conclusion == 'failure' && steps.inspect.outputs.retryable == 'true' && fromJSON(steps.inspect.outputs.attempt) < 3 }}
