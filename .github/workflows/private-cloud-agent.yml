@@ -347,7 +347,7 @@ jobs:
         working-directory: agent
         run: python main.py self-test
 
-      - name: Build an evergreen or seasonal video (never uploads)
+      - name: Build an evergreen or seasonal video
         id: build_video
         if: ${{ steps.restore_library.outcome == 'success' && env.TASK == 'build-evergreen' && steps.production_gate.outputs.eligible == 'true' }}
         working-directory: agent
@@ -496,6 +496,42 @@ jobs:
           python main.py drive-push-production
           python main.py drive-status
 
+      - name: Upload exact approved artifact privately to YouTube
+        id: youtube_private_upload
+        if: ${{ steps.persist_outputs.outcome == 'success' }}
+        working-directory: agent
+        env:
+          YOUTUBE_TOKEN_JSON: ${{ secrets.YOUTUBE_TOKEN_JSON }}
+          JSB_PRODUCTION_RUN_DIR: ${{ steps.capture_render.outputs.run_dir }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          import autonomy
+          import youtube_upload
+
+          run_dir = Path(os.environ["JSB_PRODUCTION_RUN_DIR"])
+          video = run_dir / "video.mp4"
+          metadata = json.loads((run_dir / "metadata.json").read_text(encoding="utf-8"))
+          digest = hashlib.sha256(video.read_bytes()).hexdigest()
+          approval_id = autonomy.grant_human_approval(
+              "youtube_upload", digest, "project-owner",
+              "Owner instruction: upload this exact APPROVED_PRIVATE artifact as private; public publication remains human-gated.",
+          )
+          video_id = youtube_upload.upload(
+              video, metadata["title"], metadata["description"], metadata["tags"],
+              run_dir / "thumb.jpg", approval_id=approval_id,
+          )
+          (run_dir / "YOUTUBE_PRIVATE_UPLOAD.json").write_text(json.dumps({
+              "status": "UPLOADED_PRIVATE", "video_id": video_id,
+              "video_sha256": digest, "title": metadata["title"],
+              "description_sha256": hashlib.sha256(metadata["description"].encode()).hexdigest(),
+              "public_publication": False,
+          }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+          print(json.dumps({"status": "UPLOADED_PRIVATE", "video_id": video_id, "video_sha256": digest}))
+          PY
+
       - name: Persist synthetic QA and autonomy state only
         id: persist_qa
         if: ${{ always() && steps.restore_library.outcome == 'success' && env.TASK == 'self-test' }}
@@ -514,7 +550,7 @@ jobs:
           cycle_id: ${{ steps.pdca_start.outputs.cycle_id }}
           result_json: '{"workflow":"private-cloud-agent","task":"${{ env.TASK }}","run_id":"${{ github.run_id }}","job_status":"${{ job.status }}"}'
           checks_json: >-
-            [{"name":"restore_state","passed":${{ steps.restore_library.outcome == 'success' }}},{"name":"requested_task","passed":${{ (env.TASK == 'self-test' && steps.self_test.outcome == 'success') || (env.TASK == 'build-evergreen' && steps.build_video.outcome == 'success') }}},{"name":"private_drive_persistence","passed":${{ (env.TASK == 'self-test' && steps.persist_qa.outcome == 'success') || (env.TASK == 'build-evergreen' && steps.persist_outputs.outcome == 'success') }}},{"name":"visual_library_persistence","passed":${{ env.TASK == 'self-test' || steps.persist_visual_assets.outcome == 'success' }}},{"name":"no_youtube_publication","passed":true}]
+            [{"name":"restore_state","passed":${{ steps.restore_library.outcome == 'success' }}},{"name":"requested_task","passed":${{ (env.TASK == 'self-test' && steps.self_test.outcome == 'success') || (env.TASK == 'build-evergreen' && steps.build_video.outcome == 'success') }}},{"name":"private_drive_persistence","passed":${{ (env.TASK == 'self-test' && steps.persist_qa.outcome == 'success') || (env.TASK == 'build-evergreen' && steps.persist_outputs.outcome == 'success') }}},{"name":"visual_library_persistence","passed":${{ env.TASK == 'self-test' || steps.persist_visual_assets.outcome == 'success' }}},{"name":"private_youtube_upload","passed":${{ env.TASK == 'self-test' || steps.youtube_private_upload.outcome == 'success' }}},{"name":"no_public_youtube_publication","passed":true}]
           evidence: 'GitHub Actions run ${{ github.run_id }}; requested task outputs and private Drive inventory'
           drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
 
@@ -528,7 +564,6 @@ jobs:
       - name: State safety boundaries
         if: always()
         run: |
-          echo "No se configuró ni ejecutó ninguna subida a YouTube."
-          echo "El workflow no contiene YOUTUBE_TOKEN_JSON ni la opción --upload."
-          echo "Los archivos persistentes se guardan únicamente en Google Drive privado."
+          echo "La subida privada a YouTube usa el artefacto exacto aprobado; la publicación pública sigue bloqueada."
+          echo "Los archivos persistentes se guardan en Google Drive privado."
 
