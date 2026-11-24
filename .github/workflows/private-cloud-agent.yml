@@ -447,6 +447,14 @@ jobs:
           print(quality.stdout)
           if quality.returncode != 0:
               raise SystemExit("Professional visual quality gate failed; private upload blocked.")
+          board = subprocess.run(
+              ["python", "../scripts/video_release_board.py", "--run-dir", str(folder),
+               "--expected-seconds", str(expected), "--output", str(folder / "VIDEO_RELEASE_BOARD.json")],
+              check=False, capture_output=True, text=True
+          )
+          print(board.stdout)
+          if board.returncode != 0:
+              raise SystemExit("Release board requested repair; video was not approved for private upload.")
           print(f"PASS: {folder} | {duration:.2f}s | H.264 QHD | AAC estéreo")
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
               output.write(f"run_dir={folder.as_posix()}\n")
