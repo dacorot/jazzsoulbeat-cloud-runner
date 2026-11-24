@@ -7,7 +7,8 @@ on:
       - "LIBRARY_GROWTH_START.md"
       - ".github/workflows/library-growth-supervisor.yml"
   schedule:
-    - cron: "0 */2 * * *"
+    # Canonical autonomous growth cycle: 19:00, 03:00 and 11:00 Colombia.
+    - cron: "0 0,8,16 * * *"
 
 permissions:
   contents: read
@@ -45,7 +46,7 @@ jobs:
           mkdir -p output/library-growth/source-status
       - name: Validate source registry
         run: |
-          python -c 'import json; from pathlib import Path; r=json.loads(Path("config/library_source_registry.json").read_text(encoding="utf-8")); assert r["free_only"] and r["never_auto_approve"] and r["never_publish"] and len(r["sources"]) >= 6; print("Sources configured:", len(r["sources"]))'
+          python -c 'import json; from pathlib import Path; r=json.loads(Path("config/library_source_registry.json").read_text(encoding="utf-8")); assert r["free_only"] and r["approval_mode"] == "AUTONOMOUS_EVIDENCE_BOUND" and r["auto_approve_only_with_primary_evidence"] and r["never_publish"] and len(r["sources"]) >= 6; print("Autonomous sources configured:", len(r["sources"]))'
       - name: Discover official catalogues
         working-directory: agent
         run: |
@@ -64,6 +65,16 @@ jobs:
           python main.py intake-library-growth
           test -f output/library-promotion/eligible-external.json
           test -s output/library-promotion/external-intake-report.json
+      - name: Run evidence-bound autonomous music gate and retrain model
+        working-directory: agent
+        run: |
+          python ../scripts/autonomous_music_gate.py \
+            --input output/library-promotion/eligible-external.json \
+            --output output/library-promotion/autonomous-eligible.json \
+            --quarantine output/library-promotion/autonomous-quarantine.json \
+            --policy ../config/autonomous_learning.json \
+            --feedback output/learning/feedback.jsonl \
+            --model output/learning/model.json
 
       - name: Normalize library CSV schema in ephemeral checkout
         working-directory: agent
@@ -76,7 +87,7 @@ jobs:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
         run: |
           set -euo pipefail
-          candidates="output/library-promotion/eligible-external.json"
+          candidates="output/library-promotion/autonomous-eligible.json"
           report="output/library-promotion/import-report.json"
           if [[ -s "$candidates" ]]; then
             python main.py promote-library --candidates "$candidates" --report "$report"

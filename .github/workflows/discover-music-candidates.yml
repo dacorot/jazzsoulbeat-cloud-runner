@@ -4,9 +4,8 @@ on:
     paths:
       - "MUSIC_DISCOVERY_START.md"
   workflow_dispatch:
-  schedule:
-    # Daily at 11:00 Colombia (UTC-5).
-    - cron: "0 16 * * *"
+  # Manual/reusable only; the canonical scheduled owner is
+  # library-growth-supervisor.yml.
 permissions:
   contents: read
 concurrency:

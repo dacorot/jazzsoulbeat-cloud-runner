@@ -8,8 +8,8 @@ on:
   push:
     paths:
       - ".github/workflows/music-growth-watchdog.yml"
-  schedule:
-    - cron: "*/5 * * * *"
+  # Manual/reusable only. Scheduling is owned by library-growth-supervisor.yml
+  # to prevent competing writers against private Drive state.
   workflow_dispatch:
 
 concurrency:

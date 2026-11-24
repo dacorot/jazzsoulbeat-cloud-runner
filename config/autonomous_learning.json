@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "mode": "AUTONOMOUS_EVIDENCE_BOUND",
+  "min_auto_approval_score": 0.88,
+  "min_duration_seconds": 180,
+  "allowed_license_prefixes": ["CC0", "CC BY"],
+  "primary_domains": ["ketsa.uk", "incompetech.com"],
+  "target_genres": ["jazz", "smooth jazz", "soft jazz", "lofi", "lo-fi"],
+  "reject_terms": ["funk", "funky", "groove", "jazz-funk", "dance", "party", "disco", "shuffle", "swing", "vocal", "voice", "lyrics", "remix", "mashup", "sample pack", "live concert"],
+  "feature_order": ["primary_source", "license_allowed", "hash_verified", "technical_ok", "instrumental", "editorial_match", "duration_ok", "forbidden_term"],
+  "hard_requirements": ["primary_source", "license_allowed", "hash_verified", "technical_ok", "instrumental", "editorial_match", "duration_ok"],
+  "feedback_file": "output/learning/feedback.jsonl",
+  "model_file": "output/learning/model.json",
+  "never_publish": true,
+  "quarantine_on_ambiguity": true
+}

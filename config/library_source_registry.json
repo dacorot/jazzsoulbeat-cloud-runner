@@ -1,6 +1,7 @@
 {
   "version": 1,
-  "mission": "Keep the Jazz Soul Beat music-library growth loop active without granting rights automatically.",
+  "mission": "Keep the Jazz Soul Beat music-library growth loop autonomous with evidence-bound private approval and no publication.",
+  "approval_mode": "AUTONOMOUS_EVIDENCE_BOUND",
   "free_only": true,
   "sources": [
     {
@@ -64,7 +65,9 @@
       "fallback_priority": 7
     }
   ],
-  "never_auto_approve": true,
+  "never_auto_approve": false,
+  "auto_approve_only_with_primary_evidence": true,
+  "quarantine_ambiguous_candidates": true,
   "never_publish": true,
   "required_candidate_fields": [
     "title",

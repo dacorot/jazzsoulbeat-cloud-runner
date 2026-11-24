@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "contract_version": "2026-11-23",
+  "project": "Jazz Soul Beat",
+  "status": "AUTONOMOUS_PRIVATE_PIPELINE",
+  "publication": "HUMAN_ONLY",
+  "delivery": {
+    "video_count": 12,
+    "min_duration_seconds": 7200,
+    "max_duration_seconds": 10800,
+    "independent_videos": true
+  },
+  "audio": {
+    "minimum_unique_tracks": 500,
+    "minimum_approved_seconds": 36000,
+    "rights_verified": true,
+    "creative_approval": true,
+    "hash_bound": true,
+    "no_pool_reuse_as_capacity": true,
+    "autonomous_private_approval": true
+  },
+  "visuals": {
+    "base_aspect_ratio": "16:9",
+    "effect_required_per_scene": true,
+    "scene_effects_validated": true,
+    "human_animation_review_required": false,
+    "professional_quality_gate": "professional_visual_quality_gate",
+    "camera": "locked",
+    "effect_stack": ["localized_atmosphere", "window_reflections", "coffee_steam"],
+    "full_frame_overlays": false,
+    "mask_boundary_validation": true
+  },
+  "release": {
+    "technical_qa_required": true,
+    "editorial_qa_required": true,
+    "rights_qa_required": true,
+    "private_upload_automatic": true,
+    "public_publish_requires_user_approval": true,
+    "public_upload": false
+  }
+}

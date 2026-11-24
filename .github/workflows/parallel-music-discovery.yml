@@ -3,8 +3,8 @@ name: Jazz Soul Beat - Parallel music discovery lanes
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "0 6 * * *"
+  # Manual/reusable only. The library-growth supervisor is the sole scheduled
+  # owner of discovery, promotion, learning and persistence.
   push:
     paths:
       - "MUSIC_PARALLEL_DISCOVERY_START.md"

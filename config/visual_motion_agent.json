@@ -20,6 +20,25 @@
     "fps": 30,
     "resolution": [1920, 1080]
   },
+  "professional_effect_stack": {
+    "required": true,
+    "profiles": [
+      "approved_plate_localized_atmosphere",
+      "approved_plate_window_reflections",
+      "approved_plate_coffee_steam"
+    ],
+    "principles": [
+      "locked_camera",
+      "effect_is_scene_masked",
+      "no_full_frame_overlays",
+      "no_unmotivated_motion",
+      "no_effect_crosses_subject_boundaries",
+      "subtle_animated_exposure_only_when_scene_manifest_allows_it"
+    ],
+    "minimum_base_resolution": [1920, 1080],
+    "output_aspect_ratio": "16:9",
+    "render_review_required": true
+  },
   "forbidden": [
     "full_frame_particle_overlay",
     "rain_crossing_window_mullions",
@@ -31,6 +50,7 @@
     "automatic_creative_approval",
     "automatic_publication"
   ],
-  "human_gates": ["base_image_approval", "animation_approval", "publication_approval"]
+  "automated_gates": ["base_image_technical_qa", "effect_manifest_qa", "animation_render_qa"],
+  "human_gates": ["publication_approval"]
 }
 
