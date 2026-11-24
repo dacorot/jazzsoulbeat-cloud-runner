@@ -52,6 +52,20 @@ jobs:
           echo "attempt=$attempt" >> "$GITHUB_OUTPUT"
           echo "retryable=$retryable" >> "$GITHUB_OUTPUT"
           echo "failed_step=$failed_step" >> "$GITHUB_OUTPUT"
+          latest_created="$(printf '%s' "$latest" | jq -r '.created_at // ""')"
+          now_epoch="$(date +%s)"
+          if [[ -n "$latest_created" ]]; then
+            latest_epoch="$(date -d "$latest_created" +%s)"
+            age_seconds=$((now_epoch - latest_epoch))
+          else
+            age_seconds=999999999
+          fi
+          running_count="$(printf '%s' "$runs" | jq '[.workflow_runs[] | select(.status == "in_progress" || .status == "queued")] | length')"
+          dispatch_needed=false
+          if [[ "$running_count" == "0" && "$age_seconds" -ge 86400 ]]; then
+            dispatch_needed=true
+          fi
+          echo "dispatch_needed=$dispatch_needed" >> "$GITHUB_OUTPUT"
           {
             echo "## First-video watchdog"
             echo
@@ -62,7 +76,25 @@ jobs:
             echo "- Failed step: $failed_step"
             echo "- Retryable: `$retryable`"
             echo "- Title: $title"
+            echo "- Production dispatch needed: $dispatch_needed"
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Dispatch missing private production cycle
+        if: ${{ steps.inspect.outputs.dispatch_needed == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api --method POST \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/${{ github.repository }}/actions/workflows/private-cloud-agent.yml/dispatches" \
+            -f ref=main \
+            -f 'inputs[task]=build-evergreen' \
+            -f 'inputs[hours]=2' \
+            -f 'inputs[collection]=evergreen' \
+            -f 'inputs[season]=' \
+            -f 'inputs[agent_ref]=fix/real-music-and-cinematic-motion'
+          echo "Dispatched a missing private production cycle." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Recover bounded failed run
         if: ${{ steps.inspect.outputs.status == 'completed' && steps.inspect.outputs.conclusion == 'failure' && steps.inspect.outputs.retryable == 'true' && fromJSON(steps.inspect.outputs.attempt) < 3 }}

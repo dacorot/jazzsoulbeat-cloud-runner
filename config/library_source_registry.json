@@ -65,7 +65,8 @@
       "fallback_priority": 7
     }
   ],
-  "never_auto_approve": false,
+  "never_auto_approve": true,
+  "autonomous_private_approval": true,
   "auto_approve_only_with_primary_evidence": true,
   "quarantine_ambiguous_candidates": true,
   "never_publish": true,

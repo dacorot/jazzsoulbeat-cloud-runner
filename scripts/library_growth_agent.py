@@ -78,9 +78,13 @@ def source_heartbeat(registry_path: Path, outcomes: dict[str, str]) -> dict:
     sources = registry.get("sources", [])
     active_sources = [row for row in sources if row.get("enabled", True) is not False]
     known = {str(row.get("id")) for row in active_sources}
+    all_known = {str(row.get("id")) for row in sources}
     disabled = sorted(str(row.get("id")) for row in sources if row.get("enabled", True) is False)
     unknown = sorted(set(outcomes) - known)
-    succeeded = sorted(source_id for source_id in known if outcomes.get(source_id) == "success")
+    # A delegated/disabled lane may still report a successful heartbeat from
+    # its external adapter. It must never become active merely by reporting;
+    # active lanes remain the only ones required for completeness.
+    succeeded = sorted(source_id for source_id in all_known if outcomes.get(source_id) == "success")
     failed = sorted(source_id for source_id in known if outcomes.get(source_id) == "failure")
     missing = sorted(source_id for source_id in known if source_id not in outcomes)
     if not succeeded:
