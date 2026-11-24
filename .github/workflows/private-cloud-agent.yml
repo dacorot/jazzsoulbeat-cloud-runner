@@ -42,6 +42,15 @@ on:
         required: true
         default: fix/real-music-and-cinematic-motion
         type: string
+      genre:
+        description: "Género único del video"
+        required: true
+        default: lofi
+        type: choice
+        options:
+          - jazz
+          - soul
+          - lofi
 
 permissions:
   contents: read
@@ -61,6 +70,7 @@ jobs:
       COLLECTION: ${{ github.event_name == 'workflow_dispatch' && inputs.collection || 'evergreen' }}
       SEASON: ${{ github.event_name == 'workflow_dispatch' && inputs.season || '' }}
       AGENT_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.agent_ref || 'fix/real-music-and-cinematic-motion' }}
+      GENRE: ${{ github.event_name == 'workflow_dispatch' && inputs.genre || 'jazz' }}
     steps:
       - name: Check out public controller
         uses: actions/checkout@v4
@@ -306,6 +316,7 @@ jobs:
           HOURS: ${{ env.HOURS }}
           COLLECTION: ${{ env.COLLECTION }}
           SEASON: ${{ env.SEASON }}
+          GENRE: ${{ env.GENRE }}
           VIDEO_ID: ${{ steps.next_video.outputs.video_id }}
           JSB_PLAYLIST: ${{ env.COLLECTION == 'evergreen' && 'coffee_time' || env.SEASON }}
         run: |
@@ -317,9 +328,10 @@ jobs:
           # twelve-video campaign capacity before starting the next render.
           hours = float(os.environ["HOURS"])
           collection = os.environ["COLLECTION"]
+          genre = os.environ["GENRE"]
           season = os.environ.get("SEASON") or None
           try:
-              tracks, source_seconds = pick(hours * 3600, collection=collection, season=season)
+              tracks, source_seconds = pick(hours * 3600, collection=collection, season=season, genre=genre)
           except SystemExit as exc:
               with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
                   output.write("eligible=false\n")
@@ -358,6 +370,7 @@ jobs:
           MIX_HOURS: ${{ env.HOURS }}
           COLLECTION: ${{ env.COLLECTION }}
           SEASON: ${{ env.SEASON }}
+          GENRE: ${{ env.GENRE }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
@@ -365,7 +378,7 @@ jobs:
           # Motion is limited to verified in-image effects; no scene factory
           # or multi-scene fallback may override that contract.
           export JSB_REQUIRE_MULTI_SCENE=0
-          args=(make --hours "$MIX_HOURS" --auto --collection "$COLLECTION")
+          args=(make --hours "$MIX_HOURS" --auto --collection "$COLLECTION" --genre "$GENRE")
           if [[ "$COLLECTION" == "seasonal" ]]; then
             if [[ ! "$SEASON" =~ ^[a-z0-9][a-z0-9_-]{0,39}$ ]]; then
               echo "Temporada inválida o ausente; no se construirá ningún video."
