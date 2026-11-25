@@ -54,12 +54,12 @@ jobs:
           latest_epoch=0
           [[ -n "$latest_created" ]] && latest_epoch="$(date -d "$latest_created" +%s)"
           age_seconds=$((now_epoch - latest_epoch))
-          # Recover same-day publication debt after a stale/failed cycle;
-          # concurrency still prevents duplicate renders.
-          # A cancelled run can represent an intentional quality stop. Never
-          # relaunch it after 60 seconds; the normal 6-hour stale-cycle rule
-          # still provides recovery without creating a render loop.
-          if [[ "$running_count" == "0" && ("$force_dispatch" == "true" || "$age_seconds" -ge 21600 || ("$latest_conclusion" == "failure" && "$age_seconds" -ge 60 && "$latest_attempt" -lt 3)) ]]; then
+          # Recover only from an explicitly forced dispatch or a completed,
+          # stale cycle. A recent queued/pending/in-progress run is never
+          # replaced, even if the Actions API reports its state inconsistently.
+          latest_completed="false"
+          [[ "$latest_status" == "completed" ]] && latest_completed="true"
+          if [[ "$force_dispatch" == "true" || ("$latest_completed" == "true" && "$age_seconds" -ge 21600) || ("$latest_completed" == "true" && "$latest_conclusion" == "failure" && "$age_seconds" -ge 60 && "$latest_attempt" -lt 3) ]]; then
             jq -n \
               --arg ref main \
               --arg task build-evergreen \
