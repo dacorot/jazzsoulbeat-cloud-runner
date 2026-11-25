@@ -205,6 +205,54 @@ jobs:
           progress.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
           print("Music search remains active; the next scheduled cycle will restart discovery.")
           PY
+      - name: Retry discovery until video material threshold or cycle limit
+        working-directory: agent
+        run: |
+          set -euo pipefail
+          ready() {
+            python - <<'PY'
+            import sqlite3
+            from pathlib import Path
+            db = Path("data/agent.db")
+            if not db.is_file():
+                raise SystemExit(1)
+            con = sqlite3.connect(str(db))
+            row = con.execute("SELECT COUNT(*), COALESCE(SUM(duration_seconds),0) FROM tracks WHERE approved=1 AND rights_verified=1").fetchone()
+            con.close()
+            count, seconds = int(row[0] or 0), float(row[1] or 0)
+            effective = seconds - max(0, count - 1) * 32
+            print(f"approved={count} raw_seconds={seconds:.2f} effective_seconds={effective:.2f}")
+            raise SystemExit(0 if effective >= 3600 else 1)
+            PY
+          }
+          for attempt in 1 2 3 4; do
+            echo "Autonomous music retry $attempt/4"
+            if ready; then
+              echo "Video material threshold reached."
+              break
+            fi
+            python main.py discover-ketsa --limit 100 || true
+            python main.py discover-incompetech || true
+            python main.py download-ketsa --limit 100 || true
+            python main.py download-incompetech || true
+            python -c 'import rights_audit; rights_audit.audit_ketsa()' || true
+            python main.py audit-incompetech-sources || true
+            python main.py audit-incompetech-track-pages || true
+            python -c 'import rights_audit; rights_audit.audit_incompetech()' || true
+            python main.py intake-library-growth
+            python ../scripts/autonomous_music_gate.py \
+              --input output/library-promotion/eligible-external.json \
+              --output output/library-promotion/autonomous-eligible.json \
+              --quarantine output/library-promotion/autonomous-quarantine.json \
+              --policy ../config/autonomous_learning.json \
+              --feedback output/learning/feedback.jsonl \
+              --model output/learning/model.json
+            if [[ -s output/library-promotion/autonomous-eligible.json ]] && jq -e 'length > 0' output/library-promotion/autonomous-eligible.json >/dev/null; then
+              python main.py promote-library --candidates output/library-promotion/autonomous-eligible.json --report output/library-promotion/import-report.json
+              python main.py drive-push-library
+            fi
+          done
+          ready || echo "Material threshold not reached; scheduled search loop remains active."
       - name: Persist only growth reports to private Drive
         if: always()
         working-directory: agent
