@@ -362,9 +362,24 @@ jobs:
         working-directory: agent
         run: python main.py self-test
 
+      - name: Render short visual proof before longform
+        id: visual_proof
+        if: ${{ steps.restore_library.outcome == 'success' && env.TASK == 'build-evergreen' && steps.production_gate.outputs.eligible == 'true' }}
+        working-directory: agent
+        run: |
+          set -euo pipefail
+          proof_image="$(find assets/visual-agents/approved-style-samples -type f \( -name '*.png' -o -name '*.jpg' -o -name '*.jpeg' \) | sort | head -n 1)"
+          test -n "$proof_image" || { echo "No approved visual proof image found"; exit 1; }
+          mkdir -p output/visual-proof
+          ffmpeg -nostdin -y -loglevel error -f lavfi -i anullsrc=channel_layout=stereo:sample_rate=48000 -t 10 output/visual-proof/silence.wav
+          ffmpeg -nostdin -y -loglevel error -loop 1 -i "$proof_image" -i output/visual-proof/silence.wav \
+            -t 10 -vf "scale=2560:1440:force_original_aspect_ratio=decrease,pad=2560:1440:(ow-iw)/2:(oh-ih)/2" \
+            -c:v libx264 -preset veryfast -pix_fmt yuv420p -c:a aac -ar 48000 -ac 2 output/visual-proof/proof.mp4
+          ffprobe -v error -show_entries stream=width,height,codec_name -of json output/visual-proof/proof.mp4
+
       - name: Build an evergreen or seasonal video
         id: build_video
-        if: ${{ steps.restore_library.outcome == 'success' && env.TASK == 'build-evergreen' && steps.production_gate.outputs.eligible == 'true' }}
+        if: ${{ steps.restore_library.outcome == 'success' && env.TASK == 'build-evergreen' && steps.production_gate.outputs.eligible == 'true' && steps.visual_proof.outcome == 'success' }}
         working-directory: agent
         env:
           MIX_HOURS: ${{ env.HOURS }}
