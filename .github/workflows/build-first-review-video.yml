@@ -84,7 +84,7 @@ jobs:
           python main.py drive-status
           python main.py library-status
 
-      - name: Start Deming PDCA cycle for the scheduled one-hour private video build
+      - name: Start Deming PDCA cycle for the scheduled two-hour private video build
         id: pdca_start
         uses: ./.github/actions/pdca-start
         with:
@@ -92,7 +92,7 @@ jobs:
           objective: Produce and verify a two-hour private Jazz Soul Beat video when the approved music gate permits it
           drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
 
-      - name: Check approved one-hour library gate
+      - name: Check approved two-hour library gate
         id: library_gate
         working-directory: agent
         run: |
@@ -120,7 +120,7 @@ jobs:
       - name: Skip safely until enough approved music exists
         if: ${{ steps.library_gate.outputs.ready != 'true' }}
         run: |
-          echo "No automatic build until the approved, rights-verified library contains one full hour. No repeats or shortened tracks."
+          echo "No automatic build until the approved, rights-verified library contains two full hours. No repeats or shortened tracks."
 
       - name: Generate two-hour review video from approved real tracks
         if: ${{ steps.library_gate.outputs.ready == 'true' }}
@@ -168,7 +168,7 @@ jobs:
           streams = data["streams"]
           video = next(s for s in streams if s["codec_type"] == "video")
           audio = next(s for s in streams if s["codec_type"] == "audio")
-          assert 3590 <= duration <= 3610, duration
+          assert 7190 <= duration <= 7210, duration
           assert video["codec_name"] == "h264" and (video["width"], video["height"]) == (2560, 1440), video
           assert audio["codec_name"] == "aac" and audio["channels"] == 2, audio
           print(f"PASS: {duration:.2f}s | H.264 2560x1440 QHD | AAC stereo | {data['format']['size']} bytes")
@@ -201,7 +201,7 @@ jobs:
           python main.py drive-push
           python main.py drive-status
 
-      - name: Verify and close daily video-build PDCA cycle
+      - name: Verify and close two-hour video-build PDCA cycle
         if: ${{ always() && steps.pdca_start.outcome == 'success' }}
         uses: ./.github/actions/pdca-finish
         with:
@@ -212,7 +212,7 @@ jobs:
           evidence: 'GitHub Actions run ${{ github.run_id }}; video gate and private review package'
           drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
 
-      - name: Confirm publication safety
+      - name: Confirm publication safety for private review
         run: |
           echo "Public publishing is never performed by this workflow."
           echo "No YouTube upload is performed automatically, even if OAuth credentials exist."
