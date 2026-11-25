@@ -41,7 +41,7 @@ jobs:
         run: |
           python -m compileall -q .
           python -m pytest -q tests
-      - name: Restore private review mix and candidate anime image from Drive
+      - name: Restore private review mix and approved non-anime character image from Drive
         working-directory: agent
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
@@ -82,12 +82,12 @@ jobs:
           image_path = Path(required[3])
           image_sha256 = hashlib.sha256(image_path.read_bytes()).hexdigest()
           if image_sha256 != "caaf59a4eda49938878424a0bf209c65804a52dcb368a5fcac0f32ad3d772f90":
-              raise RuntimeError("The restored visual is not the approved male anime reference.")
+              raise RuntimeError("The restored visual is not the approved character reference.")
           with Image.open(image_path) as im:
               if im.format != "JPEG" or im.size != (2560, 1440):
                   raise RuntimeError(f"Unexpected approved-reference format or dimensions: {im.format} {im.size}")
           print({"restored": result, "inputs": required, "excluded_guest_performer": "USUAN2300005",
-                 "approved_male_reference_sha256": image_sha256, "resolution": [2560, 1440]})
+                 "approved_character_reference_sha256": image_sha256, "resolution": [2560, 1440]})
           PY
       - name: Render a two-minute private 60-second-loop test
         working-directory: agent
@@ -110,7 +110,7 @@ jobs:
           )
           (out / "REVIEW_ONLY_NOTICE.txt").write_text(
               "PRIVATE REVIEW ONLY. This is a two-minute technical loop test, not a final video. "
-              "It uses the approved original male anime character reference, hash-verified from private Drive. "
+              "It uses the approved original character reference, hash-verified from private Drive. "
               "The visual cycle animates only existing city lights and steam above the pictured cup, plus subtle dust. "
               "The music remains pending track-level rights and human listening approval. "
               "No YouTube upload, public sharing, or publication was attempted.\n",
