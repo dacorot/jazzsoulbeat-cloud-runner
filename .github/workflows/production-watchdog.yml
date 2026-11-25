@@ -53,7 +53,10 @@ jobs:
           age_seconds=$((now_epoch - latest_epoch))
           # Recover same-day publication debt after a stale/failed cycle;
           # concurrency still prevents duplicate renders.
-          if [[ "$running_count" == "0" && ("$force_dispatch" == "true" || "$age_seconds" -ge 21600 || (("$latest_conclusion" == "failure" || "$latest_conclusion" == "cancelled") && "$age_seconds" -ge 60 && "$latest_attempt" -lt 3)) ]]; then
+          # A cancelled run can represent an intentional quality stop. Never
+          # relaunch it after 60 seconds; the normal 6-hour stale-cycle rule
+          # still provides recovery without creating a render loop.
+          if [[ "$running_count" == "0" && ("$force_dispatch" == "true" || "$age_seconds" -ge 21600 || ("$latest_conclusion" == "failure" && "$age_seconds" -ge 60 && "$latest_attempt" -lt 3)) ]]; then
             jq -n \
               --arg ref main \
               --arg task build-evergreen \
@@ -75,7 +78,7 @@ jobs:
             echo "conclusion=$latest_conclusion"
             echo "run_id=$latest_run_id"
             echo "attempt=$latest_attempt"
-            echo "retryable=$([[ ("$latest_conclusion" == "failure" || "$latest_conclusion" == "cancelled") && "$latest_attempt" -lt 3 ]] && echo true || echo false)"
+            echo "retryable=$([[ "$latest_conclusion" == "failure" && "$latest_attempt" -lt 3 ]] && echo true || echo false)"
           } >> "$GITHUB_OUTPUT"
 
       - name: Recover bounded failed run
