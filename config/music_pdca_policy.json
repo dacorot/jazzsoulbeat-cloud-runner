@@ -1,0 +1,49 @@
+{
+  "policy_id": "music-quality-pdca-v1",
+  "objective": "Improve every accepted song and video through evidence-bound continuous learning.",
+  "baseline": {
+    "reference_run_id": "45646476397",
+    "reference_title": "Moonlit Coffeehouse",
+    "decision": "APPROVED_AS_BASELINE",
+    "rule": "The baseline is a minimum floor, never a target ceiling."
+  },
+  "cycle": {
+    "plan": [
+      "define the musical hypothesis and intended listener experience",
+      "select genre, tempo, harmonic language, ensemble and arrangement goals",
+      "write measurable acceptance criteria before generation"
+    ],
+    "do": [
+      "generate or arrange a complete instrumental track",
+      "render editable stems when available",
+      "mix with stable dynamics and controlled crossfades"
+    ],
+    "check": [
+      "human listening is mandatory",
+      "compare against the approved baseline",
+      "check composition, harmony, groove, instrumentation, realism, continuity and technical audio",
+      "reject any track that merely matches the baseline"
+    ],
+    "act": [
+      "record the listener decision and reasons",
+      "update prompts, arrangement rules, model settings and QA thresholds",
+      "promote only a clearly improved track",
+      "carry unresolved defects into the next plan"
+    ]
+  },
+  "hard_rejections": [
+    "sounds obviously synthetic or like a demo",
+    "lacks professional-band interaction",
+    "has abrupt rhythm, key, energy or instrumentation changes",
+    "has no meaningful musical development",
+    "is equal to the current baseline without a documented improvement"
+  ],
+  "approval_states": [
+    "REJECTED",
+    "APPROVED_AS_BASELINE",
+    "APPROVED_IMPROVED",
+    "APPROVED_FOR_VIDEO_REVIEW",
+    "APPROVED_FOR_PUBLICATION"
+  ],
+  "never_skip_check_or_act": true
+}
