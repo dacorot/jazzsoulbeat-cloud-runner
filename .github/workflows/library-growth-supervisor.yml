@@ -207,10 +207,12 @@ jobs:
           PY
       - name: Retry discovery until video material threshold or cycle limit
         working-directory: agent
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
         run: |
           set -euo pipefail
           ready() {
-            python -c 'import sqlite3; from pathlib import Path; db=Path("data/agent.db"); con=sqlite3.connect(str(db)); count,seconds=con.execute("SELECT COUNT(*), COALESCE(SUM(duration_seconds),0) FROM tracks WHERE approved=1 AND rights_verified=1").fetchone(); con.close(); effective=float(seconds or 0)-max(0,int(count or 0)-1)*32; print(f"approved={int(count or 0)} raw_seconds={float(seconds or 0):.2f} effective_seconds={effective:.2f}"); raise SystemExit(0 if effective >= 3600 else 1)' 
+            python -c 'import sqlite3; from pathlib import Path; db=Path("data/agent.db"); con=sqlite3.connect(str(db)); count,seconds=con.execute("SELECT COUNT(*), COALESCE(SUM(duration),0) FROM tracks WHERE approved=1 AND rights_verified=1").fetchone(); con.close(); effective=float(seconds or 0)-max(0,int(count or 0)-1)*32; print(f"approved={int(count or 0)} raw_seconds={float(seconds or 0):.2f} effective_seconds={effective:.2f}"); raise SystemExit(0 if effective >= 3600 else 1)' 
           }
           for attempt in 1 2 3 4; do
             echo "Autonomous music retry $attempt/4"
