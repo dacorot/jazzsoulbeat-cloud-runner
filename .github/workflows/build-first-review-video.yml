@@ -1,9 +1,10 @@
 name: Build new private Jazz Soul Beat review videos
 
 on:
-  # Legacy review builder retained for manual reproducibility only.
-  # Scheduled drafts are owned by private-cloud-agent.yml to avoid duplicated Drive writes.
   workflow_dispatch:
+  schedule:
+    # Video-first production cadence: one private two-hour build every 48 hours.
+    - cron: "0 13 */2 * *"
 
 permissions:
   contents: read
@@ -15,7 +16,7 @@ concurrency:
 
 jobs:
   build-and-store:
-    name: Build a new one-hour licensed jazz/soul review mix
+    name: Build a new two-hour licensed jazz/soul review mix
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
@@ -87,8 +88,8 @@ jobs:
         id: pdca_start
         uses: ./.github/actions/pdca-start
         with:
-          task: first-video-production
-          objective: Produce and verify a one-hour private Jazz Soul Beat video when the approved music gate permits it
+          task: two-hour-video-production
+          objective: Produce and verify a two-hour private Jazz Soul Beat video when the approved music gate permits it
           drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
 
       - name: Check approved one-hour library gate
@@ -110,7 +111,7 @@ jobs:
               c.close()
           durations = [float(row["duration"]) for row in rows]
           usable = sum(durations) - DEFAULT_CROSSFADE_SECONDS * max(0, len(durations)-1)
-          ready = bool(durations) and usable >= 3600
+          ready = bool(durations) and usable >= 7200
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
               f.write("ready=" + ("true" if ready else "false") + chr(10))
           print(f"Eligible approved tracks: {len(durations)}; usable seconds: {usable:.1f}; ready: {ready}")
@@ -121,7 +122,7 @@ jobs:
         run: |
           echo "No automatic build until the approved, rights-verified library contains one full hour. No repeats or shortened tracks."
 
-      - name: Generate one-hour review video from approved real tracks
+      - name: Generate two-hour review video from approved real tracks
         if: ${{ steps.library_gate.outputs.ready == 'true' }}
         working-directory: agent
         env:
@@ -141,7 +142,7 @@ jobs:
             python main.py drive-push-visual-assets
             if [ "$SCENE_GENERATION_STATUS" -ne 0 ]; then exit "$SCENE_GENERATION_STATUS"; fi
           fi
-          python main.py make --hours 1 --auto
+          python main.py make --hours 2 --auto
 
       - name: Verify video, thumbnail, metadata, and licensed music provenance
         id: video_verify
@@ -205,7 +206,7 @@ jobs:
         uses: ./.github/actions/pdca-finish
         with:
           cycle_id: ${{ steps.pdca_start.outputs.cycle_id }}
-          result_json: '{"workflow":"first-review-video","run_id":"${{ github.run_id }}","approved_music_gate":"${{ steps.library_gate.outputs.ready }}","job_status":"${{ job.status }}"}'
+          result_json: '{"workflow":"two-hour-review-video","run_id":"${{ github.run_id }}","approved_music_gate":"${{ steps.library_gate.outputs.ready }}","job_status":"${{ job.status }}"}'
           checks_json: >-
             [{"name":"approved_library_gate_executed","passed":${{ steps.library_gate.outcome == 'success' }}},{"name":"video_media_validation_or_safe_gate_block","passed":${{ steps.library_gate.outputs.ready != 'true' || steps.video_verify.outcome == 'success' }}},{"name":"private_drive_persistence_or_no_build_required","passed":${{ steps.library_gate.outputs.ready != 'true' || steps.persist_review.outcome == 'success' }}},{"name":"youtube_upload_prohibited","passed":true}]
           evidence: 'GitHub Actions run ${{ github.run_id }}; video gate and private review package'
@@ -230,10 +231,10 @@ jobs:
             description="Private review build failed; inspect workflow logs."
           elif [ "$READY" != "true" ]; then
             state=pending
-            description="Waiting for one complete hour of approved, rights-verified music; no video generated."
+            description="Waiting for two complete hours of approved, rights-verified music; no video generated."
           else
             state=success
-            description="New private Drive review video generated; no YouTube upload performed."
+            description="New private Drive two-hour review video generated; no YouTube upload performed."
           fi
           gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
             -f state="$state" \
