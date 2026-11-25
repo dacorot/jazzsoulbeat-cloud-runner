@@ -21,5 +21,6 @@
     "no_long_render_before_short_proof_pass",
     "thumbnail_must_be_readable_at_mobile_size"
   ],
+  "rain_policy": "AUDITION_ONLY_UNTIL_EXTERNAL_MASKED_COMPOSITING_TOOL_PASSES_HUMAN_REVIEW",
   "publication": "DISABLED_UNTIL_OWNER_APPROVAL"
 }

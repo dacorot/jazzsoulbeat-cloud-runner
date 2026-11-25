@@ -42,7 +42,10 @@ jobs:
           latest_conclusion="$(printf '%s' "$latest" | jq -r '.conclusion // ""')"
           latest_run_id="$(printf '%s' "$latest" | jq -r '.id // ""')"
           latest_attempt="$(printf '%s' "$latest" | jq -r '.run_attempt // 0')"
-          running_count="$(printf '%s' "$runs" | jq '[.workflow_runs[] | select(.status == "in_progress" or .status == "queued")] | length')"
+          # GitHub can hold a dispatch in `pending` while the concurrency
+          # group is occupied. Count it as active or the watchdog will launch
+          # a duplicate production run.
+          running_count="$(printf '%s' "$runs" | jq '[.workflow_runs[] | select(.status == "in_progress" or .status == "queued" or .status == "pending")] | length')"
           force_dispatch="false"
           if [[ "${{ github.event_name }}" == "push" && "$HEAD_COMMIT_MESSAGE" == *"[dispatch-private-production]"* ]]; then
             force_dispatch="true"
