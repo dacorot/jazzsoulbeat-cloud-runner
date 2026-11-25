@@ -45,7 +45,7 @@ on:
       genre:
         description: "Género único del video"
         required: true
-        default: lofi
+        default: jazz
         type: choice
         options:
           - jazz
