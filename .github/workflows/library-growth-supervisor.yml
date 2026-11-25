@@ -282,4 +282,4 @@ jobs:
         if: always()
         run: |
           echo "Restricted supervisor: read-only agent checkout, source discovery and output/library-growth only."
-          echo "No tracks/library.csv, data/agent.db, production render or YouTube action was modified."
+          echo "Only hash-verified library deltas and private Drive state may be updated; no production render or YouTube action is performed."
