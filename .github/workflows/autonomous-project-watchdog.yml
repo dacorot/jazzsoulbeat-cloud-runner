@@ -75,7 +75,8 @@ jobs:
           else:
               m = json.loads(manifest_path.read_text(encoding="utf-8"))
               rules, motion = m.get("visual_rules", {}), m.get("motion", {})
-              check("anime_style", "anime" in rules.get("style", "").lower(), rules.get("style"))
+              style = rules.get("style", "")
+              check("non_anime_style", "anime" not in style.lower(), style)
               check("no_real_people", rules.get("real_people") is False, rules.get("real_people"))
               check("48_scene_target", m.get("season_or_category_target") == 48, m.get("season_or_category_target"))
               check("atmospheric_motion", motion.get("effect") == "layered atmospheric animation", motion.get("effect"))

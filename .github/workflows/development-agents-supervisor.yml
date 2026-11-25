@@ -1,6 +1,10 @@
 name: Jazz Soul Beat development agents supervisor
 # Private scope fix: 5453ff7b9ff77bfc349d4f3efce42397df0b0464
-# Visual contract gate: require 48 independent atmospheric anime scenes\n# Brand guardian: enforce channel identity across every category\n# Production delivery: require a real, persisted, reviewable artifact per cycle\n# Private agent render contract fix: 1672395e4516b51c737dbc00c184c6cea5dda197\n# Visual contract batch guard repair: 6c6aeba7d93df30f1549b84722bf6b08dcd59c3a
+# Visual contract gate: require 48 independent atmospheric non-anime scenes.
+# Brand guardian: enforce channel identity across every category.
+# Production delivery: require a real, persisted, reviewable artifact per cycle.
+# Private agent render contract fix: 1672395e4516b51c737dbc00c184c6cea5dda197.
+# Visual contract batch guard repair: 6c6aeba7d93df30f1549b84722bf6b08dcd59c3a.
 
 on:
   workflow_dispatch:
