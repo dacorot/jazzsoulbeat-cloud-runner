@@ -379,6 +379,7 @@ jobs:
 
       - name: Build an evergreen or seasonal video
         id: build_video
+        timeout-minutes: 20
         if: ${{ steps.restore_library.outcome == 'success' && env.TASK == 'build-evergreen' && steps.production_gate.outputs.eligible == 'true' && steps.visual_proof.outcome == 'success' }}
         working-directory: agent
         env:
@@ -546,18 +547,33 @@ jobs:
           python - <<'PY'
           import hashlib, json, os
           from pathlib import Path
+          import traceback
           import autonomy
           import youtube_upload
 
           run_dir = Path(os.environ["JSB_PRODUCTION_RUN_DIR"])
           video = run_dir / "video.mp4"
-          metadata = json.loads((run_dir / "metadata.json").read_text(encoding="utf-8"))
+          metadata_path = run_dir / "metadata.json"
+          thumbnail = run_dir / "thumb.jpg"
+          print(json.dumps({
+              "run_dir": str(run_dir),
+              "video_exists": video.is_file(),
+              "video_bytes": video.stat().st_size if video.is_file() else 0,
+              "metadata_exists": metadata_path.is_file(),
+              "thumbnail_exists": thumbnail.is_file(),
+          }))
+          metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
           digest = hashlib.sha256(video.read_bytes()).hexdigest()
           approval_id = "private-auto-" + digest[:20]
-          video_id = youtube_upload.upload(
-              video, metadata["title"], metadata["description"], metadata["tags"],
-              run_dir / "thumb.jpg", approval_id=approval_id,
-          )
+          try:
+              video_id = youtube_upload.upload(
+                  video, metadata["title"], metadata["description"], metadata["tags"],
+                  thumbnail, approval_id=approval_id,
+              )
+          except Exception as exc:
+              print(f"YouTube private upload failed: {type(exc).__name__}: {exc}")
+              traceback.print_exc()
+              raise
           (run_dir / "YOUTUBE_PRIVATE_UPLOAD.json").write_text(json.dumps({
               "status": "UPLOADED_PRIVATE", "video_id": video_id,
               "video_sha256": digest, "title": metadata["title"],
