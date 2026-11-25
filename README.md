@@ -4,7 +4,7 @@ Controlador público mínimo para ejecutar el agente privado `dacorot/jazzsoulbe
 
 ## Estado operativo verificado
 
-- El workflow `.github/workflows/private-cloud-agent.yml` está integrado en `main`: admite ejecución manual, marcador `PRIVATE_CLOUD_AGENT_START.md` y programación lunes/miércoles/viernes a las 06:00 de Colombia (11:00 UTC). En ejecución programada usa `build-evergreen` con gate estricto; si no hay música aprobada suficiente, termina sin render ni publicación.
+- El workflow `.github/workflows/private-cloud-agent.yml` está integrado en `main`: admite ejecución manual, marcador `PRIVATE_CLOUD_AGENT_START.md` y producción programada cada 48 horas a las 06:00 de Colombia (11:00 UTC). Usa `build-evergreen` con gate estricto; si no hay música aprobada suficiente, termina sin render.
 - Usa `ubuntu-latest`, runner estándar en este repositorio público. No usa larger runners, servicios de pago ni facturación habilitada por este proyecto.
 - Accede al repositorio privado con `PRIVATE_REPO_READ_TOKEN`, limitado a lectura.
 - Restaura `tracks/`, `assets/visual-agents/`, `data/agent.db` y `output/` desde Google Drive; el flujo de producción solo recupera el audio de biblioteca aprobado y referenciado por manifiestos.
@@ -44,7 +44,7 @@ La tarea `self-test` genera únicamente el video sintético de comprobación; no
 - `music-producer.yml` solo se ejecuta manualmente o mediante su marcador de inicio; intenta generar un instrumental original de 120 segundos con el Space público ACE-Step. Si el servicio gratuito no responde o cambia su API, falla sin recurrir a proveedores de pago. No equivale todavía a producción musical autónoma de larga duración.
 - `private-cloud-agent.yml` es manual y conserva el flujo de restauración/guardado en Drive. `parallel-production.yml` también queda manual: cada ejecución reúne auditoría de derechos, generación visual y render de varias horas, por lo que no debe dispararse por cada cambio de código.
 - La ejecución automática no garantiza puntualidad: GitHub puede retrasar o descartar schedules con alta carga y desactiva schedules en repositorios públicos tras 60 días sin actividad.
-- El workflow no recibe `YOUTUBE_TOKEN_JSON`, no ejecuta `--upload` y no publica videos. Los resultados se guardan únicamente en Google Drive privado.
+- Tras superar render, captura, QA y persistencia, el workflow puede subir el artefacto exacto a YouTube como privado. La publicación pública permanece bloqueada y requiere aprobación independiente.
 - No se aprueban pistas automáticamente. La licencia comercial, autoridad del publicador y derechos de composición, interpretación y master requieren evidencia y revisión humana.
 - No se deben guardar secretos, tokens, audios, bases de datos ni videos en este repositorio público.
 - No activar pagos, runners grandes, suscripciones ni servicios externos de pago.
@@ -55,7 +55,7 @@ La tarea `self-test` genera únicamente el video sintético de comprobación; no
 1. Abre [el workflow privado](https://github.com/dacorot/jazzsoulbeat-cloud-runner/actions/workflows/private-cloud-agent.yml).
 2. Selecciona **Run workflow** en la rama `main`.
 3. Elige la tarea y los parámetros que correspondan. Para validar una rama sin producir música, usa `self-test` y establece `agent_ref` a la rama de trabajo.
-4. Revisa el resultado en la ejecución. No se realiza ninguna publicación en YouTube.
+4. Revisa el resultado en la ejecución. Una subida privada solo ocurre después de todos los gates; nunca se publica automáticamente.
 
 El runner es efímero: no conserva archivos después del trabajo. La continuidad depende de Google Drive y de los workflows programados/manuales. Esto ofrece ejecución por horarios, no un proceso 24/7 permanentemente activo. La producción se bloquea mientras no exista una hora completa de música aprobada con derechos verificados. Todos los workflows que escriben en la base SQLite o en la carpeta de estado de Drive comparten el mismo grupo de concurrencia; así se evita que dos ejecuciones sobrescriban estados mutuamente.
 

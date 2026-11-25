@@ -9,7 +9,8 @@ Zona horaria humana: Colombia (America/Bogota, UTC-5). Los cron de GitHub se exp
 ## Cadencia automatizada
 
 - **Cada 6 horas, todos los días:** preflight del agente privado: restaurar el estado necesario, compilar, ejecutar pruebas, self-test técnico, comprobar artefactos y persistir únicamente los resultados QA permitidos. Esta ejecución es el pulso de control de salud.
-- **Todos los días, 07:00 Colombia:** intentar construir un nuevo video de revisión de una hora. Solo continúa si existe una hora completa de música aprobada y con derechos verificados; de lo contrario registra el bloqueo y no genera un video incompleto.
+- **Cada 48 horas, 06:00 Colombia:** intentar construir un video evergreen de dos horas. Solo continúa si existe una biblioteca completa de música aprobada y con derechos verificados; de lo contrario registra el bloqueo y no genera un video incompleto.
+- **Cuatro veces al día:** consultar YouTube Analytics en modo lectura, guardar snapshots y alimentar el ciclo de aprendizaje; si la API está deshabilitada, conservar el diagnóstico bloqueado sin inventar métricas.
 - **Todos los días, 07:30 Colombia:** actualizar la cola de descubrimiento musical y sus métricas. Los candidatos permanecen pendientes; descubrir no equivale a aprobar.
 - **Semanalmente:** auditorías de procedencia y derechos de catálogos en revisión; informe KPI de 7 días y comparativos móviles de 30 y 90 días.
 - **Mensualmente:** refresco de catálogos oficiales Ketsa e Incompetech.
@@ -52,7 +53,7 @@ Un gate pendiente o fallido debe quedar explícito; nunca transformarlo en aprob
 
 ## Criterios de producción
 
-- Primer video: 60 minutos. Los posteriores alternan duraciones de 2 y 3 horas según la biblioteca aprobada.
+- Producción objetivo: videos de dos horas cada 48 horas; no se publica un render que no pase la validación completa.
 - No repetir pistas dentro de un video ni acelerar, recortar o alargar canciones para rellenar.
 - Solo música aprobada y con derechos verificados.
 - Audio continuo, transiciones limpias y niveles consistentes.
