@@ -28,12 +28,12 @@
     "audio_optional_for_visual_only_preview": true
   },
   "motion_contract": {
-    "animated_layers": ["coffee_steam", "approved_plate_rain_highlights"],
+    "animated_layers": ["coffee_steam", "window_reflections"],
     "static_layers": ["approved_base_plate"],
     "camera": "locked",
-    "rain": "integrated_plate_only",
+    "rain": "audition_only_until_external_masked_compositing_human_review",
     "rain_mask_required": true,
-    "rain_placement": "verified_window_mask_only",
+    "rain_placement": "not_in_production",
     "loop_seconds": 20,
     "fps": 30,
     "resolution": [1920, 1080]

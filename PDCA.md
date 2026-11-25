@@ -35,7 +35,7 @@ No declarar una tarea terminada por haber ejecutado un comando. Verificar:
 2. Duración, resolución, códecs y reproducción completa cuando aplique.
 3. Identidad musical frente al manifiesto y calidad de mezcla.
 4. Evidencia de derechos, autoridad del uploader, composición, interpretación y grabación.
-5. Calidad visual, estilo anime adulto, continuidad de personajes y ausencia de personas reales.
+5. Calidad visual, ilustración editorial contemporánea no anime, continuidad de personajes y ausencia de personas reales.
 6. Movimiento ambiental y continuidad del bucle, sin saltos ni parpadeos.
 7. Metadatos, thumbnail, procedencia y persistencia privada.
 8. Pruebas automatizadas y regresión de las correcciones.
@@ -57,8 +57,8 @@ Un gate pendiente o fallido debe quedar explícito; nunca transformarlo en aprob
 - Solo música aprobada y con derechos verificados.
 - Audio continuo, transiciones limpias y niveles consistentes.
 - Video H.264 QHD 2560×1440, audio AAC estéreo.
-- Arte original anime adulto, sofisticado y cinematográfico; continuidad de personajes.
-- Movimiento ambiental perceptible y bucles visuales sin saltos.
+- Arte original editorial adulto, sofisticado y cinematográfico; continuidad de personajes; nunca anime.
+- Movimiento ambiental localizado y verificado; cámara bloqueada y bucles visuales sin saltos. Lluvia, niebla, nieve y partículas de pantalla completa quedan solo en audición hasta superar una revisión humana profesional.
 - Metadatos, thumbnail y manifiesto de procedencia completos.
 
 ## Registro de cada ciclo
@@ -97,7 +97,7 @@ The agent maintains a historical KPI ledger in `data/agent.db`. Every PDCA cycle
 |---|---|---|
 | Production quality | Deliverables that pass all required acceptance checks | 100% before marking VERIFIED |
 | Production quality | Audio/video integrity, duration, codec, continuity and metadata checks | 100% of applicable checks pass |
-| Creative identity | Compliance with approved adult anime visual identity and character continuity | 100% of audited outputs |
+| Creative identity | Compliance with approved non-anime editorial visual identity and character continuity | 100% of audited outputs |
 | Creative identity | Seamless loop and perceptible environmental motion | 100% of audited scenes |
 | Autonomy | Authorized task completion rate | Initial target ≥90%; measured, not assumed |
 | Autonomy | Unjustified blocks and loss of operational continuity | 0 |

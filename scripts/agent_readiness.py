@@ -69,7 +69,7 @@ def _visual(root, image):
         fixture.write_bytes(b"readiness fixture")
         plan = create_plan(fixture)
     assert plan["profile"] == "single_approved_plate_integrated_motion"
-    assert plan["animated_layers"] == ["coffee_steam", "approved_plate_rain_highlights"]
+    assert plan["animated_layers"] == ["coffee_steam", "window_reflections"]
     assert plan["camera"] == "locked"
     return {"profile": plan["profile"], "base_image_sha256": plan["base_image_sha256"]}
 

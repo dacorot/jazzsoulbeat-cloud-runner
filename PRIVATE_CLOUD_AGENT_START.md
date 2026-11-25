@@ -194,7 +194,7 @@ Exact H264 duration re-encode marker: 2026-11-19T07:00:00Z
 Requested-duration contract repair marker: 2026-11-19T08:00:00Z
 
 
-Visual repair trigger: 2026-11-19 — locked camera, no zoom, reference contract integrated, explicit rain/fog/steam layers required.
+Visual repair trigger: 2026-11-19 — locked camera, no zoom, reference contract integrated, verified localized steam/reflection layers only; rain/fog/snow remain audition-only until professional masked compositing passes human review.
 
 Visual repair retry: 2026-11-19 — tests aligned with locked-camera contract and bounded Drive folder fallback.
 
