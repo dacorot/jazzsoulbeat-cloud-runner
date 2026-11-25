@@ -40,8 +40,30 @@ jobs:
         env:
           YOUTUBE_TOKEN_JSON: ${{ secrets.YOUTUBE_TOKEN_JSON }}
         run: |
+          set +e
           END_DATE=$(date -u +%F)
-          python youtube_analytics.py --all-recent --days 7 --end-date "$END_DATE" --output-dir output/youtube-analytics
+          mkdir -p output/youtube-analytics
+          python youtube_analytics.py --all-recent --days 7 --end-date "$END_DATE" --output-dir output/youtube-analytics 2>&1 | tee output/youtube-analytics/analytics-run.log
+          code=${PIPESTATUS[0]}
+          if [ "$code" -ne 0 ]; then
+            python - "$END_DATE" "$code" <<'PY'
+          import json, sys
+          from pathlib import Path
+          end_date, code = sys.argv[1], int(sys.argv[2])
+          Path("output/youtube-analytics/ANALYTICS_BLOCKED.json").write_text(
+              json.dumps({
+                  "status": "BLOCKED_ANALYTICS_API",
+                  "observed_end_date": end_date,
+                  "exit_code": code,
+                  "message": "YouTube Analytics API is unavailable or disabled for the configured Google Cloud project.",
+                  "action_required": "Enable youtubeanalytics.googleapis.com in Google Cloud project 1037178008003, then wait for propagation.",
+                  "publication": "NO_UPLOAD_OR_METADATA_CHANGE",
+              }, indent=2) + "\n", encoding="utf-8"
+          )
+          PY
+            echo "::warning::YouTube Analytics API is unavailable; a blocked diagnostic was persisted and no publication action occurred."
+          fi
+          exit 0
       - name: Persist private analytics snapshots
         working-directory: agent
         env:
