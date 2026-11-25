@@ -46,7 +46,19 @@ jobs:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
         run: python main.py drive-pull-state
 
+      - name: Skip cleanly when no historical delivery manifest exists
+        id: delivery_manifest
+        run: |
+          if [[ -f agent/tracks/generated/jazz-only-10-videos-2026-11-22/delivery-manifest.json ]]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+            echo "Historical delivery manifest found."
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "No historical delivery manifest; no review notifications are pending."
+          fi
+
       - name: Create hash-bound review requests
+        if: ${{ steps.delivery_manifest.outputs.available == 'true' }}
         run: |
           python scripts/prepare_delivery_video_reviews.py \
             --manifest agent/tracks/generated/jazz-only-10-videos-2026-11-22/delivery-manifest.json \
@@ -55,6 +67,7 @@ jobs:
             --plan agent/output/original-music/delivery-video-reviews/review-plan.json
 
       - name: Notify Telegram with private review instructions
+        if: ${{ steps.delivery_manifest.outputs.available == 'true' }}
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           JAZZ_SOUL_BEAT_TELEGRAM_CHAT_ID: ${{ secrets.JAZZ_SOUL_BEAT_TELEGRAM_CHAT_ID }}
@@ -72,6 +85,7 @@ jobs:
           PY
 
       - name: Persist review ledger privately
+        if: ${{ steps.delivery_manifest.outputs.available == 'true' }}
         working-directory: agent
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
