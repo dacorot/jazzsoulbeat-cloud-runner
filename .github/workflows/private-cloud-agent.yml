@@ -5,8 +5,8 @@ on:
     paths:
       - "PRIVATE_CLOUD_AGENT_START.md"
   schedule:
-    # Three private production drafts weekly: Monday, Wednesday and Friday at 06:00 Colombia (UTC-5).
-    - cron: "0 11 * * 1,3,5"
+    # One private two-hour production cycle every 48 hours (06:00 Colombia / 11:00 UTC).
+    - cron: "0 11 */2 * *"
   workflow_dispatch:
     inputs:
       task:
@@ -56,7 +56,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: jazz-soul-beat-shared-private-drive-state
+  group: jazz-soul-beat-video-production
   cancel-in-progress: false
 
 jobs:
