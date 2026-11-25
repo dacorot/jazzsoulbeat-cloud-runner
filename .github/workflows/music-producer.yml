@@ -10,7 +10,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: jazz-soul-beat-shared-private-drive-state
+  group: jazz-soul-beat-music-production
   cancel-in-progress: false
 jobs:
   produce:
