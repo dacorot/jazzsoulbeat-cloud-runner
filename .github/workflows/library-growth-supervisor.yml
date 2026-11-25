@@ -148,7 +148,7 @@ jobs:
                           if identity:
                               seen.add(identity)
                           rows.append(row)
-          approved=[r for r in rows if (r.get("approved") or "").lower() in {"1","true","yes"} and (r.get("rights_verified") or "").lower() in {"1","true","yes"}]
+          approved=[r for r in rows if str(r.get("approved") or "").lower() in {"1","true","yes"} and str(r.get("rights_verified") or "").lower() in {"1","true","yes"}]
           ladder = [500, 600, 700, 800, 900, 1000]
           from playlist_organizer import classify_playlists
           playlist_counts={}
