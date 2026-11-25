@@ -188,7 +188,14 @@ jobs:
           import json
           from pathlib import Path
           progress = Path("output/library-growth/target-progress.json")
-          data = json.loads(progress.read_text(encoding="utf-8")) if progress.is_file() else {}
+          if progress.is_file():
+              try:
+                  data = json.loads(progress.read_text(encoding="utf-8"))
+              except json.JSONDecodeError:
+                  # A stale concatenated report must not stop the search loop.
+                  data = {"recovered_from_malformed_progress": True}
+          else:
+              data = {}
           data.update({
               "search_loop": "ACTIVE",
               "empty_result_action": "RESTART_ON_NEXT_SCHEDULED_CYCLE",
