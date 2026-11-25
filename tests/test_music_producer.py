@@ -66,7 +66,7 @@ class ProducerTests(unittest.TestCase):
         source = Path(self.temp.name) / "external-output.mp3"
         source.write_bytes(b"faked audio bytes" * 9000)
         probe = {
-            "format": {"duration": "180.02"},
+            "format": {"duration": "240.02"},
             "streams": [{"codec_type": "audio"}],
         }
         with self.fake_client(result=source), patch.object(
@@ -81,7 +81,7 @@ class ProducerTests(unittest.TestCase):
         self.assertIs(report["rights_verified"], False)
         self.assertIs(report["human_review_required"], True)
         self.assertEqual(report["publication_status"], "NOT_PUBLISHED")
-        self.assertAlmostEqual(report["duration_actual_seconds"], 180.02)
+        self.assertAlmostEqual(report["duration_actual_seconds"], 240.02)
         self.assertEqual(
             report["sha256"],
             hashlib.sha256((self.producer.AUDIO / "candidate.mp3").read_bytes()).hexdigest(),
@@ -165,7 +165,7 @@ class ProducerTests(unittest.TestCase):
     def test_success_still_cannot_be_assembled_without_human_review(self):
         source = Path(self.temp.name) / "approved-output.flac"
         source.write_bytes(b"faked media bytes" * 14000)
-        probe = {"format": {"duration": "184"}, "streams": [{"codec_type": "audio"}]}
+        probe = {"format": {"duration": "244"}, "streams": [{"codec_type": "audio"}]}
         with self.fake_client(result=source), patch.object(
             self.producer.subprocess, "run",
             return_value=subprocess.CompletedProcess(

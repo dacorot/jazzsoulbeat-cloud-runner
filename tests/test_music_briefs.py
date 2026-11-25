@@ -14,13 +14,13 @@ class MusicBriefTests(unittest.TestCase):
         for brief in BRIEFS.values():
             self.assertGreater(len(brief.arrangement), 80)
             self.assertTrue(65 <= brief.bpm <= 85)
-            prompt = brief.prompt(180)
+            prompt = brief.prompt(240)
             self.assertIn("original instrumental jazz/soul", prompt.lower())
             self.assertIn("natural ending", prompt.lower())
             self.assertIn("no cover", prompt.lower())
 
     def test_reject_short_loops_and_too_long_songs(self):
-        for value in (0, 120, 179, 361, 500, 180.1, True, "180"):
+        for value in (0, 120, 239, 481, 500, 240.1, True, "240"):
             for brief in BRIEFS.values():
                 with self.subTest(category=brief.slug, duration=value):
                     with self.assertRaises(ValueError):
