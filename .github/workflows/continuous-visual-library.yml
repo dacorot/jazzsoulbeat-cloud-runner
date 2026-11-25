@@ -5,7 +5,7 @@ on:
     paths:
       - "VISUAL_PRODUCTION_START.md"
   schedule:
-    # Twice daily, serialized against every other private Drive mutation.
+    # Every two hours, serialized against every other private Drive mutation.
     - cron: "0 */2 * * *"
   workflow_dispatch:
     inputs:
@@ -40,7 +40,9 @@ jobs:
     env:
       AGENT_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.agent_ref || 'fix/real-music-and-cinematic-motion' }}
       REQUESTED_CATEGORIES: ${{ github.event_name == 'workflow_dispatch' && inputs.categories || 'all' }}
-      PER_CATEGORY: ${{ github.event_name == 'workflow_dispatch' && inputs.per_category || '1' }}
+      # Keep the scheduled path at the validated free-quota ceiling so the
+      # 48-scene category library grows without manual dispatches.
+      PER_CATEGORY: ${{ github.event_name == 'workflow_dispatch' && inputs.per_category || '2' }}
     steps:
       - name: Check out controller
         uses: actions/checkout@v4
