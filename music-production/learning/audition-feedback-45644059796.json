@@ -1,0 +1,23 @@
+{
+  "run_id":"45644059796",
+  "artifact":"candidate.mp3",
+  "decision":"REJECTED",
+  "approval":false,
+  "listener_feedback":"Mejoró, pero todavía necesita más trabajo y más estudio musical.",
+  "learning_signal":"NEGATIVE_MUSICAL_QUALITY",
+  "reasons":[
+    "La composición todavía no alcanza el nivel de una banda profesional.",
+    "El arreglo necesita más desarrollo y conversación real entre instrumentos.",
+    "La instrumentación completa debe sentirse integrada, no solo superpuesta.",
+    "La generación requiere más estudio de jazz, soul y lo-fi suave antes de producir lotes."
+  ],
+  "next_generation_requirements":[
+    "motivo principal reconocible con variación natural",
+    "voicings y conducción de voces más convincentes",
+    "bajo, piano, batería y vientos con roles musicales diferenciados",
+    "frases con respiración y resolución",
+    "desarrollo formal completo sin relleno ni bucles genéricos",
+    "audición humana obligatoria antes de cualquier aprobación"
+  ],
+  "status":"DO_NOT_IMPORT_DO_NOT_MIX_DO_NOT_PUBLISH"
+}
