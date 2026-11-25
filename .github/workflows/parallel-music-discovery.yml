@@ -64,7 +64,8 @@ jobs:
           if [ -n "$RIGHTS_CSV" ]; then
             python ../scripts/rights_provenance_agent.py               --csv "$RIGHTS_CSV"               --output "output/parallel-discovery/${DISCOVERY_LANE}/rights-provenance.json"               2>&1 | tee -a "output/parallel-discovery/${DISCOVERY_LANE}/run.txt"
           fi
-          # Seasonal routing is deferred until its dedicated adapter is available.\n          mapfile -t EXISTING_FILES < <(find output music-library -type f \( -name '*.csv' -o -name '*.json' \) ! \( -name '*_candidates.csv' -o -name 'candidate_catalog.csv' \) 2>/dev/null | sort)
+          # Seasonal routing is deferred until its dedicated adapter is available.
+          mapfile -t EXISTING_FILES < <(find output music-library -type f \( -name '*.csv' -o -name '*.json' \) ! \( -name '*_candidates.csv' -o -name 'candidate_catalog.csv' \) 2>/dev/null | sort)
           mapfile -t CANDIDATE_FILES < <(find output music-library -type f \( -name '*_candidates.csv' -o -name 'candidate_catalog.csv' \) 2>/dev/null | sort)
           python ../scripts/music_dedup_agent.py \
             --existing "${EXISTING_FILES[@]}" \
@@ -85,7 +86,8 @@ jobs:
             --offset "${{ matrix.offset }}" \
             "${APPROVED_TITLES_ARGS[@]}" \
             2>&1 | tee -a "output/parallel-discovery/${DISCOVERY_LANE}/run.txt"
-          # review_audio_downloader already emits the pending-only manifest; no missing post-audit adapter is called.\n      - name: Assert discovery remains review-only
+          # review_audio_downloader already emits the pending-only manifest; no missing post-audit adapter is called.
+      - name: Assert discovery remains review-only
         working-directory: agent
         run: |
           if grep -REn "rights_verified.*(True|true|1)|youtube_upload.*(PUBLIC|PUBLISHED)|PRIVATE_ONLY_AUTHORIZED" output/parallel-discovery; then

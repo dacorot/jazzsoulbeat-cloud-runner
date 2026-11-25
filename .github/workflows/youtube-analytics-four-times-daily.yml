@@ -50,4 +50,5 @@ jobs:
           python main.py drive-push-qa
           python main.py drive-status
       - name: Confirm no publication action
-        run: echo "Analytics only: no upload, title edit, thumbnail edit or publication was performed."
+        run: |
+          echo "Analytics only: no upload, title edit, thumbnail edit or publication was performed."
