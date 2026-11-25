@@ -42,6 +42,20 @@ jobs:
           latest_conclusion="$(printf '%s' "$latest" | jq -r '.conclusion // ""')"
           latest_run_id="$(printf '%s' "$latest" | jq -r '.id // ""')"
           latest_attempt="$(printf '%s' "$latest" | jq -r '.run_attempt // 0')"
+          # A failed YouTube upload must not cause the watchdog to rebuild a
+          # video that already passed render, capture and private Drive
+          # persistence. Retry only failures that happened before a validated
+          # production package existed.
+          validated_package="false"
+          if [[ -n "$latest_run_id" && "$latest_status" == "completed" ]]; then
+            jobs="$(gh api -H "Accept: application/vnd.github+json" "/repos/${{ github.repository }}/actions/runs/${latest_run_id}/jobs?per_page=100")"
+            build_conclusion="$(printf '%s' "$jobs" | jq -r '[.jobs[].steps[]? | select(.name == "Build an evergreen or seasonal video") | .conclusion] | first // ""')"
+            capture_conclusion="$(printf '%s' "$jobs" | jq -r '[.jobs[].steps[]? | select(.name == "Capture and validate the exact production render folder") | .conclusion] | first // ""')"
+            persist_conclusion="$(printf '%s' "$jobs" | jq -r '[.jobs[].steps[]? | select(.name == "Persist only the validated production folder and production database") | .conclusion] | first // ""')"
+            if [[ "$build_conclusion" == "success" && "$capture_conclusion" == "success" && "$persist_conclusion" == "success" ]]; then
+              validated_package="true"
+            fi
+          fi
           # GitHub can hold a dispatch in `pending` while the concurrency
           # group is occupied. Count it as active or the watchdog will launch
           # a duplicate production run.
@@ -59,7 +73,7 @@ jobs:
           # replaced, even if the Actions API reports its state inconsistently.
           latest_completed="false"
           [[ "$latest_status" == "completed" ]] && latest_completed="true"
-          if [[ "$force_dispatch" == "true" || ("$latest_completed" == "true" && "$age_seconds" -ge 21600) || ("$latest_completed" == "true" && "$latest_conclusion" == "failure" && "$age_seconds" -ge 60 && "$latest_attempt" -lt 3) ]]; then
+          if [[ "$force_dispatch" == "true" || ("$latest_completed" == "true" && "$age_seconds" -ge 21600) || ("$latest_completed" == "true" && "$latest_conclusion" == "failure" && "$validated_package" != "true" && "$age_seconds" -ge 60 && "$latest_attempt" -lt 3) ]]; then
             jq -n \
               --arg ref main \
               --arg task build-evergreen \
@@ -82,6 +96,7 @@ jobs:
             echo "run_id=$latest_run_id"
             echo "attempt=$latest_attempt"
             echo "retryable=$([[ "$latest_conclusion" == "failure" && "$latest_attempt" -lt 3 ]] && echo true || echo false)"
+            echo "validated_package=$validated_package"
           } >> "$GITHUB_OUTPUT"
 
       - name: Recover bounded failed run
