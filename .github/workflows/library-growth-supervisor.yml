@@ -272,8 +272,12 @@ jobs:
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
         run: |
-          python main.py drive-push-growth-research
-          python main.py drive-status
+          if timeout 300s python main.py drive-push-growth-research; then
+            echo "Growth reports persisted to private Drive."
+          else
+            echo "Growth-report persistence timed out or failed; the next scheduled cycle will retry it."
+          fi
+          timeout 60s python main.py drive-status || echo "Drive status unavailable in this cycle."
       - name: Enforce restricted scope
         if: always()
         run: |
