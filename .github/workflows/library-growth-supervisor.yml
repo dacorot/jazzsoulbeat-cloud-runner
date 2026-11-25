@@ -42,11 +42,10 @@ jobs:
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
         run: |
-          # Growth must validate the current library's real audio bytes before
-          # importing new candidates.  Metadata-only restore makes every
-          # existing imported path look missing and turns promotion into a
-          # false zero-result cycle.
-          python main.py drive-pull-music-library
+          # Growth audits restore manifests and evidence only.  Candidate
+          # downloads are verified in this run; restoring the entire historical
+          # production library would make every six-hour cycle download many GB.
+          python main.py drive-pull-audit-state
           mkdir -p output/library-growth/source-status
       - name: Validate source registry
         run: |
