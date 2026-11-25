@@ -1,0 +1,25 @@
+{
+  "policy_id": "transparent-publication-v1",
+  "required_for_every_release": [
+    "title and description match the actual audio",
+    "tracklist and source/license evidence",
+    "AI disclosure when any audio or composition was generated with AI",
+    "no claim of human performance when the audio was AI-generated",
+    "no claim of exclusive copyright unless separately established",
+    "SHA-256 and provenance retained privately"
+  ],
+  "stable_audio_wording": "Some instrumental audio in this video was generated with Stable Audio 3. It is used under the applicable Stability AI license. Human editorial review, mixing and release decisions were performed by Jazz Soul Beat.",
+  "spotify_wording": "AI-generated instrumental audio is disclosed through the distributor's AI credits where supported.",
+  "rights_notice": "© 2026 Jazz Soul Beat. The video, arrangement, mix, visual design, metadata and channel presentation are proprietary project production. No reupload, redistribution, sampling, Content ID registration or commercial reuse of this production is authorized without written permission. AI-generated source audio is used under the applicable tool license and is not represented as exclusively human-authored.",
+  "enforcement_scope": [
+    "protect the finished video and its audiovisual synchronization",
+    "protect the original mix, edit, arrangement and human creative contributions",
+    "retain provenance and license evidence for the AI-generated source",
+    "issue platform takedown or rights complaints for unauthorized copies of the finished production"
+  ],
+  "not_claimed": [
+    "exclusive copyright over raw AI-generated audio where applicable law does not provide it",
+    "ownership of third-party source recordings or licensed catalogue tracks"
+  ],
+  "fail_closed": true
+}
