@@ -43,15 +43,14 @@ jobs:
         working-directory: agent
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
-        # The watchdog audits the active library and visual contract; never
-        # restore the full private Drive archive on every five-minute pulse.
-        run: python main.py drive-pull-library
+        # The watchdog audits policy state and visual references; never restore
+        # production audio or the full private Drive archive on each pulse.
+        run: python main.py drive-pull-audit-state
       - name: Inventory and music audit
         id: inventory
         working-directory: agent
         run: |
           set -euo pipefail
-          python main.py scan
           python main.py inventory-assets
           python main.py library-status
       - name: Audit visual contract
