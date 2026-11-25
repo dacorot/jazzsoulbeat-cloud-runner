@@ -61,8 +61,9 @@ jobs:
         run: |
           set -euo pipefail
           python - <<'PY'
-          import hashlib, json, subprocess, os
+          import json, os
           from pathlib import Path
+          from visual_contract import validate_manifest
           root = Path("assets/visual-agents/midnight_jazz_soul")
           report_path = Path("output/qa/autonomous-visual-audit.json")
           report_path.parent.mkdir(parents=True, exist_ok=True)
@@ -70,31 +71,20 @@ jobs:
           def check(name, passed, detail):
               report["checks"].append({"name": name, "passed": bool(passed), "detail": detail})
               if not passed: report["status"] = "FAIL"
-          manifest_path = root / "manifest.json"
+          scene_root = root / "scenes"
+          manifest_path = scene_root / "SCENE_MANIFEST.json"
           if not manifest_path.is_file():
-              check("manifest_exists", False, "Missing manifest")
+              check("scene_manifest_exists", False, str(manifest_path))
           else:
-              m = json.loads(manifest_path.read_text(encoding="utf-8"))
-              rules, motion = m.get("visual_rules", {}), m.get("motion", {})
-              style = rules.get("style", "")
-              check("non_anime_style", "anime" not in style.lower(), style)
-              check("no_real_people", rules.get("real_people") is False, rules.get("real_people"))
-              check("48_scene_target", m.get("season_or_category_target") == 48, m.get("season_or_category_target"))
-              check("atmospheric_motion", motion.get("effect") == "layered atmospheric animation", motion.get("effect"))
-              check("not_zoom_only", motion.get("status") != "current_zoom_only_loops_invalid_for_production", motion.get("status"))
-          bases = sorted((root / "bases").glob("*.png")) if (root / "bases").is_dir() else []
-          motion = sorted((root / "motion").glob("*.mp4")) if (root / "motion").is_dir() else []
-          hashes = [hashlib.sha256(p.read_bytes()).hexdigest() for p in bases]
-          check("active_batch", len(bases) == 12, len(bases))
-          check("paired_motion", len(motion) == len(bases) == 12, f"{len(bases)} bases/{len(motion)} motion")
-          check("unique_bases", len(set(hashes)) == len(hashes), f"{len(set(hashes))}/{len(hashes)}")
-          invalid = []
-          for p in motion:
               try:
-                  d = subprocess.check_output(["ffprobe","-v","error","-show_entries","format=duration","-of","default=noprint_wrappers=1:nokey=1",str(p)], text=True).strip()
-                  if float(d) <= 0: invalid.append(p.name)
-              except Exception: invalid.append(p.name)
-          check("readable_motion", not invalid, invalid)
+                  result = validate_manifest(
+                      json.loads(manifest_path.read_text(encoding="utf-8")),
+                      scene_root=scene_root,
+                      minimum_scenes=48,
+                  )
+                  check("scene_manifest_contract", True, result)
+              except Exception as exc:
+                  check("scene_manifest_contract", False, f"{type(exc).__name__}: {exc}")
           report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
           print(json.dumps(report, ensure_ascii=False, indent=2))
           if report["status"] != "PASS": raise SystemExit("Visual contract failed; no asset may advance.")
