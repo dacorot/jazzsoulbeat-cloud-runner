@@ -46,14 +46,26 @@ jobs:
         run: python main.py drive-pull-state
 
       - name: Create hash-bound review requests
+        id: prepare_reviews
         run: |
+          manifest="agent/tracks/generated/jazz-only-10-videos-2026-11-22/delivery-manifest.json"
+          if [[ ! -s "$manifest" ]]; then
+            mkdir -p agent/output/original-music/delivery-video-reviews
+            printf '{"request_ids":[],"status":"NO_DELIVERY_MANIFEST"}\n' > agent/output/original-music/delivery-video-reviews/review-plan.json
+            printf '{"requests":[],"status":"NO_DELIVERY_MANIFEST"}\n' > agent/output/original-music/delivery-video-reviews/approval_ledger.json
+            echo "prepared=false" >> "$GITHUB_OUTPUT"
+            echo "No delivery manifest exists yet; notification cycle remains idle."
+            exit 0
+          fi
           python scripts/prepare_delivery_video_reviews.py \
-            --manifest agent/tracks/generated/jazz-only-10-videos-2026-11-22/delivery-manifest.json \
+            --manifest "$manifest" \
             --agent-root agent \
             --ledger agent/output/original-music/delivery-video-reviews/approval_ledger.json \
             --plan agent/output/original-music/delivery-video-reviews/review-plan.json
+          echo "prepared=true" >> "$GITHUB_OUTPUT"
 
       - name: Notify Telegram with private review instructions
+        if: ${{ steps.prepare_reviews.outputs.prepared == 'true' }}
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           JAZZ_SOUL_BEAT_TELEGRAM_CHAT_ID: ${{ secrets.JAZZ_SOUL_BEAT_TELEGRAM_CHAT_ID }}
@@ -71,6 +83,7 @@ jobs:
           PY
 
       - name: Persist review ledger privately
+        if: ${{ steps.prepare_reviews.outputs.prepared == 'true' }}
         working-directory: agent
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}

@@ -32,6 +32,7 @@ jobs:
         id: inspect
         env:
           GH_TOKEN: ${{ github.token }}
+          HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
           set -euo pipefail
           runs="$(gh api -H "Accept: application/vnd.github+json" "/repos/${{ github.repository }}/actions/workflows/private-cloud-agent.yml/runs?per_page=10")"
@@ -43,7 +44,7 @@ jobs:
           latest_attempt="$(printf '%s' "$latest" | jq -r '.run_attempt // 0')"
           running_count="$(printf '%s' "$runs" | jq '[.workflow_runs[] | select(.status == "in_progress" or .status == "queued")] | length')"
           force_dispatch="false"
-          if [[ "${{ github.event_name }}" == "push" && "${{ github.event.head_commit.message }}" == *"[dispatch-private-production]"* ]]; then
+          if [[ "${{ github.event_name }}" == "push" && "$HEAD_COMMIT_MESSAGE" == *"[dispatch-private-production]"* ]]; then
             force_dispatch="true"
           fi
           now_epoch="$(date +%s)"
@@ -53,11 +54,18 @@ jobs:
           # Recover same-day publication debt after a stale/failed cycle;
           # concurrency still prevents duplicate renders.
           if [[ "$running_count" == "0" && ("$force_dispatch" == "true" || "$age_seconds" -ge 21600 || (("$latest_conclusion" == "failure" || "$latest_conclusion" == "cancelled") && "$age_seconds" -ge 60 && "$latest_attempt" -lt 3)) ]]; then
+            jq -n \
+              --arg ref main \
+              --arg task build-evergreen \
+              --arg hours 2 \
+              --arg collection evergreen \
+              --arg season '' \
+              --arg agent_ref fix/real-music-and-cinematic-motion \
+              '{ref:$ref,inputs:{task:$task,hours:$hours,collection:$collection,season:$season,agent_ref:$agent_ref}}' \
+              > /tmp/private-production-dispatch.json
             gh api --method POST -H "Accept: application/vnd.github+json" \
               "/repos/${{ github.repository }}/actions/workflows/private-cloud-agent.yml/dispatches" \
-              -f ref=main -f 'inputs[task]=build-evergreen' -f 'inputs[hours]=1' \
-              -f 'inputs[collection]=evergreen' -f 'inputs[season]=' \
-              -f 'inputs[agent_ref]=fix/real-music-and-cinematic-motion'
+              --input /tmp/private-production-dispatch.json
             echo "Private production cycle dispatched." >> "$GITHUB_STEP_SUMMARY"
           else
             echo "Private production already running or recent; no duplicate dispatch." >> "$GITHUB_STEP_SUMMARY"
