@@ -13,7 +13,7 @@ OUT.mkdir(exist_ok=True)
 AUDIO.mkdir(exist_ok=True)
 SPACE = os.getenv("ACE_STEP_SPACE", "ACE-Step/Ace-Step-v1.5")
 # An audition must be one song, 3–6 minutes; never stretch a loop to fill a video.
-DEFAULT_DURATION_SECONDS = 180
+DEFAULT_DURATION_SECONDS = 240
 NEGATIVE = (
     "copyrighted melody, cover, soundalike, artist imitation, childish, chiptune, "
     "synthetic test tones, robotically repeated arpeggios, low fidelity"
