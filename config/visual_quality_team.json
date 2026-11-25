@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "team_id": "jsb_visual_quality_team_v1",
+  "mission": "Deliver modern, non-anime editorial scenes that survive visual review before long-form rendering.",
+  "roles": [
+    {"id": "art_director", "responsibility": "Approve composition, lighting, subject hierarchy and thumbnail readability."},
+    {"id": "reference_consistency", "responsibility": "Preserve the recurring character, wardrobe logic and approved visual language."},
+    {"id": "compositing_supervisor", "responsibility": "Require real masks for smoke, steam, rain, snow and reflections; reject full-frame overlays."},
+    {"id": "motion_designer", "responsibility": "Design restrained motion that stays inside the scene and loops cleanly."},
+    {"id": "qa_reviewer", "responsibility": "Inspect short proof renders at 100 percent and block defects before the two-hour render."}
+  ],
+  "candidate_toolchain": [
+    {"tool": "ComfyUI", "role": "reference-conditioned generation, inpainting, segmentation and explicit masks", "source": "https://github.com/comfy-org/ComfyUI"},
+    {"tool": "Runway Gen-4 References", "role": "controlled character/style references and short motion proof", "source": "https://help.runwayml.com/hc/en-us/articles/40042718905875-Creating-with-Gen-4-Image-References"},
+    {"tool": "Adobe Firefly Generative Fill", "role": "targeted cleanup and scene expansion with reference images", "source": "https://helpx.adobe.com/firefly/web/work-with-images/edit-images/generative-fill.html"}
+  ],
+  "hard_gates": [
+    "no_anime_or_manga",
+    "no_unmasked_environmental_effects",
+    "no_effect_outside_frame_or_subject_boundaries",
+    "no_long_render_before_short_proof_pass",
+    "thumbnail_must_be_readable_at_mobile_size"
+  ],
+  "publication": "DISABLED_UNTIL_OWNER_APPROVAL"
+}

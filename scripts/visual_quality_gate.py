@@ -50,6 +50,10 @@ def inspect(
         elif field == "no_camera_motion":
             if provenance.get("camera") != "locked":
                 failures.append("camera_motion_forbidden")
+        elif field == "no_unsafe_unmasked_effects":
+            manifest = provenance.get("effect_manifest", {})
+            if manifest.get("mask_status") not in {"verified_scene_masks", "no_verified_scene_masks_no_effects"}:
+                failures.append("unsafe_unmasked_effects_forbidden")
         elif provenance.get(field) != expected:
             failures.append(f"contract_mismatch:{field}")
     return {

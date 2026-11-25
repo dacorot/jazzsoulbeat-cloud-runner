@@ -11,6 +11,7 @@
   "required_aspect_ratio": "16:9",
   "minimum_resolution": [1920, 1080],
   "allowed_effect_profiles": [
+    "locked_camera_no_unsafe_overlays",
     "approved_plate_localized_atmosphere",
     "approved_plate_window_reflections",
     "approved_plate_coffee_steam",
@@ -31,6 +32,7 @@
     "camera": "locked",
     "publication": "DISABLED",
     "no_full_frame_particle_overlay": true,
-    "no_camera_motion": true
+    "no_camera_motion": true,
+    "no_unsafe_unmasked_effects": true
   }
 }

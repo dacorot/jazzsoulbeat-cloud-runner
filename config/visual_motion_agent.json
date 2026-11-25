@@ -39,7 +39,7 @@
     "resolution": [1920, 1080]
   },
   "professional_effect_stack": {
-    "required": true,
+    "required": false,
     "profiles": [
       "approved_plate_localized_atmosphere",
       "approved_plate_window_reflections",
@@ -55,7 +55,9 @@
     ],
     "minimum_base_resolution": [1920, 1080],
     "output_aspect_ratio": "16:9",
-    "render_review_required": true
+      "render_review_required": true,
+      "short_proof_required_before_longform": true,
+      "unmasked_effect_fallback": "clean_locked_plate"
   },
   "forbidden": [
     "full_frame_particle_overlay",

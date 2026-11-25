@@ -17,8 +17,11 @@ ALLOWED = {
 def audit(video: Path, provenance: dict, effect_report: dict) -> dict:
     failures = []
     effects = provenance.get("effect_manifest", {}).get("effects", [])
-    if not effects:
-        failures.append("no_defined_effects")
+    mask_status = provenance.get("effect_manifest", {}).get("mask_status", "")
+    # A clean locked plate is safer than an unmasked effect. Effects are
+    # optional; any declared effect still requires a verified scene mask.
+    if not effects and mask_status != "no_verified_scene_masks_no_effects":
+        failures.append("empty_effect_manifest_without_safe_status")
     if any(effect not in ALLOWED for effect in effects):
         failures.append("unapproved_effect_profile")
     if provenance.get("camera") != "locked":
@@ -27,6 +30,8 @@ def audit(video: Path, provenance: dict, effect_report: dict) -> dict:
         failures.append("effect_mask_not_required")
     if effect_report.get("execution_status") != "RENDERED":
         failures.append("effects_not_executed")
+    if not effects and effect_report.get("mask_status") != "no_verified_scene_masks_no_effects":
+        failures.append("empty_effect_report_without_safe_status")
     if effect_report.get("video_sha256") != provenance.get("video_sha256"):
         failures.append("effect_report_video_hash_mismatch")
     if not video.is_file() or video.stat().st_size == 0:
