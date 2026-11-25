@@ -60,7 +60,7 @@ def plan_week(day: dt.date) -> dict:
             "duration_seconds": duration,
             "width": 2560,
             "height": 1440,
-            "visual_style": "original sophisticated adult anime; subtle seamless ambient motion; no real people",
+            "visual_style": "original sophisticated adult cinematic illustration; non-anime; subtle seamless ambient motion; no real people",
             "human_approval_required": True,
             "youtube_upload_visibility": "private",
             "public_scheduling_enabled": False,
