@@ -15,7 +15,7 @@ concurrency:
 
 env:
   JSB_PRODUCTION_RUN_DIR: output/20261125-200035-321569
-  AGENT_REF: f7ecd1b
+  AGENT_REF: f7ecd1b9823d81daf0732773e5b334b67c951d95
 
 jobs:
   upload:
