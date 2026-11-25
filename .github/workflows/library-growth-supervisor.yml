@@ -237,14 +237,21 @@ jobs:
               echo "Video material threshold reached."
               break
             fi
-            python main.py discover-ketsa --limit 100 || true
-            python main.py discover-incompetech || true
-            python main.py download-ketsa --limit 100 || true
-            python main.py download-incompetech || true
-            python -c 'import rights_audit; rights_audit.audit_ketsa()' || true
-            python main.py audit-incompetech-sources || true
-            python main.py audit-incompetech-track-pages || true
-            python -c 'import rights_audit; rights_audit.audit_incompetech()' || true
+            ketsa() {
+              python main.py discover-ketsa --limit 100 || true
+              python main.py download-ketsa --limit 100 || true
+              python -c 'import rights_audit; rights_audit.audit_ketsa()' || true
+            }
+            incompetech() {
+              python main.py discover-incompetech || true
+              python main.py download-incompetech || true
+              python main.py audit-incompetech-sources || true
+              python main.py audit-incompetech-track-pages || true
+              python -c 'import rights_audit; rights_audit.audit_incompetech()' || true
+            }
+            ketsa & ketsa_pid=$!
+            incompetech & incompetech_pid=$!
+            wait "$ketsa_pid" "$incompetech_pid"
             python main.py intake-library-growth
             python ../scripts/autonomous_music_gate.py \
               --input output/library-promotion/eligible-external.json \
