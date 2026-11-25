@@ -1,6 +1,9 @@
 name: Jazz Soul Beat - Stable Audio 3 instrumental audition
 
 on:
+  schedule:
+    # Generate a new long-form music candidate every 48 hours.
+    - cron: "0 1 */2 * *"
   workflow_dispatch:
     inputs:
       duration_seconds:
@@ -32,7 +35,7 @@ jobs:
           python -m pip install --upgrade gradio_client
       - name: Generate controlled instrumental audition
         env:
-          MUSIC_DURATION_SECONDS: ${{ inputs.duration_seconds }}
+          MUSIC_DURATION_SECONDS: ${{ inputs.duration_seconds || '360' }}
         run: python scripts/stable_audio3_producer.py
       - name: Upload private audition artifact
         if: ${{ always() && hashFiles('music-production/generated/candidate.wav') != '' }}
