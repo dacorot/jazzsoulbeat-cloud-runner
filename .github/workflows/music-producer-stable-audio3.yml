@@ -1,0 +1,48 @@
+name: Jazz Soul Beat - Stable Audio 3 instrumental audition
+
+on:
+  workflow_dispatch:
+    inputs:
+      duration_seconds:
+        description: "Audition duration in seconds"
+        required: true
+        default: "360"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: jazz-soul-beat-music-production
+  cancel-in-progress: false
+
+jobs:
+  produce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install FFmpeg and client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ffmpeg
+          python -m pip install --upgrade gradio_client
+      - name: Generate controlled instrumental audition
+        env:
+          MUSIC_DURATION_SECONDS: ${{ inputs.duration_seconds }}
+        run: python scripts/stable_audio3_producer.py
+      - name: Upload private audition artifact
+        if: ${{ always() && hashFiles('music-production/generated/candidate.wav') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: stable-audio3-audition-${{ github.run_id }}
+          path: |
+            music-production/generated/candidate.wav
+            music-production/production_report.json
+          retention-days: 14
+      - name: Confirm review gate
+        if: always()
+        run: echo "Candidate remains pending human musical review; no approval or publication occurred."
