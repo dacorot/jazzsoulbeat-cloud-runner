@@ -1,0 +1,34 @@
+{
+  "policy_id": "editorial-packaging-learning-v1",
+  "objective": "Improve titles and thumbnails without promising an experience the audio does not deliver.",
+  "metric_rules": {
+    "ctr": "Measures packaging response from impressions; it is not a music-quality score.",
+    "average_view_duration": "Measures minutes listened per view; it is the primary continuity signal for long-form mixes.",
+    "average_percentage_viewed": "Provides context for duration, but must not replace absolute minutes listened.",
+    "impressions": "Measures reach; low impressions with strong retention is a distribution problem, not proof that the mix failed.",
+    "decision_rule": "Diagnose CTR, reach and listening continuity separately before changing title, thumbnail or audio."
+  },
+  "packaging_rules": {
+    "title": [
+      "Lead with the real listener use case: Relaxing, Study, Late-Night or Coffeehouse.",
+      "State the actual duration and musical style; never promise upbeat energy for soft music.",
+      "Do not use clickbait, fake claims, excessive keywords or unsupported genre labels."
+    ],
+    "thumbnail": [
+      "Use one clear adult cinematic focal subject or scene.",
+      "Keep text optional, short and readable at mobile size; do not bake text into generated artwork.",
+      "Preserve the approved character and visual language; no anime-derived rendering."
+    ]
+  },
+  "audio_feedback_rules": [
+    "Low average view duration with early exits is a continuity/mix investigation first.",
+    "Abrupt rhythm, key, energy or instrumentation changes trigger rejection before packaging tests.",
+    "A high CTR cannot rescue a mix that loses listeners in the opening minutes."
+  ],
+  "pdca": [
+    "Plan a single packaging or audio hypothesis.",
+    "Do one controlled change.",
+    "Check CTR, impressions, average view duration and early-retention curve together.",
+    "Act by retaining, revising or rejecting the hypothesis and recording the evidence."
+  ]
+}
