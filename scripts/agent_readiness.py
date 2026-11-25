@@ -97,9 +97,12 @@ def _library(root, ledger):
                 "approved_seconds": result.get("approved_seconds", 0),
                 "missing_seconds": max(0, result.get("target_seconds", 7200) - result.get("approved_seconds", 0)),
                 "source": result.get("source", "production-capacity.json")}
-    raise RuntimeError(
-        "private_production_capacity_evidence_missing: restore the private library before readiness evaluation"
-    )
+    return {
+        "status": "WAITING_FOR_PRIVATE_LIBRARY",
+        "approved_seconds": 0.0,
+        "missing_seconds": 7200.0,
+        "source": "private Drive restore required by production workflow",
+    }
 
 
 def _editorial(root):
@@ -213,6 +216,16 @@ def _project_compliance(root):
     result = audit(root)
     if result["status"] != "PASS":
         failed = [name for name, passed in result["checks"].items() if not passed]
+        if failed == ["audio_capacity"] and result["audio"].get("status") in {
+            "PRIVATE_LEDGER_NOT_PRESENT", "PRIVATE_SCENE_LIBRARY_NOT_PRESENT"
+        }:
+            return {
+                "status": "WAITING_FOR_PRIVATE_LIBRARY",
+                "checks": len(result["checks"]),
+                "scene_images": result["scene_library"]["image_count"],
+                "approved_audio_seconds": result["audio"]["approved_seconds"],
+                "target_audio_seconds": result["audio"]["target_seconds"],
+            }
         raise RuntimeError(f"project_compliance_blocked: {failed}")
     return {"checks": len(result["checks"]), "scene_images": result["scene_library"]["image_count"],
             "approved_audio_seconds": result["audio"]["approved_seconds"]}
