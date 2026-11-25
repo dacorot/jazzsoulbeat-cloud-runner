@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "id": "visual_quality_online_learning_v1",
+  "objective": "Learn which visual proof conditions predict a professional pass without overriding hard safety gates.",
+  "feature_order": ["mask_verified", "effect_region_pass", "camera_locked", "no_full_frame_overlay", "short_proof_pass", "human_review_pass"],
+  "hard_gates": ["mask_verified", "effect_region_pass", "camera_locked", "no_full_frame_overlay", "short_proof_pass"],
+  "feedback_file": "output/learning/visual_feedback.jsonl",
+  "model_file": "output/learning/visual_model.json",
+  "algorithm": "online_logistic_regression",
+  "publication": "DISABLED_UNTIL_OWNER_APPROVAL"
+}

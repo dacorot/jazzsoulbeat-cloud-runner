@@ -485,10 +485,17 @@ jobs:
           effects = subprocess.run(
               ["python", "../scripts/visual_effect_audit.py", "--video", str(folder / "video.mp4"),
                "--provenance", str(provenance), "--effect-report", str(folder / "EFFECT_EXECUTION_REPORT.json"),
-               "--output", str(folder / "EFFECT_AUDIT.json")],
+               "--output", str(folder / "EFFECT_AUDIT.json"),
+               "--feedback", "output/learning/visual_feedback.jsonl"],
               check=False, capture_output=True, text=True
           )
           print(effects.stdout)
+          learning = subprocess.run(
+              ["python", "../scripts/visual_learning.py", "--feedback", "output/learning/visual_feedback.jsonl",
+               "--model", "output/learning/visual_model.json"],
+              check=False, capture_output=True, text=True
+          )
+          print(learning.stdout)
           if effects.returncode != 0:
               raise SystemExit("Visual effects audit failed; private upload blocked.")
           board = subprocess.run(

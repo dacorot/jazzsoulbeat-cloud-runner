@@ -46,16 +46,35 @@ def audit(video: Path, provenance: dict, effect_report: dict) -> dict:
     }
 
 
+def record_feedback(path: Path | None, result: dict) -> None:
+    if path is None:
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    features = {
+        "mask_verified": bool(result.get("effects_verified")),
+        "effect_region_pass": not any("mask" in item or "effect" in item for item in result.get("failures", [])),
+        "camera_locked": "camera_not_locked" not in result.get("failures", []),
+        "no_full_frame_overlay": "full_frame_overlay" not in result.get("failures", []),
+        "short_proof_pass": result.get("status") == "PASS",
+        "human_review_pass": False,
+    }
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps({"features": features, "label": int(result.get("status") == "PASS"),
+                                 "reason": ";".join(result.get("failures", [])) or "visual_audit_pass"}, ensure_ascii=False) + "\n")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--video", type=Path, required=True)
     parser.add_argument("--provenance", type=Path, required=True)
     parser.add_argument("--effect-report", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--feedback", type=Path, default=None)
     args = parser.parse_args()
     provenance = json.loads(args.provenance.read_text(encoding="utf-8"))
     effect_report = json.loads(args.effect_report.read_text(encoding="utf-8"))
     result = audit(args.video, provenance, effect_report)
+    record_feedback(args.feedback, result)
     args.output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(result, ensure_ascii=False))
     return 0 if result["status"] == "PASS" else 1
