@@ -1,6 +1,7 @@
 {
   "schema_version": 1,
-  "style": "original_sophisticated_adult_japanese_cinematic_anime_seinen",
+  "style": "original_sophisticated_adult_cinematic_illustration_non_anime",
+  "hard_visual_rule": "No anime, manga, chibi or anime-derived rendering. Preserve approved characters and identity while modernizing environments, lighting and composition.",
   "rule": "Each playlist wave must rotate seasonal scene families; never reuse the same hero composition or grand piano as the focal object in every scene.",
   "seasons": {
     "spring": {"palette": ["fresh green", "soft rain blue", "warm cream"], "environments": ["rainy cafe", "blossoming reading room", "quiet riverside terrace"], "motion": ["rain on glass", "moving leaves", "steam"]},
