@@ -90,7 +90,7 @@ def _library(root, ledger):
         result = json.loads(capacity_path.read_text(encoding="utf-8"))
         if result.get("status") != "READY":
             raise RuntimeError(
-                f"production_capacity_blocked: approved_seconds={result.get("approved_seconds", 0)} "
+                f"production_capacity_blocked: approved_seconds={result.get('approved_seconds', 0)} "
                 f"target_seconds={result.get("target_seconds", 7200)}"
             )
         return {"status": "READY_FOR_LONGFORM_ASSEMBLY",
