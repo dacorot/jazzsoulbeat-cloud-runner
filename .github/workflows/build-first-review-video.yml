@@ -1,10 +1,8 @@
 name: Build new private Jazz Soul Beat review videos
 
 on:
+  # Manual fallback only; the private cloud agent owns the 48-hour production cadence.
   workflow_dispatch:
-  schedule:
-    # Video-first production cadence: one private two-hour build every 48 hours.
-    - cron: "0 13 */2 * *"
 
 permissions:
   contents: read
