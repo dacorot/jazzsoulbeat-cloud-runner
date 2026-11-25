@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: jazz-soul-beat-video-production
+  group: jazz-soul-beat-upload-recovery
   cancel-in-progress: false
 
 env:
