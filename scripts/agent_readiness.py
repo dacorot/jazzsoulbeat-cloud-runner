@@ -91,7 +91,7 @@ def _library(root, ledger):
         if result.get("status") != "READY":
             raise RuntimeError(
                 f"production_capacity_blocked: approved_seconds={result.get('approved_seconds', 0)} "
-                f"target_seconds={result.get("target_seconds", 7200)}"
+                f"target_seconds={result.get('target_seconds', 7200)}"
             )
         return {"status": "READY_FOR_LONGFORM_ASSEMBLY",
                 "approved_seconds": result.get("approved_seconds", 0),
