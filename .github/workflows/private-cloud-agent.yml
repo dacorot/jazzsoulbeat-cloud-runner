@@ -156,6 +156,30 @@ jobs:
         working-directory: agent
         run: python main.py library-status
 
+      - name: Show explainable library review states
+        if: ${{ steps.restore_library.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        working-directory: agent
+        run: |
+          python - <<'PY'
+          import json
+          import sqlite3
+          from pathlib import Path
+          db = Path("data/agent.db")
+          if not db.is_file():
+              raise SystemExit("Missing agent database after library restore")
+          connection = sqlite3.connect(str(db))
+          rows = connection.execute(
+              "SELECT review_state, COUNT(*) FROM tracks GROUP BY review_state ORDER BY review_state"
+          ).fetchall()
+          connection.close()
+          summary = {state: count for state, count in rows}
+          Path("output/library-quality-audit.json").write_text(
+              json.dumps({"review_states": summary, "source": "private-cloud-agent"}, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          print(json.dumps(summary, indent=2))
+          PY
+
       - name: Integrate approved original masters
         id: original_promotion
         if: ${{ steps.restore_library.outcome == 'success' && env.TASK == 'build-evergreen' }}
