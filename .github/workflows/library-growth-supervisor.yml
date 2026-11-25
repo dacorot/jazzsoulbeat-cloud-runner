@@ -90,11 +90,21 @@ jobs:
       - name: Discover secondary leads
         working-directory: agent
         run: |
-          if python - <<'PY'
+          if timeout --kill-after=10s 300s python - <<'PY'
           import internet_archive_catalog
           internet_archive_catalog.discover(limit=500)
           PY
-          then echo success > output/library-growth/source-status/internet_archive; else echo failure > output/library-growth/source-status/internet_archive; fi
+          then
+            echo success > output/library-growth/source-status/internet_archive
+          else
+            code=$?
+            if [[ "$code" == "124" || "$code" == "137" ]]; then
+              echo "::warning::Internet Archive discovery timed out; continuing with official and community sources."
+            else
+              echo "::warning::Internet Archive discovery failed; continuing with other sources."
+            fi
+            echo failure > output/library-growth/source-status/internet_archive
+          fi
       - name: Make autonomous rights decisions and promotion batch
         working-directory: agent
         run: |
