@@ -210,20 +210,7 @@ jobs:
         run: |
           set -euo pipefail
           ready() {
-            python - <<'PY'
-            import sqlite3
-            from pathlib import Path
-            db = Path("data/agent.db")
-            if not db.is_file():
-                raise SystemExit(1)
-            con = sqlite3.connect(str(db))
-            row = con.execute("SELECT COUNT(*), COALESCE(SUM(duration_seconds),0) FROM tracks WHERE approved=1 AND rights_verified=1").fetchone()
-            con.close()
-            count, seconds = int(row[0] or 0), float(row[1] or 0)
-            effective = seconds - max(0, count - 1) * 32
-            print(f"approved={count} raw_seconds={seconds:.2f} effective_seconds={effective:.2f}")
-            raise SystemExit(0 if effective >= 3600 else 1)
-            PY
+            python -c 'import sqlite3; from pathlib import Path; db=Path("data/agent.db"); con=sqlite3.connect(str(db)); count,seconds=con.execute("SELECT COUNT(*), COALESCE(SUM(duration_seconds),0) FROM tracks WHERE approved=1 AND rights_verified=1").fetchone(); con.close(); effective=float(seconds or 0)-max(0,int(count or 0)-1)*32; print(f"approved={int(count or 0)} raw_seconds={float(seconds or 0):.2f} effective_seconds={effective:.2f}"); raise SystemExit(0 if effective >= 3600 else 1)' 
           }
           for attempt in 1 2 3 4; do
             echo "Autonomous music retry $attempt/4"
