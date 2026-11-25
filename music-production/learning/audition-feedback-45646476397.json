@@ -1,0 +1,14 @@
+{
+  "run_id":"45646476397",
+  "artifact":"candidate.wav",
+  "title":"Moonlit Coffeehouse",
+  "sha256":"edc6482faca457f17197913154e72d9d90061585377ae60e76a5c8453de41320",
+  "decision":"APPROVED_AS_BASELINE",
+  "approval":true,
+  "listener_feedback":"Aprobado, pero este es el nivel más básico que deben alcanzar los demás.",
+  "learning_signal":"POSITIVE_BASELINE_NOT_CEILING",
+  "quality_floor":["música perceptiblemente real y musical","atmósfera suave y estable","arreglo instrumental coherente","tema reconocible y desarrollo suficiente","mezcla limpia y sin artefactos evidentes"],
+  "next_generation_requirements":["igualar o superar esta calidad","mayor profundidad armónica","más interacción entre instrumentos","arreglo de banda más completo","mejor desarrollo formal y variación","no aceptar una calidad inferior a esta referencia"],
+  "status":"ELIGIBLE_FOR_REVIEW_LIBRARY_NOT_PUBLICATION",
+  "rights_status":"PENDING_FINAL_PROVENANCE_REVIEW"
+}
