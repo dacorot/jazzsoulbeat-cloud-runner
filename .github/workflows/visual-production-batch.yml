@@ -73,7 +73,7 @@ jobs:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
         run: |
           set +e
-          timeout 300s python main.py drive-pull
+          timeout 120s python main.py drive-pull-visual-assets
           code=$?
           if [ "$code" -ne 0 ]; then
             echo "::warning::Drive restore did not finish; continuing with a clean visual workspace."
