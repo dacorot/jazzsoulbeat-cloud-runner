@@ -73,7 +73,9 @@ jobs:
           # replaced, even if the Actions API reports its state inconsistently.
           latest_completed="false"
           [[ "$latest_status" == "completed" ]] && latest_completed="true"
-          if [[ "$force_dispatch" == "true" || ("$latest_completed" == "true" && "$age_seconds" -ge 21600) || ("$latest_completed" == "true" && "$latest_conclusion" == "failure" && "$validated_package" != "true" && "$age_seconds" -ge 60 && "$latest_attempt" -lt 3) ]]; then
+          # The production cadence is every 48 hours; recovery must not turn
+          # a missed schedule into an unintended six-hour publishing cadence.
+          if [[ "$force_dispatch" == "true" || ("$latest_completed" == "true" && "$age_seconds" -ge 172800) || ("$latest_completed" == "true" && "$latest_conclusion" == "failure" && "$validated_package" != "true" && "$age_seconds" -ge 60 && "$latest_attempt" -lt 3) ]]; then
             jq -n \
               --arg ref main \
               --arg task build-evergreen \
