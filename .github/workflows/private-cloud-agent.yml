@@ -242,30 +242,22 @@ jobs:
           set -euo pipefail
           mkdir -p output/library-promotion
           python - <<'PY'
-          import csv, json, os
+          import json, os, sqlite3
           from pathlib import Path
 
-          root = Path("tracks")
-          manifests = [root / "library.csv", *sorted((root / "seasonal").glob("*/library.csv"))]
-          approved = []
-          for manifest in manifests:
-              if not manifest.is_file():
-                  continue
-              with manifest.open(newline="", encoding="utf-8-sig") as handle:
-                  for row in csv.DictReader(handle):
-                      truthy = {"1", "true", "yes"}
-                      if str(row.get("approved", "")).lower() in truthy and str(row.get("rights_verified", "")).lower() in truthy:
-                          try:
-                              seconds = float(row.get("duration_seconds") or row.get("duration") or 0)
-                          except (TypeError, ValueError):
-                              seconds = 0.0
-                          if seconds > 0:
-                              approved.append(row)
+          db = Path("data/agent.db")
+          if not db.is_file():
+              raise SystemExit("Missing derived audio database after library scan")
+          connection = sqlite3.connect(str(db))
+          approved = connection.execute(
+              "SELECT file, title, genre, duration FROM tracks WHERE approved=1 AND rights_verified=1"
+          ).fetchall()
+          connection.close()
           target = int(float(os.environ["HOURS"]) * 3600)
-          total = sum(float(row.get("duration_seconds") or row.get("duration") or 0) for row in approved)
+          total = sum(float(row[3] or 0) for row in approved)
           report = {
               "agent_id": "production_library_capacity",
-              "source": "tracks/library.csv + tracks/seasonal/*/library.csv",
+              "source": "data/agent.db after manifest scan; manifests remain authoritative",
               "approved_tracks": len(approved),
               "approved_seconds": round(total, 2),
               "target_seconds": target,
@@ -375,6 +367,7 @@ jobs:
               output.write("eligible=true\n")
           with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
               summary.write("## Production gate\n\n**ELIGIBLE** — " + message + "\n")
+          PY
 
       - name: Start Deming PDCA cycle for requested cloud task
         id: pdca_start
