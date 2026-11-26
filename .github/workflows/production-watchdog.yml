@@ -110,6 +110,7 @@ jobs:
           latest="$(printf '%s' "$runs" | jq -c '[.workflow_runs[]] | sort_by(.created_at) | reverse | .[0] // {}')"
           latest_status="$(printf '%s' "$latest" | jq -r '.status // "none"')"
           latest_created="$(printf '%s' "$latest" | jq -r '.created_at // ""')"
+          latest_conclusion="$(printf '%s' "$latest" | jq -r '.conclusion // ""')"
           running_count="$(printf '%s' "$runs" | jq '[.workflow_runs[] | select(.status == "in_progress" or .status == "queued" or .status == "pending")] | length')"
           now_epoch="$(date +%s)"
           latest_epoch=0
@@ -148,6 +149,8 @@ jobs:
           age_seconds=$((now_epoch - latest_epoch))
           if [[ "$running_count" -gt 0 ]]; then
             echo "Visual production already has an active or queued cycle."
+          elif [[ "$latest_status" == "completed" && "$latest_conclusion" == "failure" && "$age_seconds" -lt 3600 ]]; then
+            echo "Visual production failed recently (${age_seconds}s old); retry cooling period is active."
           elif [[ "$latest_status" != "none" && "$age_seconds" -lt 86400 ]]; then
             echo "Visual production cycle is recent (${age_seconds}s old); no duplicate dispatch."
           else
