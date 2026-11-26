@@ -243,6 +243,7 @@ jobs:
           }
           for attempt in 1 2 3 4; do
             echo "Autonomous music retry $attempt/4"
+            before=$(python -c 'import sqlite3; from pathlib import Path; db=Path("data/agent.db"); con=sqlite3.connect(str(db)); count,seconds=con.execute("SELECT COUNT(*), COALESCE(SUM(duration),0) FROM tracks WHERE approved=1 AND rights_verified=1").fetchone(); con.close(); print(f"{int(count or 0)}:{float(seconds or 0):.2f}")')
             if ready; then
               echo "Video material threshold reached."
               break
@@ -273,6 +274,11 @@ jobs:
             if [[ -s output/library-promotion/autonomous-eligible.json ]] && jq -e 'length > 0' output/library-promotion/autonomous-eligible.json >/dev/null; then
               timeout --kill-after=10s 600s python main.py promote-library --candidates output/library-promotion/autonomous-eligible.json --report output/library-promotion/import-report.json
               timeout --kill-after=10s 600s python main.py drive-push-library
+            fi
+            after=$(python -c 'import sqlite3; from pathlib import Path; db=Path("data/agent.db"); con=sqlite3.connect(str(db)); count,seconds=con.execute("SELECT COUNT(*), COALESCE(SUM(duration),0) FROM tracks WHERE approved=1 AND rights_verified=1").fetchone(); con.close(); print(f"{int(count or 0)}:{float(seconds or 0):.2f}")')
+            if [[ "$after" == "$before" ]]; then
+              echo "No approved-library growth in this attempt; the next scheduled cycle will continue discovery."
+              break
             fi
           done
           ready || echo "Material threshold not reached; scheduled search loop remains active."
