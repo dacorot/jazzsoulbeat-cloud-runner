@@ -156,6 +156,11 @@ jobs:
         working-directory: agent
         run: python main.py library-status
 
+      - name: Catalog content by genre season playlist and status
+        if: ${{ steps.restore_library.outcome == 'success' && env.TASK == 'build-evergreen' }}
+        working-directory: agent
+        run: python main.py content-catalog
+
       - name: Show explainable library review states
         if: ${{ steps.restore_library.outcome == 'success' && env.TASK == 'build-evergreen' }}
         working-directory: agent
