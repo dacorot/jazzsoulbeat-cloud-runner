@@ -11,7 +11,11 @@ on:
         required: false
         default: "100"
   schedule:
-    - cron: "0 */8 * * *"
+    # Continuous bounded production: re-enter every two hours until the
+    # persistent queue reaches the target for every genre. The queue state,
+    # provider quota handling and concurrency lock keep this from duplicating
+    # work or running over an active batch.
+    - cron: "0 */2 * * *"
 permissions:
   contents: read
 concurrency:
