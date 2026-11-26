@@ -31,6 +31,9 @@ class TechnicalAudioQATests(unittest.TestCase):
             "creative_approval": False,
             "eligible_for_video_assembly": False,
             "publication_status": "NOT_PUBLISHED",
+            "genre": "jazz",
+            "genre_signature": "extended harmony, comping, melodic improvisation",
+            "genre_authenticity_status": "PENDING_HUMAN_LISTENING",
         }
         self.save()
 

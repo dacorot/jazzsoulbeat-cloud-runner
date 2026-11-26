@@ -42,6 +42,10 @@ def main() -> int:
         errors.append("publication_must_remain_disabled")
     if report.get("genre") not in REQUIRED_GENRES:
         errors.append("unsupported_or_missing_genre")
+    if not report.get("genre_signature"):
+        errors.append("genre_signature_missing")
+    if report.get("genre_authenticity_status") != "PENDING_HUMAN_LISTENING":
+        errors.append("genre_authenticity_must_remain_pending_human_listening")
 
     outcome = {
         "status": "PASS_SECOND_AUTOMATED_GATE" if not errors else "BLOCKED_PRE_REVIEW_GATE",
@@ -50,6 +54,7 @@ def main() -> int:
             "improvement_over_baseline_declared_for_human_comparison",
             "rights_and_publication_safety_lock",
             "genre_and_review_state_validated",
+            "genre_authenticity_not_automatically_certified",
         ],
         "errors": errors,
         "human_review_required": True,

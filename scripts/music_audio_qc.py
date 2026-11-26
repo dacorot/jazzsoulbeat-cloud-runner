@@ -47,6 +47,10 @@ def verify_audio(report_path: Path) -> dict:
         raise AudioQualityError("Model output cannot be creatively approved automatically.")
     if report.get("publication_status") != "NOT_PUBLISHED":
         raise AudioQualityError("Report has invalid publication state.")
+    if not report.get("genre_signature"):
+        raise AudioQualityError("Report is missing the explicit genre signature used for human comparison.")
+    if report.get("genre_authenticity_status") != "PENDING_HUMAN_LISTENING":
+        raise AudioQualityError("Genre authenticity must remain pending human listening.")
 
     # Input JSON is not trusted; ensure the audio is under the project staging directory.
     path = Path(report.get("file", ""))
@@ -116,6 +120,9 @@ def verify_audio(report_path: Path) -> dict:
         "peak_level_db": peak_db,
         "max_long_silence_seconds": round(max_silence, 3),
         "editorial_verdict": "PENDING_HUMAN_LISTENING",
+        "genre": report.get("genre"),
+        "genre_signature": report.get("genre_signature"),
+        "genre_authenticity_status": "PENDING_HUMAN_LISTENING",
         "creative_approval": False,
         "rights_verified": False,
         "eligible_for_video_assembly": False,

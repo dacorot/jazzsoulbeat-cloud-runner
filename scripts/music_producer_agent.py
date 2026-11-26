@@ -3,7 +3,7 @@
 import hashlib, json, math, os, shutil, subprocess, sys
 from urllib.parse import urlparse
 
-from scripts.music_briefs import choose_brief, choose_genre_brief
+from scripts.music_briefs import GENRE_SIGNATURES, choose_brief, choose_genre_brief
 from pathlib import Path
 from datetime import datetime, timezone
 
@@ -214,6 +214,8 @@ def main():
         "title": brief.title,
         "category": brief.slug,
         "genre": genre or "jazz_soul",
+        "genre_signature": GENRE_SIGNATURES.get(brief.slug, ""),
+        "genre_authenticity_status": "PENDING_HUMAN_LISTENING",
         "file": str(target),
         "bytes": target.stat().st_size,
         "sha256": audio_sha256,

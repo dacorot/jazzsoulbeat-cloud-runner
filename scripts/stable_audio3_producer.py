@@ -17,6 +17,7 @@ import shutil
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
+from scripts.music_briefs import GENRE_SIGNATURES, choose_genre_brief
 
 OUT = Path("music-production")
 AUDIO = OUT / "generated"
@@ -98,6 +99,11 @@ def main() -> int:
             {"category": CATEGORY, "duration_seconds": duration},
         )
     try:
+        brief = choose_genre_brief(GENRE)
+        genre_signature = GENRE_SIGNATURES[brief.slug]
+    except (KeyError, ValueError):
+        return fail("blocked_invalid_genre", "Stable Audio 3 requires a supported production genre.", {"genre": GENRE})
+    try:
         from gradio_client import Client
         client = Client(SPACE, verbose=False)
         api = client.view_api(return_format="dict")
@@ -151,6 +157,8 @@ def main() -> int:
         "title": TITLE,
         "category": CATEGORY,
         "genre": GENRE,
+        "genre_signature": genre_signature,
+        "genre_authenticity_status": "PENDING_HUMAN_LISTENING",
         "file": str(target),
         "bytes": target.stat().st_size,
         "sha256": digest,
