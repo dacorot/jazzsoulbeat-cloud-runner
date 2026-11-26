@@ -418,6 +418,10 @@ jobs:
           COLLECTION: ${{ env.COLLECTION }}
           SEASON: ${{ env.SEASON }}
           GENRE: ${{ env.GENRE }}
+          # Evergreen production must use the reviewed plate with verified
+          # localized motion masks; a static fallback is rejected by the final
+          # encoded-motion audit.
+          JSB_BACKGROUND_IMAGE: ${{ env.COLLECTION == 'evergreen' && 'assets/visual-agents/approved-style-samples/modernized_scenes/late_night_jazz_lounge_v1.png' || '' }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
