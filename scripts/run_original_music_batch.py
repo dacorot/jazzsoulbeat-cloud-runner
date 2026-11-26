@@ -48,6 +48,15 @@ def main():
             break
         genre = min(eligible, key=lambda g: (int(state["counts"].get(g, 0)), GENRES.index(g)))
         slot = int(state["counts"].get(genre, 0)) + 1
+        # Never let a failed provider call inherit a prior candidate's report
+        # or gate. Every iteration starts with an empty evidence set.
+        for stale in (ROOT / "production_report.json", ROOT / "TECHNICAL_AUDIO_QA.json", ROOT / "PRE_REVIEW_GATE.json"):
+            stale.unlink(missing_ok=True)
+        generated = ROOT / "generated"
+        if generated.is_dir():
+            for stale_audio in generated.iterdir():
+                if stale_audio.is_file() or stale_audio.is_symlink():
+                    stale_audio.unlink(missing_ok=True)
         env = os.environ.copy()
         env.update({"MUSIC_GENRE": genre, "MUSIC_DURATION_SECONDS": os.getenv("MUSIC_DURATION_SECONDS", "240")})
         result = subprocess.run([sys.executable, "-m", "scripts.music_producer_agent"], env=env, timeout=1100)
