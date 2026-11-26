@@ -65,6 +65,16 @@ def main():
                 "--report", str(report_path),
                 "--output", str(ROOT / "TECHNICAL_AUDIO_QA.json"),
             ], timeout=240).returncode
+        pre_review_exit = 1
+        technical_path = ROOT / "TECHNICAL_AUDIO_QA.json"
+        pre_review_path = ROOT / "PRE_REVIEW_GATE.json"
+        if qc_exit == 0 and report_path.is_file() and technical_path.is_file():
+            pre_review_exit = subprocess.run([
+                sys.executable, "-m", "scripts.music_pre_review_gate",
+                "--report", str(report_path),
+                "--technical-qa", str(technical_path),
+                "--output", str(pre_review_path),
+            ], timeout=60).returncode
         run_dir = ROOT / "batch" / genre / f"candidate-{slot:03d}"
         run_dir.mkdir(parents=True, exist_ok=True)
         for path in ROOT.glob("generated/*"):
@@ -75,9 +85,13 @@ def main():
         qa = ROOT / "TECHNICAL_AUDIO_QA.json"
         if qa.is_file():
             shutil.copy2(qa, run_dir / qa.name)
+        pre_review = ROOT / "PRE_REVIEW_GATE.json"
+        if pre_review.is_file():
+            shutil.copy2(pre_review, run_dir / pre_review.name)
         success = (
             result.returncode == 0
             and qc_exit == 0
+            and pre_review_exit == 0
             and report.get("status") == "generated_audio_needs_human_review"
         )
         if success:
@@ -85,6 +99,7 @@ def main():
         entry = {"genre": genre, "slot": slot, "status": report.get("status", "process_failed"),
                  "technical_candidate": success, "run_exit_code": result.returncode,
                  "technical_qa_exit_code": qc_exit,
+                 "pre_review_gate_exit_code": pre_review_exit,
                  "path": str(run_dir), "created_at_utc": datetime.now(timezone.utc).isoformat(),
                  "approval": "PENDING_HUMAN_LISTENING"}
         state["entries"].append(entry)
