@@ -81,7 +81,9 @@ def main():
         provider = "ACE_STEP"
         primary_status = report.get("status", "process_failed")
         if primary_status in {"blocked_free_quota", "blocked_rate_limit"}:
-            fallback = subprocess.run([sys.executable, "scripts/stable_audio3_producer.py"], env=env, timeout=1100)
+            # Run as a module from the repository root so the producer can
+            # import the shared ``scripts.music_briefs`` package in Actions.
+            fallback = subprocess.run([sys.executable, "-m", "scripts.stable_audio3_producer"], env=env, timeout=1100)
             result = fallback
             provider = "STABLE_AUDIO3_FALLBACK"
             if report_path.is_file():
