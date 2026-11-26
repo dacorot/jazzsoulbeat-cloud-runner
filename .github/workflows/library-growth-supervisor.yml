@@ -47,7 +47,7 @@ jobs:
           # candidate batch and silently reduce the next video's capacity.
           # drive-pull-library restores only production-referenced audio, not
           # review candidates, so the recurring cycle remains bounded.
-          python main.py drive-pull-library
+          timeout --signal=TERM --kill-after=20s 600s python main.py drive-pull-library
           mkdir -p output/library-growth/source-status
       - name: Validate source registry
         run: |
