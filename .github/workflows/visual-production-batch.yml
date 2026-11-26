@@ -85,6 +85,8 @@ jobs:
         env:
           CATEGORY: ${{ env.CATEGORY }}
           COUNT: ${{ env.COUNT }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
           set -euo pipefail
           python - <<'PY'
