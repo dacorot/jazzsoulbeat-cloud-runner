@@ -352,7 +352,13 @@ jobs:
           genre = os.environ["GENRE"]
           season = os.environ.get("SEASON") or None
           try:
-              tracks, source_seconds = pick(hours * 3600, collection=collection, season=season, genre=genre)
+              tracks, source_seconds = pick(
+                  hours * 3600,
+                  collection=collection,
+                  season=season,
+                  genre=genre,
+                  allow_shorter=True,
+              )
           except SystemExit as exc:
               with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
                   output.write("eligible=false\n")
@@ -361,10 +367,13 @@ jobs:
               with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
                   summary.write("## Production gate\n\n**SKIPPED — no video was rendered.**\n\n" + reason + "\n")
               raise SystemExit(0)
-          message = f"ELIGIBLE: {len(tracks)} approved tracks; {source_seconds/3600:.2f} source hours for a {hours:.2f}-hour render."
+          render_hours = source_seconds / 3600
+          mode = "requested duration" if render_hours >= hours else "available approved duration"
+          message = f"ELIGIBLE: {len(tracks)} approved tracks; {source_seconds/3600:.2f} source hours; render uses {mode}."
           print(message)
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
               output.write("eligible=true\n")
+              output.write(f"render_hours={render_hours:.6f}\n")
           with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
               summary.write("## Production gate\n\n**ELIGIBLE** — " + message + "\n")
           PY
@@ -405,7 +414,7 @@ jobs:
         if: ${{ steps.restore_library.outcome == 'success' && env.TASK == 'build-evergreen' && steps.production_gate.outputs.eligible == 'true' && steps.visual_proof.outcome == 'success' }}
         working-directory: agent
         env:
-          MIX_HOURS: ${{ env.HOURS }}
+          MIX_HOURS: ${{ steps.production_gate.outputs.render_hours }}
           COLLECTION: ${{ env.COLLECTION }}
           SEASON: ${{ env.SEASON }}
           GENRE: ${{ env.GENRE }}
@@ -416,7 +425,7 @@ jobs:
           # Motion is limited to verified in-image effects; no scene factory
           # or multi-scene fallback may override that contract.
           export JSB_REQUIRE_MULTI_SCENE=0
-          args=(make --hours "$MIX_HOURS" --auto --collection "$COLLECTION" --genre "$GENRE")
+          args=(make --hours "$MIX_HOURS" --allow-shorter --auto --collection "$COLLECTION" --genre "$GENRE")
           if [[ "$COLLECTION" == "seasonal" ]]; then
             if [[ ! "$SEASON" =~ ^[a-z0-9][a-z0-9_-]{0,39}$ ]]; then
               echo "Temporada inválida o ausente; no se construirá ningún video."
@@ -434,7 +443,7 @@ jobs:
         if: ${{ steps.build_video.outcome == 'success' }}
         working-directory: agent
         env:
-          HOURS: ${{ env.HOURS }}
+          HOURS: ${{ steps.production_gate.outputs.render_hours }}
           COLLECTION: ${{ env.COLLECTION }}
           JSB_REQUIRE_MULTI_SCENE: "0"
         run: |
