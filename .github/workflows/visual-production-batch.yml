@@ -113,6 +113,11 @@ jobs:
           print(json.dumps(summary, ensure_ascii=False, indent=2))
           if summary["generated"] == 0:
               raise SystemExit("No visual scene was generated; batch failed closed.")
+          if summary["generated"] != summary["requested"]:
+              raise SystemExit(
+                  f"Only {summary['generated']} of {summary['requested']} independent scenes were generated; "
+                  "partial visual batches are not promoted automatically."
+              )
           PY
 
       - name: Run Brand Guardian checks
