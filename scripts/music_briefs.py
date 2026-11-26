@@ -19,8 +19,25 @@ QUALITY_FLOOR = (
     "This must be materially better than the approved minimum baseline, not merely equal to it. "
     "Use a complete professional ensemble, convincing harmonic movement, clear melodic development, "
     "balanced dynamics and a resolved ending. Reject demo-like two-instrument sketches, generic loops, "
-    "thin arrangements, abrupt rhythm changes and any passage that sounds unfinished."
+    "thin arrangements, abrupt rhythm changes and any passage that sounds unfinished. "
+    "The genre identity must be audible in harmony, phrasing, rhythm, instrumentation and arrangement, "
+    "not inferred from the title or atmosphere. Future candidates must improve on the listener-approved reference candidates."
 )
+
+GENRE_SIGNATURES = {
+    "soft_jazz": (
+        "Authentic soft jazz identity: extended major-7, minor-7, dominant-9/13 and ii-V-I movement; "
+        "intentional comping, melodic improvisation and restrained brush swing or straight-eighth phrasing."
+    ),
+    "soft_soul": (
+        "Authentic soft soul identity: warm Rhodes/Wurlitzer color, expressive gospel-informed 7th/9th harmony, "
+        "human pocket, call-and-response phrasing and restrained ensemble dynamics without a pop or dance chorus."
+    ),
+    "soft_lofi": (
+        "Authentic soft lo-fi identity: jazz harmony and a complete live-feeling ensemble remain primary; "
+        "tape/room texture is subtle secondary character, never a repetitive beat loop or a substitute for composition."
+    ),
+}
 
 @dataclass(frozen=True)
 class Brief:
@@ -38,7 +55,7 @@ class Brief:
         return (
             f"{duration_seconds}-second original instrumental jazz/soul song. "
             f"Title: {self.title}. Tempo approximately {self.bpm} BPM, key {self.key}. "
-            f"{self.ensemble} {self.arrangement} {self.sound} {QUALITY_FLOOR} {COMMON} "
+            f"{self.ensemble} {self.arrangement} {self.sound} {GENRE_SIGNATURES.get(self.slug, '')} {QUALITY_FLOOR} {COMMON} "
             "Structured original full song, not background music created by looping a short passage."
         )
 

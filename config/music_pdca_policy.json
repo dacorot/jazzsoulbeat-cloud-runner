@@ -7,6 +7,12 @@
     "decision": "APPROVED_AS_BASELINE",
     "rule": "The baseline is a minimum floor, never a target ceiling."
   },
+  "latest_listener_feedback": {
+    "reference_batch": "45731916301",
+    "decision": "LIKED_SOUND_GENRE_VERIFICATION_PENDING",
+    "signal": "The three candidates sound good, but their jazz/soul/lo-fi identity must be verified audibly.",
+    "next_generation_rule": "Every new candidate must improve composition, professional ensemble interaction and audible genre identity over these references; atmosphere alone is insufficient."
+  },
   "cycle": {
     "plan": [
       "define the musical hypothesis and intended listener experience",
