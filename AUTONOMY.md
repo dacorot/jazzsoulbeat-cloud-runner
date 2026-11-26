@@ -10,6 +10,11 @@ All human-facing times use Colombia (America/Bogota, UTC-5). GitHub Actions cron
 
 | Cadence (Colombia) | Workflow | Purpose |
 |---|---|---|
+| Every 5 minutes | production-watchdog.yml | Prevent duplicate production runs, dispatch due music/visual work and retry failed visual batches after a bounded cooling period. |
+| Every hour | original-music-library-batch.yml | Generate up to six private original-music candidates while each genre remains below the target of 100. |
+| Daily | visual-production-batch.yml | Generate an independent visual batch; partial or derived scene sets fail closed. |
+| Four times daily | youtube-analytics-four-times-daily.yml | Save read-only YouTube analytics snapshots for PDCA learning; never edit metadata or publish. |
+| Every 48 hours | private-cloud-agent.yml | Attempt the private long-form video only when the approved-library gates pass. |
 | Every 6 hours, 24/7 | private-agent-preflight.yml | Agent health pulse: compile, unit tests, self-test, artifact QA and safe QA-only Drive persistence. |
 | Daily, 07:00 | build-first-review-video.yml | Attempt a private one-hour review video only when the complete approved and rights-verified music gate passes. |
 | Daily, 07:30 | discover-music-candidates.yml | Refresh candidate catalogues and consolidated review queues. Candidate discovery never approves tracks. |

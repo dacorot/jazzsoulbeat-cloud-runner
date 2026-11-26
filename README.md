@@ -4,6 +4,9 @@ Controlador público mínimo para ejecutar el agente privado `dacorot/jazzsoulbe
 
 ## Estado operativo verificado
 
+- **Capa autónoma vigente (26-11-2026):** `original-music-library-batch.yml` entra cada hora hasta completar la cola de 100 candidatos por género; `production-watchdog.yml` supervisa cada 5 minutos, dispara lotes atrasados y reintenta un fallo visual después de una hora; `visual-production-batch.yml` trabaja con escenas independientes y falla cerrado si no completa el lote solicitado; `youtube-analytics-four-times-daily.yml` toma snapshots cuatro veces al día.
+- El watchdog de producción no duplica ejecuciones activas. La producción musical mantiene los candidatos privados, exige control técnico y pre-revisión automática y deja la escucha humana como gate final. El video privado conserva su cadencia de 48 horas y nunca se publica automáticamente.
+- La auditoría visual exige un paquete completo de 48 escenas independientes para el video largo. Un lote parcial, una variante derivada o una escena sin contrato visual no puede avanzar.
 - El workflow `.github/workflows/private-cloud-agent.yml` está integrado en `main`: admite ejecución manual, marcador `PRIVATE_CLOUD_AGENT_START.md` y producción programada cada 48 horas a las 06:00 de Colombia (11:00 UTC). Usa `build-evergreen` con gate estricto; si no hay música aprobada suficiente, termina sin render.
 - Usa `ubuntu-latest`, runner estándar en este repositorio público. No usa larger runners, servicios de pago ni facturación habilitada por este proyecto.
 - Accede al repositorio privado con `PRIVATE_REPO_READ_TOKEN`, limitado a lectura.
@@ -23,7 +26,7 @@ Controlador público mínimo para ejecutar el agente privado `dacorot/jazzsoulbe
 | `self-test` | Genera un video sintético breve para comprobar el pipeline. |
 | `build-evergreen` | Construye un video usando exclusivamente la biblioteca evergreen aprobada. Requiere pistas aprobadas suficientes. |
 
-La generación original con ACE-Step está separada en `music-producer.yml`: produce un instrumental de 120 segundos y conserva el resultado como artefacto para revisión. No construye todavía el video final ni se ejecuta automáticamente. El comando `make-original` que aparece en algunas ramas del agente no está expuesto como tarea en este formulario cloud; no debe confundirse con una capacidad ya desplegada.
+La generación original vigente usa el lote acotado de `original-music-library-batch.yml`, con ACE-Step como proveedor primario y Stable Audio 3 como fallback gratuito de audición cuando corresponde. Cada lote se persiste en Drive privado; la aprobación creativa, la aprobación de derechos y la publicación siguen fuera de la automatización.
 
 La duración configurada en el formulario manual está limitada a 1, 2 o 3 horas. La tarea estacional requiere un slug válido y una biblioteca estacional revisada.
 
@@ -40,7 +43,7 @@ La tarea `self-test` genera únicamente el video sintético de comprobación; no
 
 ## Seguridad y límites
 
-- La automatización está separada por función: `discover-music-candidates.yml` ejecuta descubrimiento diario a las 11:00 Colombia (16:00 UTC); `private-cloud-agent.yml` intenta producción evergreen lunes, miércoles y viernes a las 06:00 Colombia (11:00 UTC), siempre sujeta al gate de derechos y duración; `private-agent-preflight.yml` valida cada seis horas. Otros workflows de investigación/revisión tienen sus propios horarios y límites. Son ejecuciones programadas en runners efímeros, no un proceso persistente 24/7.
+- La automatización está separada por función: `original-music-library-batch.yml` produce cada hora; `visual-production-batch.yml` tiene ciclo diario; `production-watchdog.yml` supervisa cada cinco minutos; `youtube-analytics-four-times-daily.yml` actualiza analítica cuatro veces al día; `private-cloud-agent.yml` intenta el video privado cada 48 horas; `private-agent-preflight.yml` valida cada seis horas. Son ejecuciones programadas en runners efímeros, no un proceso persistente 24/7.
 - `music-producer.yml` solo se ejecuta manualmente o mediante su marcador de inicio; intenta generar un instrumental original de 120 segundos con el Space público ACE-Step. Si el servicio gratuito no responde o cambia su API, falla sin recurrir a proveedores de pago. No equivale todavía a producción musical autónoma de larga duración.
 - `private-cloud-agent.yml` es manual y conserva el flujo de restauración/guardado en Drive. `parallel-production.yml` también queda manual: cada ejecución reúne auditoría de derechos, generación visual y render de varias horas, por lo que no debe dispararse por cada cambio de código.
 - La ejecución automática no garantiza puntualidad: GitHub puede retrasar o descartar schedules con alta carga y desactiva schedules en repositorios públicos tras 60 días sin actividad.
