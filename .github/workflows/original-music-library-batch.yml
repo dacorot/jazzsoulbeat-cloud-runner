@@ -5,7 +5,7 @@ on:
       batch_size:
         description: "Maximum candidates in this cycle"
         required: false
-        default: "3"
+        default: "6"
       target_per_genre:
         description: "Target candidates for each soft genre"
         required: false
@@ -60,7 +60,7 @@ jobs:
           if [ -n "$prior" ]; then cp "$prior" music-production/music-batch-state.json; fi
       - name: Generate bounded improvement candidates
         env:
-          MUSIC_BATCH_SIZE: ${{ inputs.batch_size || '3' }}
+          MUSIC_BATCH_SIZE: ${{ inputs.batch_size || '6' }}
           MUSIC_TARGET_PER_GENRE: ${{ inputs.target_per_genre || '100' }}
           MUSIC_DURATION_SECONDS: "240"
           ACE_STEP_SPACE: "Blursed/Ace-Step-v1.5"
