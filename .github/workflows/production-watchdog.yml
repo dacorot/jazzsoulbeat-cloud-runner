@@ -110,7 +110,6 @@ jobs:
           latest="$(printf '%s' "$runs" | jq -c '[.workflow_runs[]] | sort_by(.created_at) | reverse | .[0] // {}')"
           latest_status="$(printf '%s' "$latest" | jq -r '.status // "none"')"
           latest_created="$(printf '%s' "$latest" | jq -r '.created_at // ""')"
-          latest_conclusion="$(printf '%s' "$latest" | jq -r '.conclusion // ""')"
           running_count="$(printf '%s' "$runs" | jq '[.workflow_runs[] | select(.status == "in_progress" or .status == "queued" or .status == "pending")] | length')"
           now_epoch="$(date +%s)"
           latest_epoch=0
@@ -142,6 +141,7 @@ jobs:
           latest="$(printf '%s' "$runs" | jq -c '[.workflow_runs[]] | sort_by(.created_at) | reverse | .[0] // {}')"
           latest_status="$(printf '%s' "$latest" | jq -r '.status // "none"')"
           latest_created="$(printf '%s' "$latest" | jq -r '.created_at // ""')"
+          latest_conclusion="$(printf '%s' "$latest" | jq -r '.conclusion // ""')"
           running_count="$(printf '%s' "$runs" | jq '[.workflow_runs[] | select(.status == "in_progress" or .status == "queued" or .status == "pending")] | length')"
           now_epoch="$(date +%s)"
           latest_epoch=0
