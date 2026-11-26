@@ -54,10 +54,10 @@ jobs:
         working-directory: agent
         run: |
           ketsa() {
-            if python main.py discover-ketsa --limit 100; then echo success > output/library-growth/source-status/ketsa_official; else echo failure > output/library-growth/source-status/ketsa_official; fi
+            if timeout --kill-after=10s 300s python main.py discover-ketsa --limit 100; then echo success > output/library-growth/source-status/ketsa_official; else echo failure > output/library-growth/source-status/ketsa_official; fi
           }
           incompetech() {
-            if python main.py discover-incompetech; then echo success > output/library-growth/source-status/incompetech_official; else echo failure > output/library-growth/source-status/incompetech_official; fi
+            if timeout --kill-after=10s 300s python main.py discover-incompetech; then echo success > output/library-growth/source-status/incompetech_official; else echo failure > output/library-growth/source-status/incompetech_official; fi
           }
           ketsa & ketsa_pid=$!
           incompetech & incompetech_pid=$!
@@ -83,10 +83,10 @@ jobs:
           OPENVERSE_CLIENT_SECRET: ${{ secrets.OPENVERSE_CLIENT_SECRET }}
           YOUTUBE_TOKEN_JSON: ${{ secrets.YOUTUBE_TOKEN_JSON }}
         run: |
-          if python main.py discover-commons --limit 200; then echo success > output/library-growth/source-status/wikimedia_commons; else echo failure > output/library-growth/source-status/wikimedia_commons; fi
+          if timeout --kill-after=10s 300s python main.py discover-commons --limit 200; then echo success > output/library-growth/source-status/wikimedia_commons; else echo failure > output/library-growth/source-status/wikimedia_commons; fi
           echo disabled > output/library-growth/source-status/openverse_adapter_missing
-          if python main.py discover-ccmixter --limit 200; then echo success > output/library-growth/source-status/ccmixter; else echo failure > output/library-growth/source-status/ccmixter; fi
-          if python main.py discover-youtube --limit 200; then echo success > output/library-growth/source-status/youtube_creative_commons; else echo failure > output/library-growth/source-status/youtube_creative_commons; fi
+          if timeout --kill-after=10s 300s python main.py discover-ccmixter --limit 200; then echo success > output/library-growth/source-status/ccmixter; else echo failure > output/library-growth/source-status/ccmixter; fi
+          if timeout --kill-after=10s 300s python main.py discover-youtube --limit 200; then echo success > output/library-growth/source-status/youtube_creative_commons; else echo failure > output/library-growth/source-status/youtube_creative_commons; fi
       - name: Discover secondary leads
         working-directory: agent
         run: |
@@ -248,22 +248,22 @@ jobs:
               break
             fi
             ketsa() {
-              python main.py discover-ketsa --limit 100 || true
-              python main.py download-ketsa --limit 100 || true
-              python -c 'import rights_audit; rights_audit.audit_ketsa()' || true
+              timeout --kill-after=10s 300s python main.py discover-ketsa --limit 100 || true
+              timeout --kill-after=10s 600s python main.py download-ketsa --limit 100 || true
+              timeout --kill-after=10s 600s python -c 'import rights_audit; rights_audit.audit_ketsa()' || true
             }
             incompetech() {
-              python main.py discover-incompetech || true
-              python main.py download-incompetech || true
-              python main.py audit-incompetech-sources || true
-              python main.py audit-incompetech-track-pages || true
-              python -c 'import rights_audit; rights_audit.audit_incompetech()' || true
+              timeout --kill-after=10s 300s python main.py discover-incompetech || true
+              timeout --kill-after=10s 600s python main.py download-incompetech || true
+              timeout --kill-after=10s 600s python main.py audit-incompetech-sources || true
+              timeout --kill-after=10s 600s python main.py audit-incompetech-track-pages || true
+              timeout --kill-after=10s 600s python -c 'import rights_audit; rights_audit.audit_incompetech()' || true
             }
             ketsa & ketsa_pid=$!
             incompetech & incompetech_pid=$!
             wait "$ketsa_pid" "$incompetech_pid"
-            python main.py intake-library-growth
-            python ../scripts/autonomous_music_gate.py \
+            timeout --kill-after=10s 300s python main.py intake-library-growth
+            timeout --kill-after=10s 300s python ../scripts/autonomous_music_gate.py \
               --input output/library-promotion/eligible-external.json \
               --output output/library-promotion/autonomous-eligible.json \
               --quarantine output/library-promotion/autonomous-quarantine.json \
@@ -271,8 +271,8 @@ jobs:
               --feedback output/learning/feedback.jsonl \
               --model output/learning/model.json
             if [[ -s output/library-promotion/autonomous-eligible.json ]] && jq -e 'length > 0' output/library-promotion/autonomous-eligible.json >/dev/null; then
-              python main.py promote-library --candidates output/library-promotion/autonomous-eligible.json --report output/library-promotion/import-report.json
-              python main.py drive-push-library
+              timeout --kill-after=10s 600s python main.py promote-library --candidates output/library-promotion/autonomous-eligible.json --report output/library-promotion/import-report.json
+              timeout --kill-after=10s 600s python main.py drive-push-library
             fi
           done
           ready || echo "Material threshold not reached; scheduled search loop remains active."
