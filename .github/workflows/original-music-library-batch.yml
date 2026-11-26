@@ -47,7 +47,10 @@ jobs:
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
         run: |
-          python agent/main.py drive-pull-original-music
+          # The queue state is authoritative; never generate from a partially
+          # restored queue. Bound the network operation so a transient Drive
+          # issue fails closed and the next scheduled cycle can retry.
+          timeout --signal=TERM --kill-after=20s 600s python agent/main.py drive-pull-original-music
           mkdir -p music-production
           prior="$(find agent/output/original-music -name music-batch-state.json -type f | sort | tail -1 || true)"
           if [ -n "$prior" ]; then cp "$prior" music-production/music-batch-state.json; fi
