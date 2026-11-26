@@ -23,7 +23,7 @@ FALLBACK_PROMPT = {
     "lofi": "Original soft lo-fi jazz instrumental with real full ensemble: felt piano, Rhodes, upright bass, brushed drums, muted jazz guitar, soft tenor saxophone and vibraphone; 68 BPM; evolving jazz harmony, complete form and quiet ending; tasteful tape warmth only, no beat loop, hip-hop groove, vocals or abrupt rhythm change.",
 }
 TARGET = int(os.getenv("MUSIC_TARGET_PER_GENRE", "100"))
-BATCH = max(1, min(int(os.getenv("MUSIC_BATCH_SIZE", "3")), 6))
+BATCH = max(1, min(int(os.getenv("MUSIC_BATCH_SIZE", "6")), 6))
 ROOT = Path("music-production")
 STATE = ROOT / "music-batch-state.json"
 
