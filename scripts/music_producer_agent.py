@@ -3,7 +3,7 @@
 import hashlib, json, math, os, shutil, subprocess, sys
 from urllib.parse import urlparse
 
-from scripts.music_briefs import choose_brief
+from scripts.music_briefs import choose_brief, choose_genre_brief
 from pathlib import Path
 from datetime import datetime, timezone
 
@@ -34,7 +34,8 @@ def main():
     try:
         raw_duration = os.getenv("MUSIC_DURATION_SECONDS", str(DEFAULT_DURATION_SECONDS))
         duration = int(raw_duration)
-        brief = choose_brief(os.getenv("MUSIC_CATEGORY", "coffee_time"))
+        genre = os.getenv("MUSIC_GENRE", "").strip().lower()
+        brief = choose_genre_brief(genre) if genre else choose_brief(os.getenv("MUSIC_CATEGORY", "coffee_time"))
         model = os.getenv("ACE_STEP_MODEL", "acestep-v15-turbo")
         if model not in {"acestep-v15-turbo", "acestep-v15-xl-turbo"}:
             raise ValueError("Only vetted free ACE-Step turbo models are permitted.")
@@ -114,20 +115,20 @@ def main():
                 "blocked_free_quota",
                 "The free ZeroGPU allowance is exhausted; no paid fallback or immediate retry.",
                 {"endpoint": "/generation_wrapper",
-                 "provider_retry_hint": failure[:500], "category": brief.slug},
+                "provider_retry_hint": failure[:500], "category": brief.slug, "genre": genre or None},
             )
         if "429" in failure or "rate limit" in failure.lower():
             return fail(
                 "blocked_rate_limit",
                 "Free model provider rate-limited this request; no immediate retry.",
                 {"endpoint": "/generation_wrapper",
-                 "provider_retry_hint": failure[:500], "category": brief.slug},
+                "provider_retry_hint": failure[:500], "category": brief.slug, "genre": genre or None},
             )
         return fail(
             "blocked_generation",
             "The ACE-Step generation endpoint failed; no paid fallback was used.",
             {"endpoint": "/generation_wrapper", "error": failure[:1000],
-             "category": brief.slug, "requested_duration": duration},
+             "category": brief.slug, "genre": genre or None, "requested_duration": duration},
         )
 
     found = []
@@ -212,6 +213,7 @@ def main():
         "status": "generated_audio_needs_human_review",
         "title": brief.title,
         "category": brief.slug,
+        "genre": genre or "jazz_soul",
         "file": str(target),
         "bytes": target.stat().st_size,
         "sha256": audio_sha256,
@@ -234,7 +236,9 @@ def main():
         "streaming_distribution_status": "not_explicitly_addressed",
         "rights_verified": False,
         "human_review_required": True,
-        "publication_status": "NOT_PUBLISHED"
+        "publication_status": "NOT_PUBLISHED",
+        "quality_gate": "MUST_IMPROVE_APPROVED_BASELINE",
+        "baseline_reference": "Moonlit Coffeehouse / run 45646476397"
     }
     write_json(OUT / "production_report.json", report)
     print(json.dumps(report, ensure_ascii=False, indent=2))

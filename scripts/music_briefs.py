@@ -15,6 +15,13 @@ COMMON = (
     "Professional coherent harmonic movement; melodic conversation and subtle variations. Quiet late-night listening only: no dance groove, funk, disco, boogie, bossa, upbeat shuffle, hip-hop beat, vocals or spoken words."
 )
 
+QUALITY_FLOOR = (
+    "This must be materially better than the approved minimum baseline, not merely equal to it. "
+    "Use a complete professional ensemble, convincing harmonic movement, clear melodic development, "
+    "balanced dynamics and a resolved ending. Reject demo-like two-instrument sketches, generic loops, "
+    "thin arrangements, abrupt rhythm changes and any passage that sounds unfinished."
+)
+
 @dataclass(frozen=True)
 class Brief:
     slug: str
@@ -31,7 +38,7 @@ class Brief:
         return (
             f"{duration_seconds}-second original instrumental jazz/soul song. "
             f"Title: {self.title}. Tempo approximately {self.bpm} BPM, key {self.key}. "
-            f"{self.ensemble} {self.arrangement} {self.sound} {COMMON} "
+            f"{self.ensemble} {self.arrangement} {self.sound} {QUALITY_FLOOR} {COMMON} "
             "Structured original full song, not background music created by looping a short passage."
         )
 
@@ -75,7 +82,33 @@ BRIEFS = {
     ),
 }
 
+GENRE_BRIEFS = {
+    "jazz": Brief(
+        "soft_jazz", "Blue Room After Midnight", 70, "C major",
+        "Acoustic grand piano, Rhodes, upright bass, brushed jazz kit, hollowbody guitar, tenor saxophone, muted trumpet, vibraphone and subtle Hammond organ.",
+        "Lyrical 16-bar theme, conversational piano and sax responses, a restrained improvised middle, harmonic bridge, return and carefully shaped coda.",
+        "Late-night straight-eighth jazz with sophisticated voicings, human swing inflection without a driving groove, warm room ambience and low fatigue.",
+    ),
+    "soul": Brief(
+        "soft_soul", "Velvet Window Light", 72, "F major",
+        "Rhodes and acoustic piano, warm electric and upright bass, brushed drums, clean guitar, muted trumpet, tenor saxophone, vibraphone and restrained Hammond organ.",
+        "Patient verse-like theme, soulful call and response, tasteful harmonic lift, instrumental keyboard and sax conversation, reprise and resolved outro.",
+        "Quiet sophisticated soul-jazz with gospel-informed harmony, deep pocket at low energy, no pop chorus, no funk or dance emphasis, natural band interaction.",
+    ),
+    "lofi": Brief(
+        "soft_lofi", "Dusty Lamp on the Desk", 68, "B flat major",
+        "Felt piano, Rhodes, upright bass, brushed drums, muted jazz guitar, soft tenor saxophone, vibraphone and very subtle tape warmth.",
+        "Sparse but complete opening, evolving jazz theme, gentle variations, a short contrasting bridge, understated solo exchange, reprise and quiet ending.",
+        "Lo-fi texture used only as tasteful room character over real jazz harmony and a complete ensemble; never a beat loop, hip-hop groove, vinyl gimmick or two-instrument demo.",
+    ),
+}
+
 def choose_brief(slug: str) -> Brief:
     if not isinstance(slug, str) or slug not in BRIEFS:
         raise ValueError("Unsupported music category. Must be one of: " + ", ".join(BRIEFS))
     return BRIEFS[slug]
+
+def choose_genre_brief(genre: str) -> Brief:
+    if not isinstance(genre, str) or genre not in GENRE_BRIEFS:
+        raise ValueError("Unsupported production genre. Must be one of: " + ", ".join(GENRE_BRIEFS))
+    return GENRE_BRIEFS[genre]
