@@ -16,6 +16,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 GENRES = ("jazz", "soul", "lofi")
+FALLBACK_CATEGORY = {"jazz": "work_study", "soul": "coffee_time", "lofi": "chill"}
+FALLBACK_PROMPT = {
+    "jazz": "Original soft late-night jazz instrumental, complete professional ensemble with grand piano, Rhodes, upright bass, brushed drums, hollowbody guitar, tenor saxophone, muted trumpet and vibraphone; 70 BPM; lyrical theme, conversational improvisation, contrasting bridge, natural ending; no vocals, funk, disco, bossa, hip-hop, loop or abrupt rhythm change.",
+    "soul": "Original quiet soul-jazz instrumental, complete professional ensemble with Rhodes, acoustic piano, upright bass, brushed drums, clean guitar, tenor saxophone, muted trumpet, vibraphone and restrained Hammond; 72 BPM; soulful call and response, harmonic development, restrained groove, natural ending; no vocals, funk, disco, dance, loop or abrupt rhythm change.",
+    "lofi": "Original soft lo-fi jazz instrumental with real full ensemble: felt piano, Rhodes, upright bass, brushed drums, muted jazz guitar, soft tenor saxophone and vibraphone; 68 BPM; evolving jazz harmony, complete form and quiet ending; tasteful tape warmth only, no beat loop, hip-hop groove, vocals or abrupt rhythm change.",
+}
 TARGET = int(os.getenv("MUSIC_TARGET_PER_GENRE", "100"))
 BATCH = max(1, min(int(os.getenv("MUSIC_BATCH_SIZE", "3")), 6))
 ROOT = Path("music-production")
@@ -58,7 +64,12 @@ def main():
                 if stale_audio.is_file() or stale_audio.is_symlink():
                     stale_audio.unlink(missing_ok=True)
         env = os.environ.copy()
-        env.update({"MUSIC_GENRE": genre, "MUSIC_DURATION_SECONDS": os.getenv("MUSIC_DURATION_SECONDS", "240")})
+        env.update({
+            "MUSIC_GENRE": genre,
+            "MUSIC_CATEGORY": FALLBACK_CATEGORY[genre],
+            "MUSIC_PROMPT": FALLBACK_PROMPT[genre],
+            "MUSIC_DURATION_SECONDS": os.getenv("MUSIC_DURATION_SECONDS", "240"),
+        })
         result = subprocess.run([sys.executable, "-m", "scripts.music_producer_agent"], env=env, timeout=1100)
         report_path = ROOT / "production_report.json"
         report = {}
@@ -67,6 +78,17 @@ def main():
                 report = json.loads(report_path.read_text(encoding="utf-8"))
             except (OSError, ValueError, TypeError):
                 report = {"status": "invalid_report"}
+        provider = "ACE_STEP"
+        primary_status = report.get("status", "process_failed")
+        if primary_status in {"blocked_free_quota", "blocked_rate_limit"}:
+            fallback = subprocess.run([sys.executable, "scripts/stable_audio3_producer.py"], env=env, timeout=1100)
+            result = fallback
+            provider = "STABLE_AUDIO3_FALLBACK"
+            if report_path.is_file():
+                try:
+                    report = json.loads(report_path.read_text(encoding="utf-8"))
+                except (OSError, ValueError, TypeError):
+                    report = {"status": "invalid_report"}
         qc_exit = 1
         if result.returncode == 0 and report.get("status") == "generated_audio_needs_human_review":
             qc_exit = subprocess.run([
@@ -109,6 +131,7 @@ def main():
                  "technical_candidate": success, "run_exit_code": result.returncode,
                  "technical_qa_exit_code": qc_exit,
                  "pre_review_gate_exit_code": pre_review_exit,
+                 "provider": provider, "primary_provider_status": primary_status,
                  "path": str(run_dir), "created_at_utc": datetime.now(timezone.utc).isoformat(),
                  "approval": "PENDING_HUMAN_LISTENING"}
         state["entries"].append(entry)

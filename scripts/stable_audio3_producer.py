@@ -24,6 +24,7 @@ SPACE = os.getenv("STABLE_AUDIO3_SPACE", "stabilityai/stable-audio-3")
 MODEL = "medium"
 TITLE = os.getenv("MUSIC_TITLE", "Moonlit Coffeehouse")
 CATEGORY = os.getenv("MUSIC_CATEGORY", "coffee_time")
+GENRE = os.getenv("MUSIC_GENRE", "jazz_soul")
 PROMPT = os.getenv(
     "MUSIC_PROMPT",
     "Original instrumental late-night jazz soul, elegant adult coffeehouse atmosphere, "
@@ -55,11 +56,14 @@ def fail(status: str, message: str, details: dict | None = None) -> int:
         "space": SPACE,
         "model": MODEL,
         "category": CATEGORY,
+        "genre": GENRE,
         "cost_policy": "free_only",
         "creative_approval": False,
         "rights_verified": False,
         "eligible_for_video_assembly": False,
         "publication_status": "NOT_PUBLISHED",
+        "quality_gate": "MUST_IMPROVE_APPROVED_BASELINE",
+        "baseline_reference": "Moonlit Coffeehouse / run 45646476397",
     })
     return 1
 
@@ -146,6 +150,7 @@ def main() -> int:
         "status": "generated_audio_needs_human_review",
         "title": TITLE,
         "category": CATEGORY,
+        "genre": GENRE,
         "file": str(target),
         "bytes": target.stat().st_size,
         "sha256": digest,
@@ -169,6 +174,8 @@ def main() -> int:
         "rights_verified": False,
         "human_review_required": True,
         "publication_status": "NOT_PUBLISHED",
+        "quality_gate": "MUST_IMPROVE_APPROVED_BASELINE",
+        "baseline_reference": "Moonlit Coffeehouse / run 45646476397",
     })
     print(json.dumps({"status": "generated_audio_needs_human_review", "file": str(target), "sha256": digest, "duration": round(actual, 3)}, ensure_ascii=False))
     return 0
