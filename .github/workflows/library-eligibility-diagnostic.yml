@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: dacorot/jazzsoulbeat-agent
-          ref: 8623a83ca9fcaa2d7e35590fedf0597fb7e175ca
+          ref: ab8dcf30f66c652d386353e2819b5332f1f654c6
           token: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
           path: agent
           persist-credentials: false
