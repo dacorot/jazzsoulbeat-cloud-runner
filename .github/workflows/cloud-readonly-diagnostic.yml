@@ -47,6 +47,7 @@ jobs:
       - name: Verify private agent repository read access
         id: private_agent_checkout
         if: ${{ steps.secrets.outputs.private_repo_token == 'PRESENT' }}
+        continue-on-error: true
         uses: actions/checkout@v4
         with:
           repository: dacorot/jazzsoulbeat-agent
