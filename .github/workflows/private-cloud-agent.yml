@@ -22,7 +22,6 @@ on:
         default: "2"
         type: choice
         options:
-          - "1"
           - "2"
           - "3"
       collection:
@@ -357,7 +356,7 @@ jobs:
                   collection=collection,
                   season=season,
                   genre=genre,
-                  allow_shorter=True,
+                  allow_shorter=False,
               )
           except SystemExit as exc:
               with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
@@ -429,7 +428,7 @@ jobs:
           # Motion is limited to verified in-image effects; no scene factory
           # or multi-scene fallback may override that contract.
           export JSB_REQUIRE_MULTI_SCENE=0
-          args=(make --hours "$MIX_HOURS" --allow-shorter --auto --collection "$COLLECTION" --genre "$GENRE")
+          args=(make --hours "$MIX_HOURS" --auto --collection "$COLLECTION" --genre "$GENRE")
           if [[ "$COLLECTION" == "seasonal" ]]; then
             if [[ ! "$SEASON" =~ ^[a-z0-9][a-z0-9_-]{0,39}$ ]]; then
               echo "Temporada inválida o ausente; no se construirá ningún video."
