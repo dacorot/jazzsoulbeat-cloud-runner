@@ -16,7 +16,7 @@ All human-facing times use Colombia (America/Bogota, UTC-5). GitHub Actions cron
 | Four times daily | youtube-analytics-four-times-daily.yml | Save read-only YouTube analytics snapshots for PDCA learning; never edit metadata or publish. |
 | Every 48 hours | private-cloud-agent.yml | Attempt the private long-form video only when the approved-library gates pass. |
 | Every 6 hours, 24/7 | private-agent-preflight.yml | Agent health pulse: compile, unit tests, self-test, artifact QA and safe QA-only Drive persistence. |
-| Daily, 07:00 | build-first-review-video.yml | Attempt a private one-hour review video only when the complete approved and rights-verified music gate passes. |
+| Daily, 07:00 | build-first-review-video.yml | Attempt a private two-hour review video only when the complete approved and rights-verified music gate passes. |
 | Daily, 07:30 | discover-music-candidates.yml | Refresh candidate catalogues and consolidated review queues. Candidate discovery never approves tracks. |
 | Monday, 07:17 | audit-openlofi-rights.yml | Recheck Open Lo-Fi source statements, audio hashes and rights evidence; read-only. |
 | Monday, 08:17 | performance-weekly-review.yml | Generate 7-day, rolling 30-day and rolling 90-day KPI reports; preserve them in private Drive. |
@@ -38,7 +38,7 @@ The six-hour preflight is the recurring technical health check. Daily discovery 
 
 - Only audio referenced by production manifests and passing source, rights, duration and metadata checks may enter production.
 - Candidate discovery, download and rights audits never approve tracks automatically.
-- The first video is 60 minutes; later videos alternate 2- and 3-hour targets as the approved library permits.
+- Every long-form video targets 2 or 3 hours, selected per release. The first video is not shortened to 60 minutes; if the approved, rights-verified library cannot fill the selected duration, production remains blocked.
 - No video is built from an incomplete library, shortened tracks or repeated tracks.
 - Finished review packages remain in private Google Drive.
 - **No YouTube upload is allowed, including private upload, until the user explicitly authorizes it.** Public publishing always requires separate explicit authorization.
