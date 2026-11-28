@@ -76,6 +76,7 @@ jobs:
         run: python -m pip install --disable-pip-version-check google-api-python-client google-auth google-auth-httplib2
 
       - name: Verify Drive OAuth and app-visible folder metadata (read only)
+        id: drive_check
         if: ${{ steps.secrets.outputs.drive_token == 'PRESENT' }}
         env:
           DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
@@ -133,3 +134,38 @@ jobs:
             echo "- No YouTube upload or publication was attempted."
             echo "- The runner's temporary workspace is ephemeral."
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Final diagnostic verdict
+        if: always()
+        shell: bash
+        env:
+          PRIVATE_TOKEN_STATE: ${{ steps.secrets.outputs.private_repo_token }}
+          PRIVATE_CHECKOUT_OUTCOME: ${{ steps.private_agent_checkout.outcome }}
+          DRIVE_TOKEN_STATE: ${{ steps.secrets.outputs.drive_token }}
+          DRIVE_CHECK_OUTCOME: ${{ steps.drive_check.outcome }}
+        run: |
+          set -u
+          private_status="BLOCKED"
+          drive_status="BLOCKED"
+          if [[ "$PRIVATE_TOKEN_STATE" == "PRESENT" && "$PRIVATE_CHECKOUT_OUTCOME" == "success" ]]; then
+            private_status="VERIFIED"
+          elif [[ "$PRIVATE_TOKEN_STATE" == "MISSING" ]]; then
+            private_status="SECRET_MISSING"
+          fi
+          if [[ "$DRIVE_TOKEN_STATE" == "PRESENT" && "$DRIVE_CHECK_OUTCOME" == "success" ]]; then
+            drive_status="VERIFIED"
+          elif [[ "$DRIVE_TOKEN_STATE" == "MISSING" ]]; then
+            drive_status="SECRET_MISSING"
+          fi
+          {
+            echo ""
+            echo "## Diagnostic verdict"
+            echo "- Private repository access: $private_status"
+            echo "- Google Drive OAuth/read: $drive_status"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "PRIVATE_REPOSITORY_READ_ACCESS: $private_status"
+          echo "DRIVE_OAUTH_AND_READ: $drive_status"
+          if [[ "$private_status" != "VERIFIED" || "$drive_status" != "VERIFIED" ]]; then
+            echo "::error::Cloud prerequisites are not fully verified. No production was started."
+            exit 1
+          fi
