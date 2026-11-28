@@ -119,7 +119,7 @@ jobs:
 
       - name: Summarize missing Drive secret
         if: ${{ steps.secrets.outputs.drive_token == 'MISSING' }}
-        run: echo "DRIVE_OAUTH: BLOCKED_SECRET_MISSING"
+        run: 'echo "DRIVE_OAUTH: BLOCKED_SECRET_MISSING"'
 
       - name: Explicit safety summary
         if: always()
