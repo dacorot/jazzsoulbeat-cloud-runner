@@ -1,0 +1,135 @@
+name: Jazz Soul Beat cloud read-only diagnostic
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: jazz-soul-beat-readonly-diagnostic
+  cancel-in-progress: false
+
+jobs:
+  diagnostic:
+    name: Verify cloud credentials and Drive visibility without writes
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out cloud controller
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Check secret presence without revealing values
+        id: secrets
+        shell: bash
+        env:
+          PRIVATE_REPO_READ_TOKEN: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: |
+          set -euo pipefail
+          if [[ -n "$PRIVATE_REPO_READ_TOKEN" ]]; then
+            echo "private_repo_token=PRESENT" >> "$GITHUB_OUTPUT"
+            echo "PRIVATE_REPO_READ_TOKEN: PRESENT"
+          else
+            echo "private_repo_token=MISSING" >> "$GITHUB_OUTPUT"
+            echo "PRIVATE_REPO_READ_TOKEN: MISSING"
+          fi
+          if [[ -n "$DRIVE_TOKEN_JSON" ]]; then
+            echo "drive_token=PRESENT" >> "$GITHUB_OUTPUT"
+            echo "DRIVE_TOKEN_JSON: PRESENT"
+          else
+            echo "drive_token=MISSING" >> "$GITHUB_OUTPUT"
+            echo "DRIVE_TOKEN_JSON: MISSING"
+          fi
+
+      - name: Verify private agent repository read access
+        id: private_agent_checkout
+        if: ${{ steps.secrets.outputs.private_repo_token == 'PRESENT' }}
+        continue-on-error: true
+        uses: actions/checkout@v4
+        with:
+          repository: dacorot/jazzsoulbeat-agent
+          ref: master
+          token: ${{ secrets.PRIVATE_REPO_READ_TOKEN }}
+          path: private-agent-read-check
+          persist-credentials: false
+
+      - name: Report private repository access
+        if: always()
+        shell: bash
+        env:
+          TOKEN_STATE: ${{ steps.secrets.outputs.private_repo_token }}
+          CHECKOUT_OUTCOME: ${{ steps.private_agent_checkout.outcome }}
+        run: |
+          if [[ "$TOKEN_STATE" == "PRESENT" && "$CHECKOUT_OUTCOME" == "success" ]]; then
+            echo "PRIVATE_REPOSITORY_READ_ACCESS: VERIFIED"
+          elif [[ "$TOKEN_STATE" == "MISSING" ]]; then
+            echo "PRIVATE_REPOSITORY_READ_ACCESS: BLOCKED_SECRET_MISSING"
+          else
+            echo "PRIVATE_REPOSITORY_READ_ACCESS: BLOCKED_OR_DENIED"
+          fi
+
+      - name: Install minimal Google Drive API client
+        if: ${{ steps.secrets.outputs.drive_token == 'PRESENT' }}
+        run: python -m pip install --disable-pip-version-check google-api-python-client google-auth google-auth-httplib2
+
+      - name: Verify Drive OAuth and app-visible folder metadata (read only)
+        if: ${{ steps.secrets.outputs.drive_token == 'PRESENT' }}
+        env:
+          DRIVE_TOKEN_JSON: ${{ secrets.DRIVE_TOKEN_JSON }}
+        run: |
+          python - <<'PY'
+          import json, os, sys
+          from google.oauth2.credentials import Credentials
+          from google.auth.transport.requests import Request
+          from googleapiclient.discovery import build
+
+          scope = ["https://www.googleapis.com/auth/drive.file"]
+          try:
+              info = json.loads(os.environ["DRIVE_TOKEN_JSON"])
+              creds = Credentials.from_authorized_user_info(info, scope)
+              if creds.expired and creds.refresh_token:
+                  creds.refresh(Request())
+              if not creds.valid or not creds.has_scopes(scope):
+                  raise RuntimeError("OAuth token invalid or missing drive.file scope")
+              drive = build("drive", "v3", credentials=creds, cache_discovery=False)
+              # drive.file is intentionally narrow: results are limited to files
+              # created by or explicitly opened with this application.
+              q = "name = 'Jazz Soul Beat Agent Private Storage' and mimeType = 'application/vnd.google-apps.folder' and trashed = false"
+              result = drive.files().list(
+                  q=q, spaces="drive", pageSize=100,
+                  fields="files(id,name,mimeType,modifiedTime)"
+              ).execute()
+              folders = result.get("files", [])
+              print("DRIVE_API_READ: VERIFIED")
+              if folders:
+                  print(f"APP_FOLDER: VISIBLE_TO_THIS_APP ({len(folders)} matching folder(s))")
+              else:
+                  print("APP_FOLDER: NOT_VISIBLE_WITH_DRIVE_FILE_SCOPE")
+                  print("NOTE: This does not prove the folder is absent; drive.file only exposes app-authorized files.")
+              print("DRIVE_DIAGNOSTIC_MODE: READ_ONLY")
+          except Exception as exc:
+              print("DRIVE_API_READ: BLOCKED")
+              print(f"DRIVE_ERROR_TYPE: {type(exc).__name__}")
+              # Do not print exception text or token-bearing request details.
+              sys.exit(1)
+          PY
+
+      - name: Summarize missing Drive secret
+        if: ${{ steps.secrets.outputs.drive_token == 'MISSING' }}
+        run: echo "DRIVE_OAUTH: BLOCKED_SECRET_MISSING"
+
+      - name: Explicit safety summary
+        if: always()
+        run: |
+          {
+            echo "## Cloud read-only diagnostic"
+            echo ""
+            echo "- No audio or video was downloaded."
+            echo "- No FFmpeg, analysis, rendering, or production command was run."
+            echo "- No Google Drive files, folders, metadata, or permissions were created or changed."
+            echo "- No YouTube upload or publication was attempted."
+            echo "- The runner's temporary workspace is ephemeral."
+          } >> "$GITHUB_STEP_SUMMARY"
