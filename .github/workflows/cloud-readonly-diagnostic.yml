@@ -45,6 +45,7 @@ jobs:
           fi
 
       - name: Verify private agent repository read access
+        id: private_agent_checkout
         if: ${{ steps.secrets.outputs.private_repo_token == 'PRESENT' }}
         uses: actions/checkout@v4
         with:
@@ -59,7 +60,7 @@ jobs:
         shell: bash
         env:
           TOKEN_STATE: ${{ steps.secrets.outputs.private_repo_token }}
-          CHECKOUT_OUTCOME: ${{ steps.secrets.outcome }}
+          CHECKOUT_OUTCOME: ${{ steps.private_agent_checkout.outcome }}
         run: |
           if [[ "$TOKEN_STATE" == "PRESENT" && "$CHECKOUT_OUTCOME" == "success" ]]; then
             echo "PRIVATE_REPOSITORY_READ_ACCESS: VERIFIED"
@@ -83,8 +84,6 @@ jobs:
           from google.oauth2.credentials import Credentials
           from google.auth.transport.requests import Request
           from googleapiclient.discovery import build
-          from google.auth.exceptions import RefreshError
-          from googleapiclient.errors import HttpError
 
           scope = ["https://www.googleapis.com/auth/drive.file"]
           try:
