@@ -366,9 +366,23 @@ jobs:
               with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
                   summary.write("## Production gate\n\n**SKIPPED — no video was rendered.**\n\n" + reason + "\n")
               raise SystemExit(0)
-          render_hours = source_seconds / 3600
-          mode = "requested duration" if render_hours >= hours else "available approved duration"
-          message = f"ELIGIBLE: {len(tracks)} approved tracks; {source_seconds/3600:.2f} source hours; render uses {mode}."
+          required_seconds = hours * 3600
+          # Defense in depth: never trust curator.pick's allow_shorter behavior
+          # as the sole duration gate. A complete 2h/3h approved library is mandatory.
+          if source_seconds + 3.0 < required_seconds:
+              reason = (
+                  f"Insufficient approved audio for requested {hours:.0f}h: "
+                  f"{len(tracks)} tracks provide only {source_seconds/3600:.2f}h."
+              )
+              print("BLOCKED: " + reason)
+              with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+                  output.write("eligible=false\n")
+                  output.write(f"available_hours={source_seconds/3600:.6f}\n")
+              with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
+                  summary.write("## Production gate\n\n**BLOCKED — no video rendered.**\n\n" + reason + "\n")
+              raise SystemExit(0)
+          render_hours = hours
+          message = f"ELIGIBLE: {len(tracks)} approved tracks; {source_seconds/3600:.2f}h available; requested {hours:.0f}h will be rendered."
           print(message)
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
               output.write("eligible=true\n")
@@ -571,7 +585,7 @@ jobs:
 
       - name: Upload exact approved artifact privately to YouTube
         id: youtube_private_upload
-        if: ${{ steps.persist_outputs.outcome == 'success' }}
+        if: ${{ false }} # Disabled: human approval is required before any YouTube upload.
         working-directory: agent
         env:
           YOUTUBE_TOKEN_JSON: ${{ secrets.YOUTUBE_TOKEN_JSON }}
@@ -635,7 +649,7 @@ jobs:
           cycle_id: ${{ steps.pdca_start.outputs.cycle_id }}
           result_json: '{"workflow":"private-cloud-agent","task":"${{ env.TASK }}","run_id":"${{ github.run_id }}","job_status":"${{ job.status }}"}'
           checks_json: >-
-            [{"name":"restore_state","passed":${{ steps.restore_library.outcome == 'success' }}},{"name":"requested_task","passed":${{ (env.TASK == 'self-test' && steps.self_test.outcome == 'success') || (env.TASK == 'build-evergreen' && steps.build_video.outcome == 'success') }}},{"name":"private_drive_persistence","passed":${{ (env.TASK == 'self-test' && steps.persist_qa.outcome == 'success') || (env.TASK == 'build-evergreen' && steps.persist_outputs.outcome == 'success') }}},{"name":"visual_library_persistence","passed":${{ env.TASK == 'self-test' || steps.persist_visual_assets.outcome == 'success' }}},{"name":"private_youtube_upload","passed":${{ env.TASK == 'self-test' || steps.youtube_private_upload.outcome == 'success' }}},{"name":"no_public_youtube_publication","passed":true}]
+            [{"name":"restore_state","passed":${{ steps.restore_library.outcome == 'success' }}},{"name":"requested_task","passed":${{ (env.TASK == 'self-test' && steps.self_test.outcome == 'success') || (env.TASK == 'build-evergreen' && steps.build_video.outcome == 'success') }}},{"name":"private_drive_persistence","passed":${{ (env.TASK == 'self-test' && steps.persist_qa.outcome == 'success') || (env.TASK == 'build-evergreen' && steps.persist_outputs.outcome == 'success') }}},{"name":"visual_library_persistence","passed":${{ env.TASK == 'self-test' || steps.persist_visual_assets.outcome == 'success' }}},{"name":"youtube_upload_disabled_pending_human_review","passed":true},{"name":"no_public_youtube_publication","passed":true}]
           evidence: 'GitHub Actions run ${{ github.run_id }}; requested task outputs and private Drive inventory'
           drive_token_json: ${{ secrets.DRIVE_TOKEN_JSON }}
 
